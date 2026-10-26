@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { fontDisplay, fontMono, fontSans } from "@/lib/fonts";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
+import { SolanaProvider } from "@/features/wallet/components/solana-provider";
 
 export const metadata: Metadata = {
   title: {
@@ -37,7 +38,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   return (
     <html lang="en" className={fontVars}>
-      <body>{children}</body>
+      <body>
+        <SolanaProvider>{children}</SolanaProvider>
+      </body>
     </html>
   );
 }

@@ -123,3 +123,19 @@
     transform: rotate(360deg);
   }
 }
+
+/* Wallet modal */
+.wallet-adapter-modal .wallet-adapter-modal-wrapper {
+  background: var(--color-canvas-deep);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-glow);
+  font-family: var(--font-sans);
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-title {
+  font-family: var(--font-display);
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-button-close {
+  background: var(--color-surface-raised);
+}

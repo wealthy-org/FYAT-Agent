@@ -1,17 +1,11 @@
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import { HeroSection, placeholderHeroStats } from "@/features/hero";
+import { ConnectWalletButton } from "@/features/wallet";
 
 export default function HomePage() {
   return (
     <>
-      <Header
-        actions={
-          <Button size="sm" disabled>
-            Connect Wallet
-          </Button>
-        }
-      />
+      <Header actions={<ConnectWalletButton />} />
 
       <main>
         <HeroSection stats={placeholderHeroStats} />

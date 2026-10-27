@@ -2,6 +2,12 @@ import "server-only";
 
 import { z } from "zod";
 
+import { isValidSolanaAddress } from "@/lib/solana";
+
+const solanaAddress = z
+  .string()
+  .refine(isValidSolanaAddress, "must be a valid Solana address");
+
 const serverSchema = z.object({
   DATABASE_URL: z
     .string()
@@ -9,6 +15,14 @@ const serverSchema = z.object({
       (value) => /^postgres(ql)?:\/\//.test(value),
       "must be a postgres:// or postgresql:// connection string",
     ),
+  APP_URL: z
+    .string()
+    .refine((value) => /^https?:\/\//.test(value) && URL.canParse(value), {
+      error: "must be an http(s) URL",
+    })
+    .default("http://localhost:3000"),
+  FYAT_PROGRAM_ID: solanaAddress,
+  TOKEN_MINT: solanaAddress,
 });
 
 type ServerEnv = z.infer<typeof serverSchema>;
@@ -20,6 +34,9 @@ export function getServerEnv(): ServerEnv {
 
   const parsed = serverSchema.safeParse({
     DATABASE_URL: process.env.DATABASE_URL,
+    APP_URL: process.env.APP_URL,
+    FYAT_PROGRAM_ID: process.env.FYAT_PROGRAM_ID,
+    TOKEN_MINT: process.env.TOKEN_MINT,
   });
 
   if (!parsed.success) {

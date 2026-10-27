@@ -30,15 +30,25 @@ const { binCount } = PALETTE;
 const SKIP = 255;
 const BIG_BINS = 3;
 
-const BIN_STYLES: readonly string[] = Array.from({ length: binCount }, (_, bin) => {
-  const t = (bin + 1) / binCount;
-  const [r, g, b] = PALETTE.low.map((low, channel) =>
-    Math.round(lerp(low, PALETTE.high[channel] ?? low, t)),
-  );
-  const alpha = lerp(PALETTE.lowAlpha, 1, t);
 
-  return `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
-});
+const BIN_STYLES: readonly string[] = Array.from(
+  { length: binCount },
+  (_, bin) => {
+    const t = (bin + 1) / binCount;
+
+    // Warna dasar ungu dan putih.
+    const violet = [139, 92, 246];
+    const white = [245, 243, 255];
+
+    const blend = violet.map((v, i) =>
+      Math.round(v + ((white[i] ?? v) - v) * t),
+    );
+
+    const alpha = lerp(PALETTE.lowAlpha, 1, t);
+
+    return `rgba(${blend[0]},${blend[1]},${blend[2]},${alpha.toFixed(2)})`;
+  },
+);
 
 export function createParticleRenderer(field: ParticleField): ParticleRenderer {
   const { count, sphere, scatter, delay, keep } = field;
@@ -60,6 +70,11 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
       ctx.clearRect(0, 0, width, height);
 
       const angle = time * PARTICLES.rotationSpeed;
+      // Cahaya ungu-putih berdenyut dan bergerak.
+      const colorWave =
+        0.5 + 0.5 * Math.sin(time * 0.8);
+
+      const waveAlpha = 0.82 + colorWave * 0.18;
       const cosY = Math.cos(angle);
       const sinY = Math.sin(angle);
 
@@ -147,6 +162,7 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
       for (let b = 0; b < binCount; b++) {
         const size = b >= binCount - BIG_BINS ? PARTICLES.bigSize : PARTICLES.size;
 
+        ctx.globalAlpha = waveAlpha;
         ctx.fillStyle = BIN_STYLES[b];
         ctx.beginPath();
         for (let i = 0; i < count; i++) {
@@ -154,6 +170,7 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
         }
         ctx.fill();
       }
+      ctx.globalAlpha = 1;
     },
   };
 }

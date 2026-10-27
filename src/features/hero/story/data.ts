@@ -14,13 +14,14 @@ export type StoryNode = {
 };
 
 /** Posisi diperkirakan dari video; sesuaikan sambil membandingkan. */
+
 export const storyNodes: readonly StoryNode[] = [
   { id: "swap", label: "SWAP", kind: "accent", size: 46, x: -0.42, y: -0.62, depth: 1.0, mobile: true },
   { id: "xfer", label: "XFER", kind: "accent", size: 40, x: 0.24, y: -0.78, depth: 0.8, mobile: true },
   { id: "rpc", label: "RPC", kind: "accent", size: 30, x: 0.68, y: -0.86, depth: 0.6 },
   { id: "pda", label: "PDA", kind: "accent", size: 38, x: -0.12, y: -0.92, depth: 1.1, mobile: true },
-  { id: "pol", label: "POL", kind: "ghost", size: 36, x: -0.74, y: -0.78, depth: 0.7, mobile: true },
-  { id: "sim", label: "SIM", kind: "ghost", size: 26, x: 0.92, y: -0.52, depth: 0.5 },
+  { id: "hash", label: "HASH", kind: "accent", size: 38, x: 0.72, y: 0.48, depth: 0.9 },
+  { id: "vault", label: "VAULT", kind: "accent", size: 44, x: 0.28, y: 0.88, depth: 1.0 }, 
   { id: "usdc", label: "USDC", kind: "accent", size: 54, x: -0.62, y: -0.12, depth: 1.2 },
   { id: "exe", label: "EXE", kind: "ghost", size: 32, x: -0.95, y: 0.02, depth: 0.7 },
   { id: "h24", label: "24h", kind: "accent", size: 44, x: 0.56, y: -0.34, depth: 0.9 },
@@ -35,8 +36,26 @@ export const storyNodes: readonly StoryNode[] = [
   { id: "agt", label: "AGT", kind: "light", size: 32, x: 0.18, y: 0.92, depth: 0.7, mobile: true },
   { id: "own", label: "OWN", kind: "light", size: 38, x: 0.46, y: 0.64, depth: 1.0, mobile: true },
   { id: "spl", label: "SPL", kind: "accent", size: 30, x: 0.92, y: 0.78, depth: 0.6, mobile: true },
-  { id: "ses", label: "SES", kind: "ghost", size: 28, x: 0.12, y: 0.7, depth: 0.8 },
+  { id: "ses", label: "SES", kind: "ghost", size: 28, x: 0.12, y: 0.7, depth: 0.8 },  
+  { id: "liq", label: "LIQ", kind: "accent", size: 36, x: -0.82, y: -0.38, depth: 0.8 },
+  { id: "dex", label: "DEX", kind: "accent", size: 42, x: 0.38, y: -0.58, depth: 1.0 },
+  { id: "gas", label: "GAS", kind: "ghost", size: 30, x: 0.76, y: -0.68, depth: 0.7 },
+  { id: "tx", label: "TX", kind: "light", size: 32, x: -0.28, y: -0.72, depth: 0.8 },
+  { id: "amm", label: "AMM", kind: "accent", size: 38, x: -0.88, y: 0.24, depth: 0.9 },
+  { id: "dao", label: "DAO", kind: "ghost", size: 34, x: 0.88, y: 0.18, depth: 0.7 },
+  { id: "nft", label: "NFT", kind: "light", size: 30, x: -0.58, y: 0.72, depth: 0.8 },
+  { id: "mint", label: "MINT", kind: "accent", size: 40, x: 0.56, y: 0.82, depth: 1.0 },
+  { id: "pool", label: "POOL", kind: "ghost", size: 36, x: -0.96, y: -0.58, depth: 0.7 },
+  { id: "node", label: "NODE", kind: "accent", size: 42, x: 0.96, y: -0.36, depth: 0.9 },
+  { id: "sign", label: "SIGN", kind: "light", size: 32, x: -0.18, y: 0.96, depth: 0.7 },
+  { id: "auth", label: "AUTH", kind: "ghost", size: 34, x: -0.72, y: 0.42, depth: 0.8 },
+  { id: "feed", label: "FEED", kind: "light", size: 30, x: -0.42, y: -0.88, depth: 0.6 },
+  { id: "pol", label: "POL", kind: "ghost", size: 36, x: -0.74, y: -0.78, depth: 0.7, mobile: true },
+  { id: "sim", label: "SIM", kind: "ghost", size: 26, x: 0.92, y: -0.52, depth: 0.5 },
+  { id: "sync", label: "SYNC", kind: "ghost", size: 36, x: 0.12, y: -0.96, depth: 0.8 },
+
 ];
+
 
 export const storyCopy = {
   first: {

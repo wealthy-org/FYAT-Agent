@@ -149,3 +149,53 @@
 .wallet-adapter-modal button {
   font-family: var(--font-sans);
 }
+
+
+/* Hero entrance animation */
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes hero-glow-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hero-enter-title {
+  animation: hero-enter 1s cubic-bezier(0.16, 1, 0.3, 1)
+    0.15s both;
+}
+
+.hero-enter-description {
+  animation: hero-enter 0.9s cubic-bezier(0.16, 1, 0.3, 1)
+    0.38s both;
+}
+
+.hero-enter-glow {
+  animation: hero-glow-enter 1.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-enter-title,
+  .hero-enter-description,
+  .hero-enter-glow {
+    animation: none;
+  }
+}

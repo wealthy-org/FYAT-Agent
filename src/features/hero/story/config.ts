@@ -9,34 +9,32 @@ export const STORY = {
 } as const;
 
 /** Rentang progres scroll (0..1) tiap fase. */
+
 export const PHASES = {
   introOut: [0.05, 0.2],
   logoOut: [0.03, 0.14],
   disperse: [0.07, 0.34],
+
   nodesIn: [0.26, 0.4],
-  copy1In: [0.3, 0.38],
-  copy1Out: [0.52, 0.6],
-  nodesDim: [0.52, 0.64],
+  copy1In: [0.30, 0.38],
+  copy1Out: [0.48, 0.58],
+  nodesDim: [0.52, 0.70],
   copy2In: [0.57, 0.65],
-  strip: [0.62, 0.76],
-  /** Penundaan kemunculan antar node, dalam satuan progres. */
+  strip: [0.68, 0.82],
+  stripActiveAt: 0.76,
+
   nodeStagger: 0.08,
-  /** Seberapa jauh node naik mengikuti scroll (kali tinggi layar). */
   nodeParallax: 0.9,
-  /** Seberapa redup node saat teks kedua tampil (0..1). */
   nodeDim: 0.85,
-  /** Strip mulai menghitung angka pada progres ini. */
-  stripActiveAt: 0.66,
 } as const;
 
 export const SPHERE = {
-  radiusRatio: 0.165, // kali tinggi panggung
-  minRadius: 92,
-  maxRadius: 200,
-  /** Posisi vertikal pusat bola (0 = atas, 1 = bawah). */
-  centerY: 0.63,
-  logoScale: 0.86, // lebar logo = radius * ini
-  glowScale: 3.4, // lebar cahaya = radius * ini
+  radiusRatio: 0.28,
+  minRadius: 190,
+  maxRadius: 800,
+  centerY: 0.62,
+  logoScale: 0.80,
+  glowScale: 3.8,
 } as const;
 
 export const PARTICLES = {

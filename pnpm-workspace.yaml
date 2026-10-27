@@ -1,5 +1,6 @@
 allowBuilds:
   bufferutil: true
+  esbuild: false
   sharp: false
   unrs-resolver: false
   utf-8-validate: true

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Keypair dev lokal untuk scripts/setup-test-mint.ts. JANGAN pernah di-commit.
+.keys/

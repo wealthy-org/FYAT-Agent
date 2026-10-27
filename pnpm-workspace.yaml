@@ -1,4 +1,5 @@
 allowBuilds:
+  bigint-buffer: false
   bufferutil: true
   esbuild: false
   sharp: false

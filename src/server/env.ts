@@ -36,7 +36,7 @@ export function getServerEnv(): ServerEnv {
     DATABASE_URL: process.env.DATABASE_URL,
     APP_URL: process.env.APP_URL,
     FYAT_PROGRAM_ID: process.env.FYAT_PROGRAM_ID,
-    TOKEN_MINT: process.env.TOKEN_MINT,
+    TOKEN_MINT: process.env.NEXT_PUBLIC_TOKEN_MINT,
   });
 
   if (!parsed.success) {

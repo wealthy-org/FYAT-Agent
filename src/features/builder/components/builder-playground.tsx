@@ -2,6 +2,7 @@
 
 import { useAgentAttempt } from "../hooks/use-agent-attempt";
 import { useMandateForm } from "../hooks/use-mandate-form";
+import { useSimulation } from "../hooks/use-simulation";
 import { CodePreview } from "./code-preview";
 import { ExecutionFlowPreview } from "./execution-flow-preview";
 import { MandateConfigurator } from "./mandate-configurator";
@@ -9,6 +10,7 @@ import { MandateConfigurator } from "./mandate-configurator";
 export function BuilderPlayground() {
   const mandateForm = useMandateForm();
   const attemptForm = useAgentAttempt();
+  const simulation = useSimulation(mandateForm.config, attemptForm.attempt);
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
@@ -18,6 +20,7 @@ export function BuilderPlayground() {
         <ExecutionFlowPreview
           config={mandateForm.config}
           attemptForm={attemptForm}
+          simulation={simulation}
         />
         <CodePreview
           config={mandateForm.config}

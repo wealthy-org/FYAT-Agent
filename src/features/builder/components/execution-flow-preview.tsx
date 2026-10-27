@@ -5,27 +5,33 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 
 import { buildFlowSteps } from "../flow";
 import type { AgentAttemptForm } from "../hooks/use-agent-attempt";
+import type { SimulationController } from "../hooks/use-simulation";
 import type { MandateConfig } from "../types";
 import { AgentAttemptFields } from "./agent-attempt-fields";
 import { FlowStepList } from "./flow-step-list";
+import { SimulationControls } from "./simulation-controls";
 
 type ExecutionFlowPreviewProps = {
   config: MandateConfig | null;
   attemptForm: AgentAttemptForm;
+  simulation: SimulationController;
 };
 
 export function ExecutionFlowPreview({
   config,
   attemptForm,
+  simulation,
 }: ExecutionFlowPreviewProps) {
   const { attempt } = attemptForm;
+  const { state, start, walletConnected } = simulation;
 
   const steps = useMemo(
-    () => buildFlowSteps(config, attempt),
-    [config, attempt],
+    () => buildFlowSteps(config, attempt, state),
+    [config, attempt, state],
   );
 
   const verifyStatus = steps.find((step) => step.id === "verify")?.status;
+  const policyPassed = verifyStatus === "complete";
 
   return (
     <Card className="p-6 md:p-8">
@@ -39,7 +45,7 @@ export function ExecutionFlowPreview({
 
         {/* Selalu dirender agar perubahan verdict diumumkan screen reader */}
         <div aria-live="polite" className="shrink-0">
-          {verifyStatus === "complete" && (
+          {policyPassed && (
             <span className="rounded-full border border-success/40 bg-success/10 px-3 py-1 text-xs font-medium text-success">
               PASS
             </span>
@@ -53,6 +59,13 @@ export function ExecutionFlowPreview({
       </div>
 
       <AgentAttemptFields config={config} form={attemptForm} />
+
+      <SimulationControls
+        walletConnected={walletConnected}
+        policyPassed={policyPassed}
+        running={state.status === "running"}
+        onRun={() => void start()}
+      />
 
       <FlowStepList steps={steps} />
 

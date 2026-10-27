@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
-    "api:smoke": "tsx --env-file=.env.local scripts/api-smoke.ts"
+    "api:smoke": "tsx --env-file=.env.local scripts/api-smoke.ts",
+    "mint:setup": "tsx --env-file=.env.local scripts/setup-test-mint.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

@@ -5,6 +5,7 @@ import {
   CircleDashed,
   CircleMinus,
   CircleX,
+  LoaderCircle,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -19,12 +20,10 @@ const STATUS_STYLES: Record<
 > = {
   complete: { icon: CircleCheck, className: "text-success", label: "Complete" },
   blocked: { icon: CircleX, className: "text-danger", label: "Blocked" },
+  failed: { icon: CircleX, className: "text-danger", label: "Failed" },
+  running: { icon: LoaderCircle, className: "text-brand-400", label: "Running" },
   skipped: { icon: CircleMinus, className: "text-fg-subtle", label: "Skipped" },
-  pending: {
-    icon: CircleDashed,
-    className: "text-brand-400",
-    label: "Not run in preview",
-  },
+  pending: { icon: CircleDashed, className: "text-brand-400", label: "Not run" },
   idle: { icon: Circle, className: "text-fg-subtle", label: "Waiting" },
 };
 
@@ -40,13 +39,17 @@ export function FlowStepList({ steps }: { steps: readonly FlowStep[] }) {
             {!isLast && (
               <span
                 aria-hidden="true"
-                className="absolute left-2.75 top-7 h-[calc(100%-1.75rem)] w-px bg-border-subtle"
+                className="absolute left-[11px] top-7 h-[calc(100%-1.75rem)] w-px bg-border-subtle"
               />
             )}
 
             <Icon
               aria-hidden="true"
-              className={cn("absolute left-0 top-0 size-6", className)}
+              className={cn(
+                "absolute left-0 top-0 size-6",
+                className,
+                step.status === "running" && "animate-spin",
+              )}
             />
 
             <div className="flex flex-wrap items-baseline gap-x-3">
@@ -82,6 +85,21 @@ export function FlowStepList({ steps }: { steps: readonly FlowStep[] }) {
                   </li>
                 ))}
               </ul>
+            )}
+
+            {step.logs && step.logs.length > 0 && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs text-fg-muted hover:text-fg">
+                  Program logs
+                </summary>
+                {/* Teks biasa: log berasal dari luar aplikasi */}
+                <pre
+                  tabIndex={0}
+                  className="mt-2 max-h-48 overflow-auto rounded-lg border border-border-subtle bg-canvas p-3 font-mono text-[11px] leading-5 text-fg-muted"
+                >
+                  {step.logs.join("\n")}
+                </pre>
+              </details>
             )}
           </li>
         );

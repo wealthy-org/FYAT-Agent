@@ -39,7 +39,7 @@ export function FlowStepList({ steps }: { steps: readonly FlowStep[] }) {
             {!isLast && (
               <span
                 aria-hidden="true"
-                className="absolute left-[11px] top-7 h-[calc(100%-1.75rem)] w-px bg-border-subtle"
+                className="absolute left-2.75 top-7 h-[calc(100%-1.75rem)] w-px bg-border-subtle"
               />
             )}
 

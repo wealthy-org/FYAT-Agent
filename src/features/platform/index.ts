@@ -1,0 +1,1 @@
+export { PlatformSection } from "./components/platform-section";

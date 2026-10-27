@@ -1,59 +1,79 @@
+"use client";
+
 import { ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { useInView } from "@/hooks/use-in-view";
 import { cn } from "@/lib/cn";
 
+import { useFeaturePreview } from "../hooks/use-feature-preview";
 import type { FeatureRowData } from "../types";
-import { FeatureMock } from "./feature-mock";
+import { AuroraBackground } from "./aurora-background";
+import { FeatureCardStage } from "./feature-card-stage";
+import { FeatureTabs } from "./feature-tabs";
 
 type FeatureRowProps = {
   feature: FeatureRowData;
-  /** true → panel ilustrasi pindah ke kanan di layar md ke atas. */
+  /** true → panel gradien pindah ke kanan di layar md ke atas. */
   reversed?: boolean;
 };
 
 export function FeatureRow({ feature, reversed = false }: FeatureRowProps) {
-  const { eyebrow, title, description, pillars, cta, mock } = feature;
+  const { title, description, bullets, summary, detailLabel, details, cta } =
+    feature;
+
+  const preview = useFeaturePreview();
+  const { ref: mediaRef, inView } = useInView<HTMLDivElement>();
 
   return (
-    <article className="grid overflow-hidden rounded-2xl border border-border-subtle bg-surface backdrop-blur-md md:grid-cols-2">
+    <article className="grid overflow-hidden rounded-2xl border border-border-subtle bg-white/[0.035] md:grid-cols-2">
       <div
+        ref={mediaRef}
         className={cn(
-          "grid place-items-center bg-[radial-gradient(ellipse_at_center,#c4b5fd,#8b5cf6_55%,#c4b5fd)] p-8 md:p-10",
+          "relative grid min-h-85 place-items-center p-8 md:min-h-105 md:p-12",
           reversed && "md:order-2",
         )}
       >
-        <FeatureMock {...mock} />
+        <AuroraBackground paused={!inView} />
+        <FeatureCardStage
+          summary={summary}
+          detailLabel={detailLabel}
+          details={details}
+          activeId={preview.activeId}
+          transitioning={preview.transitioning}
+        />
       </div>
 
-      <div className="flex flex-col justify-center p-8 md:p-12">
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h3 className="mt-3 text-balance font-display text-2xl font-medium tracking-tight">
-          {title}
-        </h3>
-        <p className="mt-4 max-w-md text-sm text-fg-muted">{description}</p>
+      <div className="flex min-w-0 flex-col p-6 md:p-9">
+        <h3 className="text-base font-medium">{title}</h3>
+        <p className="mt-3 max-w-md text-sm text-fg-muted">{description}</p>
 
-        <ul className="mt-8 grid grid-cols-3 gap-3">
-          {pillars.map((pillar) => (
-            <li
-              key={pillar}
-              className="rounded-xl border border-border-subtle bg-surface-raised px-2 py-4 text-center text-xs text-fg-muted"
-            >
-              {pillar}
+        <ul className="mt-5 space-y-1.5 text-sm text-fg-muted">
+          {bullets.map((bullet) => (
+            <li key={bullet} className="flex gap-2">
+              <span aria-hidden="true">–</span>
+              {bullet}
             </li>
           ))}
         </ul>
 
-        <Button
-          href={cta.href}
-          variant="secondary"
-          size="sm"
-          className="mt-8 self-end"
-        >
-          {cta.label}
-          <ArrowUpRight className="size-3.5" aria-hidden="true" />
-        </Button>
+        <div className="mt-auto pt-8">
+          <FeatureTabs
+            details={details}
+            activeId={preview.activeId}
+            pinnedId={preview.pinnedId}
+            onPreview={preview.preview}
+            onEndPreview={preview.endPreview}
+            onTogglePin={preview.togglePin}
+          />
+
+          <div className="mt-4 flex justify-end">
+            <Button href={cta.href} variant="secondary" size="sm">
+              {cta.label}
+              <ArrowUpRight className="size-3.5" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
       </div>
     </article>
   );

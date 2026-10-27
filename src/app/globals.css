@@ -245,3 +245,18 @@
       scale(var(--blob-scale, 1.12));
   }
 }
+
+@theme {
+  --animate-docs-in: docs-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes docs-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

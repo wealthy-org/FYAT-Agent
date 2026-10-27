@@ -53,7 +53,7 @@ export const platformFeatures: readonly FeatureRowData[] = [
         body: "Every attempt, allowed or blocked, is recorded as a public receipt.",
       },
     ],
-    cta: { label: "Open Builder", href: "/#builder" },
+    cta: { label: "Open Builder", href: "/builder" },
   },
   {
     id: "mandate",

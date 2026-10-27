@@ -67,6 +67,7 @@ type TextFieldProps = FieldMessages &
     label: string;
     /** Teks tetap di sisi kanan input, misalnya satuan "USDC". */
     suffix?: string;
+    inputClassName?: string;
   };
 
 export function TextField({
@@ -74,6 +75,7 @@ export function TextField({
   hint,
   error,
   suffix,
+  inputClassName,
   ...inputProps
 }: TextFieldProps) {
   const id = useId();

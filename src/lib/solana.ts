@@ -1,3 +1,4 @@
+import { PublicKey } from "@solana/web3.js";
 import { env } from "./env";
 
 const EXPLORER_BASE_URL = "https://explorer.solana.com";
@@ -20,4 +21,14 @@ export function explorerAddressUrl(address: string): string {
 
 export function explorerTxUrl(signature: string): string {
   return `${EXPLORER_BASE_URL}/tx/${encodeURIComponent(signature)}${clusterQuery()}`;
+}
+
+/** True jika `value` adalah public key Solana yang valid (Base58, 32 byte). */
+export function isValidSolanaAddress(value: string): boolean {
+  try {
+    new PublicKey(value);
+    return true;
+  } catch {
+    return false;
+  }
 }

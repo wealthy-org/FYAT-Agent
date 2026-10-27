@@ -10,7 +10,7 @@ import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare";
 import { useMemo, type ReactNode } from "react";
 
 import { env } from "@/lib/env";
-
+import "../wallet-modal.css";
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 const CONNECTION_CONFIG = { commitment: "confirmed" } as const;

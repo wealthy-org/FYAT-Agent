@@ -139,3 +139,8 @@
 .wallet-adapter-modal .wallet-adapter-modal-button-close {
   background: var(--color-surface-raised);
 }
+
+.wallet-adapter-modal .wallet-adapter-button,
+.wallet-adapter-modal button {
+  font-family: var(--font-sans);
+}

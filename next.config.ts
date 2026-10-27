@@ -13,6 +13,7 @@ const csp = [
   "img-src 'self' data: blob:",
   "font-src 'self'",
   `connect-src 'self' ${rpcUrl} ${rpcWsUrl}`,
+  "frame-src https://connect.solflare.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -1,22 +1,27 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
+import { SolanaProvider } from "@/features/wallet";
 import { fontDisplay, fontMono, fontSans } from "@/lib/fonts";
 import { siteConfig } from "@/lib/site";
+import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
-import { SolanaProvider } from "@/features/wallet/components/solana-provider";
 
 export const metadata: Metadata = {
+  metadataBase: getSiteUrl(),
   title: {
     default: siteConfig.title,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
+  alternates: { canonical: "/" },
   openGraph: {
     title: siteConfig.title,
     description: siteConfig.description,
+    siteName: siteConfig.name,
     type: "website",
+    url: "/",
   },
   twitter: {
     card: "summary_large_image",

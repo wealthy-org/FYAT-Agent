@@ -17,7 +17,7 @@ export function ReceiptsSection({ initial }: ReceiptsSectionProps) {
       <Container>
         <SectionHeading
           id="receipts-title"
-          eyebrow="04 / Receipts"
+          eyebrow="02 / Receipts"
           title="Execution receipts"
           description="Every attempt under a mandate leaves a public record: what the agent tried, and whether the policy let it through."
         />

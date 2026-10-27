@@ -10,6 +10,25 @@ export const siteConfig = {
     { label: "Receipts", href: "/#receipts" },
     { label: "Security", href: "/#security" },
   ],
+  footerGroups: [
+    {
+      title: "Product",
+      links: [
+        { label: "Platform", href: "/#platform" },
+        { label: "Builder", href: "/#builder" },
+        { label: "Receipts", href: "/#receipts" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { label: "Security", href: "/#security" },
+        { label: "Developers", href: "/#developers" },
+      ],
+    },
+  ],
+  disclaimer:
+    "FYAT Agent is a Devnet prototype: unaudited, no token, no real funds.",
 } as const;
 
 export type NavItem = (typeof siteConfig.nav)[number];

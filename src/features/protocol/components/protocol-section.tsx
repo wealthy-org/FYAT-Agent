@@ -11,7 +11,7 @@ export function ProtocolSection() {
       <Container>
         <SectionHeading
           id="protocol-title"
-          eyebrow="02 / Protocol"
+          eyebrow="03 / Protocol"
           title="Session key, PDA vault, policy check. One enforcement path."
         />
 

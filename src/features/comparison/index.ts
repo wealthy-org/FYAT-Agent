@@ -1,0 +1,1 @@
+export { ComparisonSection } from "./components/comparison-section";

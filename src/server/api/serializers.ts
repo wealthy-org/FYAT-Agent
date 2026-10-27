@@ -1,6 +1,8 @@
 import "server-only";
-
 import { getMandateStatus, type Mandate, type Vault } from "../models";
+import type { ReceiptDto } from "@/features/receipts/types";
+import type { ReceiptWithSession } from "../models";
+
 
 export function serializeVault(vault: Vault) {
   return {
@@ -26,5 +28,18 @@ export function serializeMandate(mandate: Mandate) {
     expiresAt: mandate.expiresAt.toISOString(),
     revokedAt: mandate.revokedAt?.toISOString() ?? null,
     createdAt: mandate.createdAt.toISOString(),
+  };
+}
+
+export function serializeReceipt(receipt: ReceiptWithSession): ReceiptDto {
+  return {
+    id: receipt.id,
+    sessionPubkey: receipt.sessionPubkey,
+    action: receipt.action,
+    amount: receipt.amount.toString(),
+    status: receipt.status,
+    reason: receipt.reason,
+    txSignature: receipt.txSignature,
+    createdAt: receipt.createdAt.toISOString(),
   };
 }

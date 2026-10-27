@@ -1,0 +1,1 @@
+export { ReceiptsSection } from "./components/receipts-section";

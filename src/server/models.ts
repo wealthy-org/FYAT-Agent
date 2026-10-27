@@ -48,6 +48,14 @@ export type Receipt = {
 /** Bentuk untuk Receipts feed publik (Step 10). */
 export type ReceiptWithSession = Receipt & { sessionPubkey: string };
 
+/** Posisi keyset: timestamp mikrodetik (teks dari Postgres) + id. */
+export type ReceiptCursor = { createdAt: string; id: string };
+
+export type ReceiptPage = {
+  items: ReceiptWithSession[];
+  nextCursor: ReceiptCursor | null;
+};
+
 /** Status dihitung, bukan disimpan, jadi tidak pernah basi. */
 export function getMandateStatus(
   mandate: Pick<Mandate, "revokedAt" | "expiresAt">,

@@ -33,6 +33,11 @@
 
   /* Shadows */
   --shadow-glow: 0 0 40px -8px rgb(139 92 246 / 0.55);
+
+  /* Status */
+  --color-success: #34d399;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
 }
 
 @layer base {

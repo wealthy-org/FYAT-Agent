@@ -51,9 +51,11 @@ export function HeroSection({ stats }: HeroSectionProps) {
           {siteConfig.tagline}
         </p>
 
-        <div className="mt-6">
-          <HeroStats stats={stats} />
-        </div>
+        {stats.length > 0 && (
+          <div className="mt-6">
+            <HeroStats stats={stats} />
+          </div>
+        )}
       </Container>
     </section>
   );

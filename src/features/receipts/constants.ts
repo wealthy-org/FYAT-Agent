@@ -1,0 +1,1 @@
+export const RECEIPTS_PAGE_SIZE = 10;

@@ -22,3 +22,9 @@ export const createMandateBodySchema = z.strictObject({
     .refine(isValidSolanaAddress, "Enter a valid Solana address"),
   config: mandateConfigSchema,
 });
+
+/** GET bersifat longgar: parameter tak dikenal diabaikan, bukan ditolak. */
+export const receiptsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  cursor: z.string().max(200).optional(),
+});

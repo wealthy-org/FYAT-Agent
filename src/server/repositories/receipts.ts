@@ -6,6 +6,13 @@ import { firstRow, query, requireRow } from "../db/client";
 import { toBigInt, toDate } from "../db/mappers";
 import type { Receipt, ReceiptStatus, ReceiptWithSession } from "../models";
 
+export type ReceiptCursor = { createdAt: string; id: string };
+
+export type ReceiptPage = {
+  items: ReceiptWithSession[];
+  nextCursor: ReceiptCursor | null;
+};
+
 const DEFAULT_LIST_LIMIT = 20;
 const MAX_LIST_LIMIT = 100;
 /** Harus sama dengan CHECK pada kolom `reason`. */
@@ -113,20 +120,58 @@ export async function recordRejection(input: {
   return toReceipt(requireRow(rows));
 }
 
-export async function listRecentReceipts(
-  limit: number = DEFAULT_LIST_LIMIT,
-): Promise<ReceiptWithSession[]> {
-  const rows = await query<ReceiptWithSessionRow>(
-    `SELECT ${COLUMNS}, m.session_pubkey
+type ReceiptPageRow = ReceiptWithSessionRow & { cursor_ts: string };
+
+/**
+ * Keyset pagination: halaman berikutnya dimulai tepat setelah (created_at, id) terakhir.
+ * Mengambil limit + 1 baris untuk mengetahui apakah masih ada halaman lagi.
+ */
+export async function listReceiptsPage(
+  options: { limit?: number; after?: ReceiptCursor | null } = {},
+): Promise<ReceiptPage> {
+  const limit = clampLimit(options.limit ?? DEFAULT_LIST_LIMIT);
+  const after = options.after ?? null;
+
+  const rows = await query<ReceiptPageRow>(
+    `SELECT ${COLUMNS}, m.session_pubkey,
+            to_char(r.created_at AT TIME ZONE 'UTC',
+                    'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_ts
        FROM mandate_receipts AS r
        JOIN mandates AS m ON m.id = r.mandate_id
+      WHERE $2::timestamptz IS NULL
+         OR (r.created_at, r.id) < ($2::timestamptz, $3::uuid)
       ORDER BY r.created_at DESC, r.id DESC
       LIMIT $1`,
-    [clampLimit(limit)],
+    [limit + 1, after?.createdAt ?? null, after?.id ?? null],
   );
 
-  return rows.map((row) => ({
-    ...toReceipt(row),
-    sessionPubkey: row.session_pubkey,
-  }));
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+  const last = pageRows.at(-1);
+
+  return {
+    items: pageRows.map((row) => ({
+      ...toReceipt(row),
+      sessionPubkey: row.session_pubkey,
+    })),
+    nextCursor: hasMore && last ? { createdAt: last.cursor_ts, id: last.id } : null,
+  };
+}
+
+/**
+ * total   : setiap percobaan yang tercatat (Actions Built).
+ * blocked : percobaan yang dihentikan mandate (Transactions Protected).
+ */
+export async function getReceiptStats(): Promise<{
+  total: number;
+  blocked: number;
+}> {
+  const rows = await query<{ total: string; blocked: string }>(
+    `SELECT count(*)::text AS total,
+            count(*) FILTER (WHERE status = 'REJECTED_BY_POLICY')::text AS blocked
+       FROM mandate_receipts`,
+  );
+
+  const row = requireRow(rows);
+  return { total: Number(row.total), blocked: Number(row.blocked) };
 }

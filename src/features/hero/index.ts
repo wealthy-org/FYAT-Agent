@@ -1,3 +1,2 @@
-export { HeroSection } from "./components/hero-section";
-export { placeholderHeroStats } from "./data";
-export type { HeroStat } from "./types";
+   export { HeroSection } from "./components/hero-section";
+   export type { HeroStat } from "./types";

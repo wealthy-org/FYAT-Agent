@@ -1,6 +1,4 @@
-import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { loadOrCreatePayer } from "./lib/dev-payer";
 
 import {
   TOKEN_PROGRAM_ID,
@@ -15,8 +13,6 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 
-const KEY_DIR = path.join(process.cwd(), ".keys");
-const KEY_PATH = path.join(KEY_DIR, "dev-payer.json");
 const DECIMALS = 6;
 const MINT_AMOUNT = 100n * 10n ** BigInt(DECIMALS); // 100 token
 const MIN_BALANCE = 0.05 * LAMPORTS_PER_SOL;
@@ -30,21 +26,6 @@ function readRecipientArg(): PublicKey | null {
   const value = process.argv[index + 1];
   if (!value) throw new Error("--to needs a wallet address");
   return new PublicKey(value);
-}
-
-async function loadOrCreatePayer(): Promise<Keypair> {
-  if (existsSync(KEY_PATH)) {
-    const secret = JSON.parse(await readFile(KEY_PATH, "utf8")) as number[];
-    return Keypair.fromSecretKey(Uint8Array.from(secret));
-  }
-
-  const payer = Keypair.generate();
-  await mkdir(KEY_DIR, { recursive: true });
-  await writeFile(KEY_PATH, JSON.stringify(Array.from(payer.secretKey)), {
-    mode: 0o600,
-  });
-  console.log(`Created dev keypair at ${KEY_PATH} (gitignored, devnet only)`);
-  return payer;
 }
 
 async function ensureSol(connection: Connection, payer: Keypair): Promise<void> {

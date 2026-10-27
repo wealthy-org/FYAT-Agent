@@ -34,7 +34,7 @@ export function MandateConfigurator({ form }: MandateConfiguratorProps) {
       <form
         noValidate
         onSubmit={(event) => event.preventDefault()}
-        className="mt-8 space-y-5"
+        className="@container mt-8 space-y-5"
       >
         <SegmentedControl
           legend="Action"
@@ -78,7 +78,7 @@ export function MandateConfigurator({ form }: MandateConfiguratorProps) {
           />
         )}
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 @md:grid-cols-2">
           <TextField
             label="Max per action"
             value={values.maxPerAction}

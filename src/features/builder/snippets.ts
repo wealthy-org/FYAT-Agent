@@ -5,6 +5,7 @@ import type { AgentAttempt, MandateConfig } from "./types";
 
 const INDENT = "  ";
 const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
+const PUBLIC_DEVNET_RPC = "https://api.devnet.solana.com";
 
 function str(value: string): string {
   return JSON.stringify(value);
@@ -14,6 +15,16 @@ function str(value: string): string {
 function units(value: bigint): string {
   const digits = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "_");
   return value > MAX_SAFE ? `${digits}n` : digits;
+}
+
+/**
+ * URL RPC bisa memuat API key. Snippet mudah disalin dan dibagikan,
+ * jadi hanya endpoint publik yang boleh tampil apa adanya.
+ */
+function displayRpcUrl(): string {
+  return env.NEXT_PUBLIC_SOLANA_RPC_URL === PUBLIC_DEVNET_RPC
+    ? PUBLIC_DEVNET_RPC
+    : "<YOUR_RPC_URL>";
 }
 
 function permissionLines(config: MandateConfig): string[] {
@@ -27,6 +38,7 @@ function permissionLines(config: MandateConfig): string[] {
     return [
       `action: "SWAP",`,
       `inputMint: "USDC_DEVNET_MINT",`,
+      `outputMint: "TOKEN_MINT",`,
       `venue: ${str(config.venue)},`,
       ...common,
     ];
@@ -59,7 +71,7 @@ function buildCallLines(
             : "agentKeypair.publicKey.toBase58()"
         } });`;
 
-  const lines = ["// 3. The agent plans, simulates, and executes."];
+  const lines = ["// 3. The agent plans, simulates, and executes safely."];
 
   if (!evaluation.allowed) {
     const failed = evaluation.checks
@@ -71,8 +83,9 @@ function buildCallLines(
 
   lines.push(
     call,
-    "await plan.simulate(); // dry-run before broadcasting",
+    "await plan.simulate(); // verifies the rules before broadcasting",
     "const signature = await plan.executeWithSession(agentKeypair);",
+    `console.log("Transaction successfully executed under mandate:", signature);`,
   );
 
   return lines;
@@ -84,13 +97,16 @@ export function generateSdkSnippet(
 ): string {
   const lines = [
     "// Illustrative API: @fyat/sdk is not published yet.",
-    `import { createFyatClient } from "@fyat/sdk";`,
+    `import { createFyatClient, type FyatMandate } from "@fyat/sdk";`,
     "",
     "// 1. Initialize the client.",
-    `const client = createFyatClient({ network: ${str(env.NEXT_PUBLIC_SOLANA_NETWORK)} });`,
+    "const client = createFyatClient({",
+    `${INDENT}network: ${str(env.NEXT_PUBLIC_SOLANA_NETWORK)},`,
+    `${INDENT}rpcUrl: ${str(displayRpcUrl())},`,
+    "});",
     "",
     "// 2. The owner defines a constrained mandate.",
-    "const mandate = await client.createMandate({",
+    "const mandate: FyatMandate = await client.createMandate({",
     `${INDENT}vaultPda: "<YOUR_VAULT_PDA>",`,
     `${INDENT}sessionSigner: agentKeypair.publicKey,`,
     `${INDENT}permissions: {`,

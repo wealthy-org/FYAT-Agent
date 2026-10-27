@@ -14,6 +14,9 @@ export function BuilderSection() {
           title="The Transaction Builder"
           description="Configure a bounded mandate, preview the execution flow, and copy the SDK code."
         />
+      </Container>
+
+      <Container size="wide">
         <BuilderPlayground />
       </Container>
     </Section>

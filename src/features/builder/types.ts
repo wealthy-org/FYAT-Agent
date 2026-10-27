@@ -19,3 +19,30 @@ export type MandateFormValues = {
 };
 
 export type MandateFieldName = keyof MandateFormValues;
+
+/* ----------------------- Agent attempt & policy ----------------------- */
+
+/** Tujuan yang dicoba agent: sesuai mandate, atau di luar mandate. */
+export type AttemptTarget = "ALLOWED" | "UNAPPROVED";
+
+export type AgentAttempt = {
+  amount: bigint;
+  target: AttemptTarget;
+};
+
+export type PolicyCheckId =
+  | "PER_ACTION_CAP"
+  | "TOTAL_BUDGET"
+  | "ALLOWED_TARGET";
+
+export type PolicyCheck = {
+  id: PolicyCheckId;
+  label: string;
+  passed: boolean;
+  detail: string;
+};
+
+export type PolicyEvaluation = {
+  allowed: boolean;
+  checks: readonly PolicyCheck[];
+};

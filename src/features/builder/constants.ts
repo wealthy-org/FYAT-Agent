@@ -1,6 +1,10 @@
 export const USDC_DECIMALS = 6;
 export const ASSET_LABEL = "USDC (Devnet)";
 
+export const ASSET_SYMBOL = "USDC";
+
+export const PREVIEW_SPENT_UNITS = 0n;
+
 /** Batas pengaman: 10,000 USDC dalam base unit. */
 export const MAX_AMOUNT_UNITS = 10_000_000_000n;
 

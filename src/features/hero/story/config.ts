@@ -47,7 +47,7 @@ export const PARTICLES = {
   /** Seberapa besar bola membesar saat pecah. */
   zoom: 2.4,
   /** Jangkauan tolak kursor dan kekuatannya (px). */
-  repelRadius: 70,
+  repelRadius: 120,
   repelPush: 26,
   /** Bagian titik yang tersisa sebagai bintang. */
   starRatio: 0.32,

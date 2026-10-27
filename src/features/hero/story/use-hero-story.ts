@@ -158,12 +158,7 @@ export function useHeroStory(
       // Pointer aktif saat orbit terlihat maupun ketika bola masih utuh.
       const orbitStart = PHASES.nodesIn[0];
 
-      const strengthTarget =
-        pointer.active &&
-        progress >= PHASES.nodesIn[0] &&
-        progress < PHASES.copy2In[1]
-          ? 1
-          : 0;
+      const strengthTarget = pointer.active ? 1 : 0;
 
       pointer.strength +=
         (strengthTarget - pointer.strength) *
@@ -191,7 +186,7 @@ export function useHeroStory(
       setLayer(
         copy1Ref.current,
         story.copy1.opacity,
-        story.copy1.shift,
+        0,
       );
 
       setLayer(
@@ -203,7 +198,7 @@ export function useHeroStory(
       setLayer(
         stripRef.current,
         story.strip.opacity,
-        story.strip.shift,
+        0,
       );
 
       const logo = logoRef.current;
@@ -256,7 +251,7 @@ export function useHeroStory(
         (3 - 2 * orbitProgress);
 
       const orbitCenterX = width / 2;
-      const orbitCenterY = height * 0.49;
+      const orbitCenterY = height / 2;
 
       let nodeIndex = 0;
 

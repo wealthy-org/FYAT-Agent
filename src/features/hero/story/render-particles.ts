@@ -83,7 +83,7 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
       const originY = lerp(state.centerY, height / 2, easeInOutCubic(disperse));
       const spreadX = width * 0.56;
       const spreadY = height * 0.56;
-      const repelling = pointer.strength > 0.01;
+      const mouseActive = pointer.strength > 0.01;
 
       for (let i = 0; i < count; i++) {
         const i3 = i * 3;
@@ -135,17 +135,20 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
           e,
         );
 
-        if (repelling) {
+        if (mouseActive) {
           const dx = x - pointer.x;
           const dy = y - pointer.y;
           const distSq = dx * dx + dy * dy;
 
-          if (distSq < repelRadiusSq && distSq > 0.01) {
+          if (distSq < repelRadiusSq) {
             const dist = Math.sqrt(distSq);
             const falloff = 1 - dist / repelRadius;
-            const push = falloff * falloff * PARTICLES.repelPush * pointer.strength;
-            x += (dx / dist) * push;
-            y += (dy / dist) * push;
+
+            // Partikel tertarik mengikuti pergerakan mouse.
+            const pull = falloff * falloff * 0.45 * pointer.strength;
+
+            x -= dx * pull;
+            y -= dy * pull;
           }
         }
 

@@ -111,7 +111,7 @@ function HeroStage({ stats }: HeroProps) {
         </div>
 
         {/* Scroll-based story copy */}
-        <div className="relative z-20">
+        <div className="absolute inset-0 z-20">
           <StoryCopy
             copy1Ref={copy1Ref}
             copy2Ref={copy2Ref}

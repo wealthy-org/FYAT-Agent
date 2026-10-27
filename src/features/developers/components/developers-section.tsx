@@ -30,7 +30,7 @@ export function DevelopersSection() {
           </p>
 
           <div className="mt-8 flex justify-center">
-            <Button href="/#builder" variant="secondary">
+            <Button href="/builder" variant="secondary">
               Generate this from your own mandate
             </Button>
           </div>

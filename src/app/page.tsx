@@ -1,5 +1,6 @@
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { Button } from "@/components/ui/button";
 import { FinalCta } from "@/features/cta";
 import { DevelopersSection } from "@/features/developers";
 import {
@@ -11,7 +12,6 @@ import {
 } from "@/features/execution";
 import { HeroSection } from "@/features/hero";
 import { PlatformSection } from "@/features/platform";
-import { ConnectWalletButton } from "@/features/wallet";
 import { getHeroStats } from "@/server/services/public-stats";
 
 /** Data publik di-cache; diperbarui paling lama tiap 60 detik. */
@@ -22,7 +22,10 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header actions={<ConnectWalletButton />} hideOnScrollFrom="platform" />
+      <Header
+        actions={<Button href="/docs">Use FYAT</Button>}
+        hideOnScrollFrom="platform"
+      />
 
       <main>
         <HeroSection stats={stats} />

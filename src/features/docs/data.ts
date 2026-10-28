@@ -12,6 +12,13 @@ export const docsNav: readonly DocsNavGroup[] = [
     ],
   },
   {
+    title: "Try it live",
+    items: [
+      { slug: "playground", label: "Playground" },
+      { slug: "live-receipts", label: "Live receipts" },
+    ],
+  },
+  {
     title: "Core concepts",
     items: [
       { slug: "mandates", label: "Mandates" },
@@ -36,3 +43,11 @@ export const docsNav: readonly DocsNavGroup[] = [
 export const allDocs = docsNav.flatMap((group) =>
   group.items.map((item) => ({ ...item, group: group.title })),
 );
+
+/** Halaman interaktif: isinya komponen React, bukan teks dari pages.ts. */
+export const liveDocs = ["playground", "live-receipts"] as const;
+export type LiveDocSlug = (typeof liveDocs)[number];
+
+export function isLiveDoc(slug: string): slug is LiveDocSlug {
+  return (liveDocs as readonly string[]).includes(slug);
+}

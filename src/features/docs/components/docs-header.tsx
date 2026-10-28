@@ -2,18 +2,34 @@
 
 import { Search } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
-import { Button } from "@/components/ui/button";
+import { ConnectWalletButton } from "@/features/wallet";
+import { cn } from "@/lib/cn";
 
 import { allDocs } from "../data";
+
+const links = [
+  { href: "/", label: "Home" },
+  { href: "/docs", label: "Docs" },
+  { href: "/docs/builder-overview", label: "App" },
+] as const;
 
 export function DocsHeader() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+
+  const pathname = usePathname();
+
+  const isActive = (href: string) =>
+    href === "/docs"
+      ? pathname.startsWith("/docs") &&
+        !pathname.startsWith("/docs/playground") &&
+        !pathname.startsWith("/docs/live-receipts")
+      : pathname === href;
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -75,10 +91,23 @@ export function DocsHeader() {
         </form>
 
         <nav aria-label="Primary" className="ml-auto flex items-center gap-6">
-          <Link href="/" className="hidden text-xs text-fg-muted transition-colors hover:text-fg md:block">Home</Link>
-          <Link href="/docs" className="hidden text-xs text-fg md:block">Docs</Link>
-          <Link href="/builder" className="hidden text-xs text-fg-muted transition-colors hover:text-fg md:block">Builder</Link>
-          <Button size="sm" href="/builder">Use FYAT</Button>
+          {links.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "hidden text-xs transition-colors md:block",
+                  active ? "text-fg" : "text-fg-muted hover:text-fg",
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+          <ConnectWalletButton />
         </nav>
       </Container>
     </header>

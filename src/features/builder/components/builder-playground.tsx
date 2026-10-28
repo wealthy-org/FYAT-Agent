@@ -13,20 +13,23 @@ export function BuilderPlayground() {
   const simulation = useSimulation(mandateForm.config, attemptForm.attempt);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3 xl:items-start">
-      <MandateConfigurator form={mandateForm} />
+    // Ukuran mengikuti lebar wadahnya, bukan lebar layar.
+    <div className="@container">
+      <div className="grid gap-6 @3xl:grid-cols-2 @7xl:grid-cols-3 @7xl:items-start">
+        <MandateConfigurator form={mandateForm} />
 
-      <ExecutionFlowPreview
-        config={mandateForm.config}
-        attemptForm={attemptForm}
-        simulation={simulation}
-      />
-
-      <div className="min-w-0 lg:col-span-2 xl:col-span-1">
-        <CodePreview
+        <ExecutionFlowPreview
           config={mandateForm.config}
-          attempt={attemptForm.attempt}
+          attemptForm={attemptForm}
+          simulation={simulation}
         />
+
+        <div className="min-w-0 @3xl:col-span-2 @7xl:col-span-1">
+          <CodePreview
+            config={mandateForm.config}
+            attempt={attemptForm.attempt}
+          />
+        </div>
       </div>
     </div>
   );

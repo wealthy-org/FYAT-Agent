@@ -4,25 +4,26 @@ export const siteConfig = {
   description:
     "Builds complete Solana agent transaction flows with mandate authorization built into the execution path. Give agents execution rights, not your private key.",
   tagline: "Give agents execution rights, not your private key.",
-      nav: [
-    { label: "Builder", href: "/builder" },
+  nav: [
+    { label: "Builder", href: "/docs/playground" },
     { label: "Docs", href: "/docs" },
-    { label: "Receipts", href: "/builder#receipts" },
-    { label: "Security", href: "/#security" },
+    { label: "Receipts", href: "/docs/live-receipts" },
+    { label: "Security", href: "/docs/security" },
   ],
   footerGroups: [
     {
       title: "Product",
       links: [
         { label: "Platform", href: "/#platform" },
-        { label: "Builder", href: "/builder" },
-        { label: "Receipts", href: "/builder#receipts" },
+        { label: "Playground", href: "/docs/playground" },
+        { label: "Receipts", href: "/docs/live-receipts" },
       ],
     },
     {
       title: "Resources",
       links: [
-        { label: "Security", href: "/#security" },
+        { label: "Docs", href: "/docs" },
+        { label: "Security", href: "/docs/security" },
         { label: "Developers", href: "/#developers" },
       ],
     },

@@ -26,10 +26,9 @@ import {
   restoreEncryptedSession,
   saveEncryptedSession,
 } from "../lib/session-vault";
+import { FYAT_PROGRAM_ID } from "@/lib/program-id";
 
-const PROGRAM_ID = new PublicKey(
-  "Eu1b76PNqv5B8HbTsxrmirM3NfRy51bscQ5eUzgZVU6Y",
-);
+const PROGRAM_ID = new PublicKey(FYAT_PROGRAM_ID);
 
 type CreateResponse = {
   mandate?: { id?: string };

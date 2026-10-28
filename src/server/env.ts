@@ -1,8 +1,7 @@
 import "server-only";
-
 import { z } from "zod";
-
 import { isValidSolanaAddress } from "@/lib/solana";
+import { FYAT_PROGRAM_ID as IDL_PROGRAM_ID } from "@/lib/program-id";
 
 const solanaAddress = z
   .string()
@@ -44,9 +43,18 @@ export function getServerEnv(): ServerEnv {
       "https://api.devnet.solana.com",
   });
 
-  if (!parsed.success) {
+    if (!parsed.success) {
     throw new Error(
       `Invalid server environment variables:\n${z.prettifyError(parsed.error)}`,
+    );
+  }
+
+  // Env dan IDL harus menunjuk program yang sama. Setelah redeploy ke ID baru,
+  // salin IDL baru ke src/lib/idl/ dan perbarui FYAT_PROGRAM_ID.
+  if (parsed.data.FYAT_PROGRAM_ID !== IDL_PROGRAM_ID) {
+    throw new Error(
+      `FYAT_PROGRAM_ID (${parsed.data.FYAT_PROGRAM_ID}) != IDL address (${IDL_PROGRAM_ID}). ` +
+        "Update src/lib/idl/fyat_mandate.json or FYAT_PROGRAM_ID.",
     );
   }
 

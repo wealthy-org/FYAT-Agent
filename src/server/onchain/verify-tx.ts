@@ -22,10 +22,14 @@ export async function assertOwnerInstruction(
     throw new VerificationError(m);
   };
 
-  const tx = await connection.getTransaction(args.signature, {
-    commitment: "confirmed",
-    maxSupportedTransactionVersion: 0,
-  });
+  let tx = null;
+  for (let attempt = 0; attempt < 6 && !tx; attempt++) {
+    tx = await connection.getTransaction(args.signature, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
+    if (!tx) await new Promise((r) => setTimeout(r, 750));
+  }
   if (!tx) fail("Transaction not found");
   if (tx!.meta?.err) fail("Transaction failed onchain");
 

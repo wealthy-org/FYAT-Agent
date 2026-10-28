@@ -400,3 +400,245 @@ Steps 3 to 5 can already be previewed in the Builder playground. There the check
 ## License
 
 To be decided by the project owners.
+```
+fyat-agent
+├─ .prettierrc
+├─ AGENTS.md
+├─ db
+│  └─ migrations
+│     ├─ 0001_init.sql
+│     └─ 0002_api_security.sql
+├─ eslint.config.mjs
+├─ fides_landing_mockup.html
+├─ FYAT Agent.md
+├─ next.config.ts
+├─ onboarding_guide.md
+├─ package.json
+├─ pnpm-lock.yaml
+├─ pnpm-workspace.yaml
+├─ postcss.config.mjs
+├─ public
+│  ├─ brand
+│  │  └─ logo.jpeg
+│  ├─ file.svg
+│  ├─ globe.svg
+│  ├─ next.svg
+│  ├─ vercel.svg
+│  └─ window.svg
+├─ README.md
+├─ scripts
+│  ├─ api-smoke.ts
+│  ├─ check-vault-parity.ts
+│  ├─ devnet-e2e.ts
+│  ├─ lib
+│  │  └─ dev-payer.ts
+│  ├─ migrate.ts
+│  ├─ seed-demo.ts
+│  └─ setup-test-mint.ts
+├─ src
+│  ├─ app
+│  │  ├─ api
+│  │  │  ├─ mandates
+│  │  │  │  ├─ route.ts
+│  │  │  │  └─ [id]
+│  │  │  │     └─ revoke
+│  │  │  │        └─ route.ts
+│  │  │  ├─ receipts
+│  │  │  │  └─ route.ts
+│  │  │  └─ vaults
+│  │  │     └─ route.ts
+│  │  ├─ docs
+│  │  │  ├─ page.tsx
+│  │  │  └─ [slug]
+│  │  │     └─ page.tsx
+│  │  ├─ favicon.ico
+│  │  ├─ globals.css
+│  │  ├─ icon.tsx
+│  │  ├─ layout.tsx
+│  │  ├─ opengraph-image.tsx
+│  │  ├─ page.tsx
+│  │  ├─ robots.ts
+│  │  └─ sitemap.ts
+│  ├─ components
+│  │  ├─ layout
+│  │  │  ├─ container.tsx
+│  │  │  ├─ footer.tsx
+│  │  │  ├─ header-shell.tsx
+│  │  │  ├─ header.tsx
+│  │  │  ├─ logo.tsx
+│  │  │  ├─ mobile-nav.tsx
+│  │  │  ├─ nav-menu.tsx
+│  │  │  ├─ section.tsx
+│  │  │  └─ tone-section.tsx
+│  │  └─ ui
+│  │     ├─ button.tsx
+│  │     ├─ card.tsx
+│  │     ├─ code-block.tsx
+│  │     ├─ exec-heading.tsx
+│  │     ├─ eyebrow.tsx
+│  │     ├─ form-fields.tsx
+│  │     ├─ reveal.tsx
+│  │     ├─ section-heading.tsx
+│  │     ├─ segmented-control.tsx
+│  │     └─ tabs.tsx
+│  ├─ features
+│  │  ├─ comparison
+│  │  │  ├─ components
+│  │  │  │  └─ comparison-section.tsx
+│  │  │  ├─ data.ts
+│  │  │  ├─ index.ts
+│  │  │  └─ types.ts
+│  │  ├─ cta
+│  │  │  ├─ components
+│  │  │  │  └─ final-cta.tsx
+│  │  │  └─ index.ts
+│  │  ├─ developers
+│  │  │  ├─ components
+│  │  │  │  └─ developers-section.tsx
+│  │  │  ├─ data.ts
+│  │  │  └─ index.ts
+│  │  ├─ docs
+│  │  │  ├─ components
+│  │  │  │  ├─ docs-callout.tsx
+│  │  │  │  ├─ docs-code.tsx
+│  │  │  │  ├─ docs-header.tsx
+│  │  │  │  ├─ docs-heading.tsx
+│  │  │  │  ├─ docs-pager.tsx
+│  │  │  │  ├─ docs-shell.tsx
+│  │  │  │  ├─ docs-sidebar.tsx
+│  │  │  │  ├─ docs-title-card.tsx
+│  │  │  │  └─ docs-toc.tsx
+│  │  │  ├─ data.ts
+│  │  │  └─ pages.ts
+│  │  ├─ execution
+│  │  │  ├─ components
+│  │  │  │  ├─ before-after.tsx
+│  │  │  │  ├─ execution-graph.tsx
+│  │  │  │  ├─ receipt-preview.tsx
+│  │  │  │  └─ security-grid.tsx
+│  │  │  ├─ data.ts
+│  │  │  └─ index.ts
+│  │  ├─ hero
+│  │  │  ├─ components
+│  │  │  │  ├─ animated-counter.tsx
+│  │  │  │  ├─ hero-orb.tsx
+│  │  │  │  ├─ hero-section.tsx
+│  │  │  │  ├─ hero-static.tsx
+│  │  │  │  ├─ hero-stats.tsx
+│  │  │  │  └─ network-badge.tsx
+│  │  │  ├─ index.ts
+│  │  │  ├─ story
+│  │  │  │  ├─ components
+│  │  │  │  │  ├─ count-up.tsx
+│  │  │  │  │  ├─ hero-story.tsx
+│  │  │  │  │  ├─ node-field.tsx
+│  │  │  │  │  ├─ node-tooltip.tsx
+│  │  │  │  │  ├─ stats-strip.tsx
+│  │  │  │  │  └─ story-copy.tsx
+│  │  │  │  ├─ config.ts
+│  │  │  │  ├─ data.ts
+│  │  │  │  ├─ math.ts
+│  │  │  │  ├─ particles.ts
+│  │  │  │  ├─ phases.ts
+│  │  │  │  ├─ render-particles.ts
+│  │  │  │  └─ use-hero-story.ts
+│  │  │  └─ types.ts
+│  │  ├─ platform
+│  │  │  ├─ components
+│  │  │  │  ├─ aurora-background.tsx
+│  │  │  │  ├─ feature-card-stage.tsx
+│  │  │  │  ├─ feature-row.tsx
+│  │  │  │  ├─ feature-tabs.tsx
+│  │  │  │  └─ platform-section.tsx
+│  │  │  ├─ data.ts
+│  │  │  ├─ hooks
+│  │  │  │  ├─ use-feature-preview.ts
+│  │  │  │  └─ use-slide-intro.ts
+│  │  │  ├─ index.ts
+│  │  │  └─ types.ts
+│  │  ├─ protocol
+│  │  │  ├─ components
+│  │  │  │  └─ protocol-section.tsx
+│  │  │  ├─ data.ts
+│  │  │  ├─ index.ts
+│  │  │  └─ types.ts
+│  │  ├─ receipts
+│  │  │  ├─ api.ts
+│  │  │  ├─ components
+│  │  │  │  ├─ receipts-feed.tsx
+│  │  │  │  ├─ receipts-panel.tsx
+│  │  │  │  ├─ receipts-section.tsx
+│  │  │  │  ├─ receipts-status-badge.tsx
+│  │  │  │  └─ receipts-table.tsx
+│  │  │  ├─ constants.ts
+│  │  │  ├─ index.ts
+│  │  │  └─ types.ts
+│  │  └─ wallet
+│  │     ├─ components
+│  │     │  ├─ connect-wallet-button.tsx
+│  │     │  ├─ solana-provider.tsx
+│  │     │  └─ wallet-menu.tsx
+│  │     ├─ hooks
+│  │     │  └─ use-is-client.ts
+│  │     ├─ index.ts
+│  │     └─ wallet-modal.css
+│  ├─ hooks
+│  │  ├─ use-copy-to-clipboard.ts
+│  │  ├─ use-in-view.ts
+│  │  ├─ use-prefers-reduced-motion.ts
+│  │  └─ use-reveal.ts
+│  ├─ lib
+│  │  ├─ amount.ts
+│  │  ├─ async.ts
+│  │  ├─ auth-message.ts
+│  │  ├─ brand-image.ts
+│  │  ├─ cn.ts
+│  │  ├─ env.ts
+│  │  ├─ fonts.ts
+│  │  ├─ format.ts
+│  │  ├─ idl
+│  │  │  └─ fyat_mandate.json
+│  │  ├─ site-url.ts
+│  │  ├─ site.ts
+│  │  ├─ solana.ts
+│  │  └─ vault-address.ts
+│  └─ server
+│     ├─ api
+│     │  ├─ cursor.ts
+│     │  ├─ errors.ts
+│     │  ├─ handler.ts
+│     │  ├─ request.ts
+│     │  ├─ schemas.ts
+│     │  └─ serializers.ts
+│     ├─ auth
+│     │  ├─ authenticate.ts
+│     │  ├─ ed25519.ts
+│     │  └─ signed-request.ts
+│     ├─ db
+│     │  ├─ client.ts
+│     │  └─ mappers.ts
+│     ├─ env.ts
+│     ├─ models.ts
+│     ├─ repositories
+│     │  ├─ auth-nonces.ts
+│     │  ├─ maintenance.ts
+│     │  ├─ mandates.ts
+│     │  ├─ rate-limits.ts
+│     │  ├─ receipts.ts
+│     │  └─ vaults.ts
+│     ├─ security
+│     │  ├─ client-ip.ts
+│     │  └─ rate-limit.ts
+│     ├─ services
+│     │  ├─ public-stats.ts
+│     │  └─ receipt-feed.ts
+│     └─ solana
+│        └─ vault-address.ts
+├─ tsconfig.json
+└─ __MACOSX
+   ├─ ._fides_landing_mockup.html
+   ├─ ._FYAT Agent.md
+   ├─ ._logo.jpeg
+   └─ ._onboarding_guide.md
+
+```

@@ -5,14 +5,19 @@ import { ApiErrors } from "@/server/api/errors";
 import { createMandateBodySchema } from "@/server/api/schemas";
 import { serializeMandate } from "@/server/api/serializers";
 import { readSignedJson } from "@/server/auth/signed-request";
-import { insertMandate } from "@/server/repositories/mandates";
+import { getServerEnv } from "@/server/env";
+import { getConnection } from "@/server/onchain/connection";
+import { OnchainReadError } from "@/server/onchain/mandate-reader";
+import {
+  VerificationError,
+  verifyCreate,
+} from "@/server/onchain/verify-create";
+import { findMandateByPda, insertMandate } from "@/server/repositories/mandates";
 import { findVaultByPda } from "@/server/repositories/vaults";
 import { RATE_LIMITS } from "@/server/security/rate-limit";
 import { deriveVaultAddress } from "@/server/solana/vault-address";
 
 export const runtime = "nodejs";
-
-const MS_PER_HOUR = 3_600_000;
 
 export async function POST(req: NextRequest) {
   return handleApi(req, RATE_LIMITS.mandateWrite, async () => {
@@ -20,9 +25,18 @@ export async function POST(req: NextRequest) {
       req,
       createMandateBodySchema,
     );
-    const { sessionPubkey, config } = body;
+    const { sessionPubkey, config, mandatePda, createSignature } = body;
 
-    // Kunci agent tidak boleh sama dengan kunci owner.
+    // Program onchain hanya mengenal TRANSFER.
+    if (config.action !== "TRANSFER") {
+      throw ApiErrors.validation([
+        {
+          path: "config.action",
+          message: "Only TRANSFER mandates can be created onchain",
+        },
+      ]);
+    }
+
     if (sessionPubkey === wallet) {
       throw ApiErrors.validation([
         {
@@ -38,15 +52,67 @@ export async function POST(req: NextRequest) {
       throw ApiErrors.notFound("Vault not found. Register your vault first.");
     }
 
+    if (await findMandateByPda(mandatePda)) {
+      throw ApiErrors.validation([
+        { path: "mandatePda", message: "This mandate is already registered" },
+      ]);
+    }
+
+    const env = getServerEnv();
+
+    // Chain adalah sumber kebenaran: klien hanya melaporkan, server memverifikasi.
+    let verified;
+    try {
+      verified = await verifyCreate(getConnection(), {
+        ownerWallet: wallet,
+        mint: env.TOKEN_MINT,
+        programId: env.FYAT_PROGRAM_ID,
+        mandatePda,
+        createSignature,
+        sessionPubkey,
+        config: {
+          action: "TRANSFER",
+          recipient: config.recipient,
+          maxPerAction: config.maxPerAction,
+          maxTotal: config.maxTotal,
+          expiresInHours: config.expiresInHours,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof VerificationError ||
+        error instanceof OnchainReadError
+      ) {
+        throw ApiErrors.validation([
+          { path: "mandatePda", message: error.message },
+        ]);
+      }
+      throw error;
+    }
+
+    // Vault di DB harus sama dengan vault yang diverifikasi di chain.
+    if (verified.vaultPda !== vault.vaultPda) {
+      throw ApiErrors.validation([
+        { path: "mandatePda", message: "Mandate does not belong to your vault" },
+      ]);
+    }
+
+    const { onchain } = verified;
     const mandate = await insertMandate({
       vaultId: vault.id,
-      sessionPubkey,
-      action: config.action,
-      target: config.action === "SWAP" ? config.venue : config.recipient,
-      maxPerAction: config.maxPerAction,
-      maxTotal: config.maxTotal,
-      // Kedaluwarsa dihitung dengan jam SERVER, bukan jam klien.
-      expiresAt: new Date(Date.now() + config.expiresInHours * MS_PER_HOUR),
+      sessionPubkey: onchain.session,
+      action: "TRANSFER",
+      target: onchain.recipient,
+      maxPerAction: onchain.maxPerAction,
+      maxTotal: onchain.maxTotal,
+      // Semua nilai waktu dan batas dari chain, bukan dari klien atau jam server.
+      expiresAt: new Date(Number(onchain.expiresAt) * 1000),
+      createdAt: new Date(Number(onchain.createdAt) * 1000),
+      onchain: {
+        mandatePda: onchain.pda,
+        onchainId: onchain.id,
+        createSignature,
+      },
     });
 
     return NextResponse.json(

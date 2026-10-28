@@ -5,22 +5,47 @@ import { z } from "zod";
 import { mandateConfigSchema } from "@/features/builder/shared";
 import { isValidSolanaAddress } from "@/lib/solana";
 
-/** Body kosong: identitas sudah dibawa tanda tangan, tidak ada payload. */
+/** Format Base58 signature transaksi (64 byte → 86-88 karakter), sama dengan domain DB. */
+const SIGNATURE_RE = /^[1-9A-HJ-NP-Za-km-z]{86,88}$/;
+const solanaSignatureSchema = z
+  .string()
+  .trim()
+  .regex(SIGNATURE_RE, "Enter a valid transaction signature");
+
+const solanaAddressSchema = z
+  .string()
+  .trim()
+  .refine(isValidSolanaAddress, "Enter a valid Solana address");
+
+/** Dipakai endpoint yang memang tanpa payload. */
 export const emptyBodySchema = z.strictObject({});
 
 export const mandateIdParamsSchema = z.strictObject({ id: z.uuid() });
 
 /**
- * `config` memakai schema yang SAMA dengan form di browser (Step 6a),
- * jadi aturan klien dan server tidak mungkin berbeda.
- * vaultPda tidak ada di sini: server menurunkannya dari wallet penanda tangan.
+ * Create: owner sudah menandatangani dan mengirim transaksi di Phantom.
+ * Klien hanya melaporkan PDA dan signature. Server membaca akun dari chain
+ * dan mencocokkan owner, session, recipient, serta cap sebelum INSERT.
+ * `config` dipakai untuk membandingkan dengan isi akun onchain, bukan dipercaya.
  */
 export const createMandateBodySchema = z.strictObject({
-  sessionPubkey: z
-    .string()
-    .trim()
-    .refine(isValidSolanaAddress, "Enter a valid Solana address"),
+  sessionPubkey: solanaAddressSchema,
   config: mandateConfigSchema,
+  mandatePda: solanaAddressSchema,
+  createSignature: solanaSignatureSchema,
+});
+
+/** Revoke: owner menandatangani di Phantom, klien melaporkan signature-nya. */
+export const revokeMandateBodySchema = z.strictObject({
+  revokeSignature: solanaSignatureSchema,
+});
+
+/**
+ * Receipt dari eksekusi agent: key agent ada di browser, jadi klien
+ * melaporkan signature, dan server memverifikasinya di chain.
+ */
+export const recordExecutionBodySchema = z.strictObject({
+  txSignature: solanaSignatureSchema,
 });
 
 /** GET bersifat longgar: parameter tak dikenal diabaikan, bukan ditolak. */

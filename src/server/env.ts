@@ -23,6 +23,7 @@ const serverSchema = z.object({
     .default("http://localhost:3000"),
   FYAT_PROGRAM_ID: solanaAddress,
   TOKEN_MINT: solanaAddress,
+  SOLANA_RPC_URL: z.url(),
 });
 
 type ServerEnv = z.infer<typeof serverSchema>;
@@ -37,6 +38,10 @@ export function getServerEnv(): ServerEnv {
     APP_URL: process.env.APP_URL,
     FYAT_PROGRAM_ID: process.env.FYAT_PROGRAM_ID,
     TOKEN_MINT: process.env.NEXT_PUBLIC_TOKEN_MINT,
+    SOLANA_RPC_URL:
+      process.env.SOLANA_RPC_URL ??
+      process.env.NEXT_PUBLIC_SOLANA_RPC_URL ??
+      "https://api.devnet.solana.com",
   });
 
   if (!parsed.success) {

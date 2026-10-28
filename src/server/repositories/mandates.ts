@@ -49,14 +49,24 @@ export type NewMandate = {
   maxPerAction: bigint;
   maxTotal: bigint;
   expiresAt: Date;
+  /** Waktu pembuatan dari chain. Kosong = now() (jalur lama, DB-only). */
+  createdAt?: Date;
+  /** Rujukan ke akun onchain. Ketiga field selalu diisi bersama. */
+  onchain?: {
+    mandatePda: string;
+    onchainId: bigint;
+    createSignature: string;
+  };
 };
 
 export async function insertMandate(input: NewMandate): Promise<Mandate> {
   const rows = await query<MandateRow>(
     `INSERT INTO mandates AS m
        (vault_id, session_pubkey, allowed_action, allowed_target,
-        max_amount_per_action, max_total_budget, expires_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+        max_amount_per_action, max_total_budget, expires_at, created_at,
+        mandate_pda, onchain_id, create_signature)
+     VALUES ($1, $2, $3, $4, $5, $6, $7,
+             COALESCE($8::timestamptz, now()), $9, $10, $11)
      RETURNING ${COLUMNS}`,
     [
       input.vaultId,
@@ -66,17 +76,22 @@ export async function insertMandate(input: NewMandate): Promise<Mandate> {
       input.maxPerAction.toString(),
       input.maxTotal.toString(),
       input.expiresAt.toISOString(),
+      input.createdAt?.toISOString() ?? null,
+      input.onchain?.mandatePda ?? null,
+      input.onchain?.onchainId.toString() ?? null,
+      input.onchain?.createSignature ?? null,
     ],
   );
 
   return toMandate(requireRow(rows));
 }
 
-/** `id` harus UUID valid. Validasi dengan zod di route (Step 8) sebelum memanggil ini. */
-export async function findMandateById(id: string): Promise<Mandate | null> {
+export async function findMandateByPda(
+  mandatePda: string,
+): Promise<Mandate | null> {
   const rows = await query<MandateRow>(
-    `SELECT ${COLUMNS} FROM mandates AS m WHERE m.id = $1`,
-    [id],
+    `SELECT ${COLUMNS} FROM mandates AS m WHERE m.mandate_pda = $1`,
+    [mandatePda],
   );
 
   const row = firstRow(rows);
@@ -103,6 +118,50 @@ export async function revokeMandate(input: {
     [input.mandateId, input.ownerPubkey],
   );
 
+  const row = firstRow(rows);
+  return row ? toMandate(row) : null;
+}
+
+/** PDA onchain mandate, hanya bila mandate itu milik `ownerPubkey`. */
+export async function findOnchainRef(input: {
+  mandateId: string;
+  ownerPubkey: string;
+}): Promise<{ mandatePda: string | null } | null> {
+  const rows = await query<{ mandate_pda: string | null }>(
+    `SELECT m.mandate_pda
+       FROM mandates AS m
+       JOIN vaults AS v ON v.id = m.vault_id
+      WHERE m.id = $1 AND v.owner_pubkey = $2`,
+    [input.mandateId, input.ownerPubkey],
+  );
+  const row = firstRow(rows);
+  return row ? { mandatePda: row.mandate_pda } : null;
+}
+
+/** Revoke yang waktunya dan signature-nya berasal dari chain. */
+export async function revokeMandateOnchain(input: {
+  mandateId: string;
+  ownerPubkey: string;
+  revokedAt: Date;
+  revokeSignature: string;
+}): Promise<Mandate | null> {
+  const rows = await query<MandateRow>(
+    `UPDATE mandates AS m
+        SET revoked_at = $3, revoke_signature = $4
+       FROM vaults AS v
+      WHERE m.id = $1
+        AND m.vault_id = v.id
+        AND v.owner_pubkey = $2
+        AND m.revoked_at IS NULL
+        AND m.mandate_pda IS NOT NULL
+      RETURNING ${COLUMNS}`,
+    [
+      input.mandateId,
+      input.ownerPubkey,
+      input.revokedAt.toISOString(),
+      input.revokeSignature,
+    ],
+  );
   const row = firstRow(rows);
   return row ? toMandate(row) : null;
 }

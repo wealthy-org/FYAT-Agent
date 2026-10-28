@@ -7,10 +7,10 @@ export function Logo({ priority = false }: { priority?: boolean }) {
   return (
     <Link
       href="/"
-      className="flex items-center gap-3"
+      className="flex items-center gap-3.5"
       aria-label={`${siteConfig.name} home`}
     >
-      <span className="relative size-9 shrink-0 overflow-hidden rounded-xl border border-border-subtle bg-black">
+      <span className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-border-subtle bg-black">
         <Image
           src="/brand/logo.jpeg"
           alt=""
@@ -22,7 +22,7 @@ export function Logo({ priority = false }: { priority?: boolean }) {
           style={{ width: "202%", left: "-61%", top: "-52%" }}
         />
       </span>
-      <span className="font-display text-sm font-semibold tracking-wide">
+      <span className="font-display text-lg font-semibold tracking-wide">
         {siteConfig.name}
       </span>
     </Link>

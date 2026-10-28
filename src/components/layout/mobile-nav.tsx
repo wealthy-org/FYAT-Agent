@@ -33,7 +33,7 @@ export function MobileNav({ items, actions }: MobileNavProps) {
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={open ? "Close menu" : "Open menu"}
-        className="grid size-10 place-items-center rounded-full border border-border-subtle text-fg"
+                className="grid size-11 place-items-center rounded-full border border-border-subtle text-fg"
       >
         {open ? <X className="size-4" /> : <Menu className="size-4" />}
       </button>
@@ -52,7 +52,7 @@ export function MobileNav({ items, actions }: MobileNavProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-sm text-fg-muted hover:bg-surface hover:text-fg"
+                                className="rounded-lg px-3 py-3.5 text-base text-fg-muted hover:bg-surface hover:text-fg"
               >
                 {item.label}
               </a>

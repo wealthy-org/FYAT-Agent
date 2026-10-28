@@ -16,7 +16,7 @@ export function ConnectWalletButton() {
   // Server dan hydration pertama selalu render ini → tidak ada mismatch.
   if (!isClient) {
     return (
-      <Button size="sm" disabled>
+      <Button size="md" disabled>
         Connect Wallet
       </Button>
     );
@@ -36,7 +36,7 @@ export function ConnectWalletButton() {
   }
 
   return (
-    <Button size="sm" disabled={connecting} onClick={() => setVisible(true)}>
+    <Button size="md" disabled={connecting} onClick={() => setVisible(true)}>
       {connecting ? "Connecting…" : "Connect Wallet"}
     </Button>
   );

@@ -56,14 +56,14 @@ export function WalletMenu({ address, onDisconnect }: WalletMenuProps) {
     }
   };
 
-  const itemClass =
-    "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs text-fg-muted transition-colors hover:bg-surface-raised hover:text-fg";
+    const itemClass =
+    "flex w-full items-center gap-2.5 rounded-lg px-3 py-3 text-left text-sm text-fg-muted transition-colors hover:bg-surface-raised hover:text-fg";
 
   return (
     <div ref={containerRef} className="relative">
       <Button
         variant="secondary"
-        size="sm"
+        size="md"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-controls={menuId}
@@ -77,7 +77,7 @@ export function WalletMenu({ address, onDisconnect }: WalletMenuProps) {
       {open && (
         <div
           id={menuId}
-          className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border-subtle bg-canvas-deep p-1.5 shadow-glow"
+          className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-border-subtle bg-canvas-deep p-1.5 shadow-glow"
         >
           <button type="button" onClick={handleCopy} className={itemClass}>
             {copied ? (

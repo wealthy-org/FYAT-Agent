@@ -11,6 +11,7 @@ type ExecHeadingProps = {
   title: ReactNode;
   description?: string;
   tone: "dark" | "light";
+  size?: "md" | "lg";
   className?: string;
 };
 
@@ -21,16 +22,19 @@ export function ExecHeading({
   title,
   description,
   tone,
+  size = "md",
   className,
 }: ExecHeadingProps) {
   const dark = tone === "dark";
+  const large = size === "lg";
 
   return (
-    <div className={cn("max-w-2xl", className)}>
+    <div className={cn(large ? "max-w-3xl" : "max-w-2xl", className)}>
       <Reveal>
         <p
           className={cn(
-            "flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.18em]",
+            "flex items-center gap-2.5 font-mono uppercase tracking-[0.18em]",
+            large ? "text-xs" : "text-[11px]",
             dark ? "text-fg-subtle" : "text-ink-muted",
           )}
         >
@@ -45,7 +49,10 @@ export function ExecHeading({
       <Reveal delay={90}>
         <h2
           id={id}
-          className="mt-5 text-balance font-display text-4xl font-normal tracking-[-0.035em] md:text-6xl"
+          className={cn(
+            "mt-5 text-balance font-display font-normal tracking-[-0.035em]",
+            large ? "text-5xl md:text-7xl" : "text-4xl md:text-6xl",
+          )}
         >
           {title}
         </h2>
@@ -55,7 +62,8 @@ export function ExecHeading({
         <Reveal delay={180}>
           <p
             className={cn(
-              "mt-6 max-w-md text-pretty text-sm md:text-base",
+              "mt-6 text-pretty",
+              large ? "max-w-xl text-base md:text-lg" : "max-w-md text-sm md:text-base",
               dark ? "text-fg-muted" : "text-ink-muted",
             )}
           >

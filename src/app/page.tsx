@@ -22,7 +22,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header actions={<ConnectWalletButton />} />
+      <Header actions={<ConnectWalletButton />} hideOnScrollFrom="platform" />
 
       <main>
         <HeroSection stats={stats} />

@@ -46,10 +46,10 @@ export function DocsHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border-subtle/50 bg-canvas/70 backdrop-blur-md">
-      <Container size="wide" className="flex h-16 items-center gap-6">
+    <Container size="wide" className="flex h-20 items-center gap-8">
         <div className="flex items-center gap-3">
           <Logo />
-          <span className="rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-fg-subtle">
+          <span className="rounded-full border border-border-subtle px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
             Docs
           </span>
         </div>
@@ -69,17 +69,17 @@ export function DocsHeader() {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search the docs"
             aria-label="Search the docs"
-            className="h-10 w-full rounded-full border border-border-subtle bg-white/4 pl-10 pr-4 text-xs text-fg placeholder:text-fg-subtle focus:border-brand-400 focus:outline-none"
+            className="h-11 w-full rounded-full border border-border-subtle bg-white/4 pl-11 pr-4 text-sm text-fg placeholder:text-fg-subtle focus:border-brand-400 focus:outline-none"
           />
 
           {results.length > 0 && (
-            <ul className="absolute inset-x-0 top-12 overflow-hidden rounded-xl border border-border-subtle bg-canvas/95 p-1 backdrop-blur-md">
+            <ul className="absolute inset-x-0 top-14 overflow-hidden rounded-xl border border-border-subtle bg-canvas/95 p-1 backdrop-blur-md">
               {results.map((doc) => (
                 <li key={doc.slug}>
                   <button
                     type="button"
                     onClick={() => go(doc.slug)}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs text-fg-muted hover:bg-white/6 hover:text-fg"
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-fg-muted hover:bg-white/6 hover:text-fg"
                   >
                     {doc.label}
                     <span className="text-[10px] text-fg-subtle">{doc.group}</span>

@@ -27,6 +27,8 @@ CREATE UNIQUE INDEX mandates_create_signature_key
   ON mandates (create_signature) WHERE create_signature IS NOT NULL;
 CREATE UNIQUE INDEX mandates_revoke_signature_key
   ON mandates (revoke_signature) WHERE revoke_signature IS NOT NULL;
+CREATE UNIQUE INDEX mandate_receipts_tx_signature_unique
+    ON mandate_receipts (tx_signature) WHERE tx_signature IS NOT NULL;
 
 CREATE OR REPLACE FUNCTION guard_mandate_update() RETURNS trigger
 LANGUAGE plpgsql AS $$

@@ -24,6 +24,7 @@
     "@solana/wallet-adapter-react-ui": "^0.9.40",
     "@solana/wallet-adapter-solflare": "^0.6.34",
     "@solana/web3.js": "^1.99.0",
+    "bs58": "^6.0.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.61.0",
     "motion": "^14.7.0",

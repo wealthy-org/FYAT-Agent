@@ -56,7 +56,7 @@ export function FeatureTabs({
               if (lastPointer.current !== "mouse") onTogglePin(detail.id);
             }}
             className={cn(
-              "relative h-20 w-36 shrink-0 rounded-lg p-3 text-xs transition-colors",
+              "relative h-20 w-36 shrink-0 rounded-lg p-3 text-xs transition duration-200 hover:-translate-y-0.5 active:scale-[0.97]",
               activeId === detail.id
                 ? "bg-white/16 text-fg"
                 : "bg-white/6 text-fg-muted hover:bg-white/12",

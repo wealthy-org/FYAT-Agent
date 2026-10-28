@@ -180,12 +180,12 @@
 
 .hero-enter-title {
   animation: hero-enter 1s cubic-bezier(0.16, 1, 0.3, 1)
-    0.15s both;
+    1.5s both;
 }
 
 .hero-enter-description {
   animation: hero-enter 0.9s cubic-bezier(0.16, 1, 0.3, 1)
-    0.38s both;
+    1.75s both;
 }
 
 .hero-enter-glow {
@@ -324,5 +324,80 @@
   }
   to {
     transform: translate3d(10%, 8%, 0) scale(1.18);
+  }
+}
+
+/* Animasi tombol */
+@keyframes btn-shine {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@layer components {
+  .btn-motion {
+    transition:
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.3s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .btn-motion:active {
+    transform: scale(0.96);
+    transition-duration: 0.1s;
+  }
+
+  /* Hover hanya di perangkat dengan mouse, supaya tidak "lengket" di layar sentuh */
+  @media (hover: hover) {
+    .btn-motion:hover {
+      transform: scale(1.04);
+    }
+
+    .btn-motion:active {
+      transform: scale(0.96);
+    }
+  }
+
+  /* Kilau yang menyapu tombol saat hover */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      rgb(255 255 255 / 0.28) 50%,
+      transparent 65%
+    );
+    transform: translateX(-120%);
+  }
+
+  .btn-shine:hover::after {
+    animation: btn-shine 0.8s ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-motion {
+    transition: none;
+  }
+
+  .btn-motion:hover,
+  .btn-motion:active {
+    transform: none;
+  }
+
+  .btn-shine:hover::after {
+    animation: none;
   }
 }

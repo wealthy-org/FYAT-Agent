@@ -79,7 +79,7 @@ export function DocsHeader() {
                   <button
                     type="button"
                     onClick={() => go(doc.slug)}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-fg-muted hover:bg-white/6 hover:text-fg"
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-fg-muted transition hover:bg-white/6 hover:text-fg active:scale-[0.98]"
                   >
                     {doc.label}
                     <span className="text-[10px] text-fg-subtle">{doc.group}</span>

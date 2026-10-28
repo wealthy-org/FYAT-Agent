@@ -73,7 +73,7 @@ export function Tabs({ label, tabs }: TabsProps) {
               tabIndex={selected ? 0 : -1}
               onClick={() => setActiveIndex(index)}
               className={cn(
-                "-mb-px border-b-2 pb-3 text-xs font-medium transition-colors",
+                "-mb-px border-b-2 pb-3 text-xs font-medium transition active:scale-95",
                 selected
                   ? "border-brand-400 text-fg"
                   : "border-transparent text-fg-muted hover:text-fg",

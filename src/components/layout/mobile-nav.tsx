@@ -33,8 +33,7 @@ export function MobileNav({ items, actions }: MobileNavProps) {
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={open ? "Close menu" : "Open menu"}
-                className="grid size-11 place-items-center rounded-full border border-border-subtle text-fg"
-      >
+        className="grid size-11 place-items-center rounded-full border border-border-subtle text-fg transition duration-200 hover:border-border-strong hover:bg-surface-raised active:scale-90"      >
         {open ? <X className="size-4" /> : <Menu className="size-4" />}
       </button>
 

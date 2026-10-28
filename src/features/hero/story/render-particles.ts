@@ -1,5 +1,6 @@
 import {
   BRIGHTNESS,
+  INTRO,
   LIGHT,
   PALETTE,
   PARTICLES,
@@ -19,6 +20,8 @@ export type DrawState = {
   centerY: number;
   /** 0..1: seberapa jauh bola sudah pecah. */
   disperse: number;
+  gather: number;
+  fade: number;
   pointer: PointerState;
 };
 
@@ -65,7 +68,7 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
 
   return {
     draw(ctx, state) {
-      const { width, height, time, radius, disperse, pointer } = state;
+      const { width, height, time, radius, disperse, pointer, gather, fade } = state;
 
       ctx.clearRect(0, 0, width, height);
 
@@ -79,6 +82,7 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
       const sinY = Math.sin(angle);
 
       const dispersing = disperse > 0;
+      const gathering = gather > 0;
       const zoomedRadius = radius * (1 + PARTICLES.zoom * disperse * disperse);
       const originY = lerp(state.centerY, height / 2, easeInOutCubic(disperse));
       const spreadX = width * 0.56;
@@ -101,6 +105,12 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
         const e = dispersing
           ? easeInOutCubic(clamp((disperse - seed * 0.45) / 0.55))
           : 0;
+        
+        const g = gathering
+          ? easeInOutCubic(
+              clamp((gather - seed * INTRO.stagger) / (1 - INTRO.stagger)),
+            )
+          : 0;
 
         // Kecerahan: cahaya dari atas + tepi bola lebih terang, sisi belakang redup.
         const lambert = Math.max(0, rx * LIGHT.x + ry * LIGHT.y + rz * LIGHT.z);
@@ -114,6 +124,13 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
           const twinkle = 0.85 + 0.15 * Math.sin(time * 1.4 + seed * 50);
           const star = (BRIGHTNESS.starMin + BRIGHTNESS.starRange * seed) * twinkle;
           brightness = lerp(brightness, star, e);
+        }
+
+        // Saat mencar, partikel tampil sebagai bintang lalu menyala jadi bola.
+        if (g > 0) {
+          const twinkle = 0.85 + 0.15 * Math.sin(time * 1.4 + seed * 50);
+          const star = (BRIGHTNESS.starMin + BRIGHTNESS.starRange * seed) * twinkle;
+          brightness = lerp(brightness, star, g);
         }
 
         const alpha = keep[i] === 1 ? 1 : 1 - e;
@@ -134,6 +151,17 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
           height / 2 + scatter[i3 + 1] * spreadY + Math.sin(driftPhase) * 8,
           e,
         );
+
+        if (g > 0) {
+          const sx = scatter[i3] * spreadX * INTRO.spread;
+          const sy = scatter[i3 + 1] * spreadY * INTRO.spread;
+          const turn = g * INTRO.swirl;
+          const c = Math.cos(turn);
+          const s = Math.sin(turn);
+
+          x = lerp(x, width / 2 + sx * c - sy * s, g);
+          y = lerp(y, height / 2 + sx * s + sy * c, g);
+        }
 
         if (mouseActive) {
           const dx = x - pointer.x;
@@ -165,7 +193,7 @@ export function createParticleRenderer(field: ParticleField): ParticleRenderer {
       for (let b = 0; b < binCount; b++) {
         const size = b >= binCount - BIG_BINS ? PARTICLES.bigSize : PARTICLES.size;
 
-        ctx.globalAlpha = waveAlpha;
+        ctx.globalAlpha = waveAlpha * fade;
         ctx.fillStyle = BIN_STYLES[b];
         ctx.beginPath();
         for (let i = 0; i < count; i++) {

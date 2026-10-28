@@ -80,7 +80,7 @@ export function ReceiptPreview() {
             </ul>
 
             <Reveal delay={850} className="mt-8">
-              <Button href="/builder#receipts" variant="secondary">
+              <Button href="/docs/receipts" variant="secondary">
                 View live receipts
               </Button>
             </Reveal>

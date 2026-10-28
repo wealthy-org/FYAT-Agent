@@ -5,9 +5,9 @@ import { cn } from "@/lib/cn";
 
 const variants = {
   primary:
-    "bg-brand-500 text-white shadow-glow hover:bg-brand-400 active:bg-brand-600",
+    "btn-shine bg-brand-500 text-white shadow-glow hover:bg-brand-400 hover:shadow-[0_0_56px_-6px_rgb(168_85_247/0.85)] active:bg-brand-600",
   secondary:
-    "border border-border-subtle bg-surface text-fg hover:border-border-strong hover:bg-surface-raised",
+    "btn-shine border border-border-subtle bg-surface text-fg hover:border-border-strong hover:bg-surface-raised hover:shadow-glow",
   ghost: "text-fg-muted hover:text-fg",
 } as const;
 
@@ -47,8 +47,7 @@ export function Button(props: ButtonProps) {
   } = props;
 
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-full font-medium",
-    "transition-colors duration-200",
+    "btn-motion inline-flex items-center justify-center gap-2 rounded-full font-medium",
     "disabled:pointer-events-none disabled:opacity-50",
     variants[variant],
     sizes[size],

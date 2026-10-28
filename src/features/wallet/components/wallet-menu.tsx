@@ -57,7 +57,7 @@ export function WalletMenu({ address, onDisconnect }: WalletMenuProps) {
   };
 
     const itemClass =
-    "flex w-full items-center gap-2.5 rounded-lg px-3 py-3 text-left text-sm text-fg-muted transition-colors hover:bg-surface-raised hover:text-fg";
+      "flex w-full items-center gap-2.5 rounded-lg px-3 py-3 text-left text-sm text-fg-muted transition duration-200 hover:translate-x-0.5 hover:bg-surface-raised hover:text-fg active:scale-[0.98]";
 
   return (
     <div ref={containerRef} className="relative">

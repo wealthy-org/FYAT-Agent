@@ -25,7 +25,7 @@ export function FinalCta() {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button href="/docs/builder">Open Builder</Button>
+          <Button href="/docs/builder-overview">Open Builder</Button>
           <Button href="/docs" variant="secondary">
             Explore docs
           </Button>

@@ -76,7 +76,7 @@ export function BuilderOverview() {
                       onClick={() => setActive(i)}
                       aria-current={i === active ? "step" : undefined}
                       className={cn(
-                        "font-mono text-[11px] transition-colors duration-500",
+                        "font-mono text-[11px] transition-[color,scale] duration-300 active:scale-95",
                         i === active
                           ? "text-brand-600"
                           : i < active
@@ -115,7 +115,7 @@ export function BuilderOverview() {
           </Reveal>
 
           <Reveal delay={200} className="mt-8 flex justify-center">
-            <Button href="/builder">Open Builder</Button>
+            <Button href="/docs/builder-overview">Open Builder</Button>
           </Reveal>
         </div>
       </Container>

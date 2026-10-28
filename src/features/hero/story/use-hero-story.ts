@@ -3,15 +3,16 @@
 
 import { useEffect, useRef } from "react";
 
-import { PARTICLES, PHASES, SPHERE, STORY } from "./config";
+import { INTRO, PARTICLES, PHASES, SPHERE, STORY } from "./config";
 import { nodeHint, storyNodes } from "./data";
-import { clamp } from "./math";
+import { clamp, segment, smoothstep } from "./math";
 import { createParticleField, type ParticleField } from "./particles";
 import { computeStoryFrame, nodeAppear } from "./phases";
 import {
   createParticleRenderer,
   type ParticleRenderer,
 } from "./render-particles";
+
 
 type Tier = "mobile" | "desktop";
 
@@ -84,6 +85,8 @@ export function useHeroStory(
     let smoothed = 0;
     let lastTime = 0;
     let frameId = 0;
+    let introStart = -1;
+    let introSkipped = false;
 
     const hoverMix = new Float32Array(storyNodes.length);
     let tipIndex = -1;
@@ -135,6 +138,15 @@ export function useHeroStory(
       if (width === 0 || height === 0 || !renderer) return;
 
       const story = computeStoryFrame(progress);
+
+      if (introStart < 0) introStart = time;
+
+      const introT = introSkipped
+        ? 1
+        : clamp((time - introStart - INTRO.delay) / INTRO.duration);
+      const gather = 1 - introT;
+      const fade = introSkipped ? 1 : clamp((time - introStart) / 0.5);
+      const reveal = smoothstep(segment(introT, INTRO.reveal));
       
       const statsTransition = clamp(
         (progress - PHASES.copy2In[0]) /
@@ -178,12 +190,14 @@ export function useHeroStory(
         centerX,
         centerY,
         disperse: story.disperse,
+        gather,
+        fade,
         pointer,
       });
 
       setLayer(
         introRef.current,
-        story.intro.opacity,
+        story.intro.opacity * reveal,
         story.intro.shift,
       );
 
@@ -210,7 +224,7 @@ export function useHeroStory(
       if (logo) {
         const half = (radius * SPHERE.logoScale) / 2;
 
-        logo.style.opacity = story.logo.opacity.toFixed(3);
+        logo.style.opacity = (story.logo.opacity * reveal).toFixed(3);
 
         logo.style.transform =
           `translate3d(${(centerX - half).toFixed(1)}px, ` +
@@ -429,6 +443,8 @@ export function useHeroStory(
 
     layout();
     smoothed = readTarget();
+
+    introSkipped = smoothed > 0.02;
 
     resize.observe(canvas);
     visibility.observe(container);

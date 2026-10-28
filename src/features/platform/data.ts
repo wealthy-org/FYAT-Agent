@@ -53,7 +53,7 @@ export const platformFeatures: readonly FeatureRowData[] = [
         body: "Every attempt, allowed or blocked, is recorded as a public receipt.",
       },
     ],
-    cta: { label: "Open Builder", href: "/builder" },
+    cta: { label: "Open Builder", href: "/docs/builder-overview" },
   },
   {
     id: "mandate",
@@ -106,7 +106,7 @@ export const platformFeatures: readonly FeatureRowData[] = [
         body: "The owner can revoke the session at any moment. The agent loses its rights.",
       },
     ],
-    cta: { label: "Explore protocol", href: "/#security" },
+    cta: { label: "Explore protocol", href: "/docs/security" },
   },
   {
     id: "vault",
@@ -154,6 +154,6 @@ export const platformFeatures: readonly FeatureRowData[] = [
         body: "Each attempt leaves a receipt that links to the Solana Explorer.",
       },
     ],
-    cta: { label: "Read the docs", href: "/#developers" },
+    cta: { label: "Read the docs", href: "/docs" },
   },
 ];

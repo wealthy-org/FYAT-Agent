@@ -60,7 +60,7 @@ export function CodeBlock({ code, filename, label }: CodeBlockProps) {
         <button
           type="button"
           onClick={() => void copy(code)}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-fg-muted transition-colors hover:bg-surface-raised hover:text-fg"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-fg-muted transition duration-200 hover:bg-surface-raised hover:text-fg active:scale-95"
         >
           {copied ? (
             <Check aria-hidden="true" className="size-3.5 text-success" />

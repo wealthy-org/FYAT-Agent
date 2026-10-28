@@ -20,7 +20,7 @@ export function DocsCode({ code, label }: DocsCodeProps) {
         type="button"
         onClick={() => void copy(code)}
         aria-label={copied ? "Copied" : "Copy code"}
-        className="absolute right-3 top-3 grid size-8 place-items-center rounded-md text-fg-muted opacity-0 transition hover:bg-white/10 hover:text-fg focus-visible:opacity-100 group-hover:opacity-100"
+        className="absolute right-3 top-3 grid size-8 place-items-center rounded-md text-fg-muted opacity-0 transition hover:bg-white/10 hover:text-fg focus-visible:opacity-100 group-hover:opacity-100 active:scale-90"
       >
         {copied ? (
           <Check aria-hidden="true" className="size-4 text-success" />

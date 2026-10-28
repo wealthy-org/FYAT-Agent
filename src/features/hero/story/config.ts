@@ -53,6 +53,22 @@ export const PARTICLES = {
   starRatio: 0.32,
 } as const;
 
+/** Animasi masuk: partikel mencar lalu berkumpul jadi bola. */
+export const INTRO = {
+  /** Jeda sebelum partikel mulai berkumpul (detik). */
+  delay: 0.2,
+  /** Lama partikel berkumpul (detik). */
+  duration: 2.4,
+  /** Seberapa jauh partikel mencar di awal (dikali lebar/tinggi layar). */
+  spread: 0.9,
+  /** Putaran spiral saat berkumpul (radian). 0 = lurus ke pusat. */
+  swirl: 1.4,
+  /** Selisih waktu tiba antar partikel (0..1). Makin besar = makin bergelombang. */
+  stagger: 0.45,
+  /** Rentang progres intro tempat logo, glow, dan teks muncul. */
+  reveal: [0.5, 1],
+} as const;
+
 /** Arah cahaya (sudah dinormalisasi): dari kiri-atas, condong ke penonton. */
 export const LIGHT = { x: -0.291, y: 0.825, z: 0.485 } as const;
 

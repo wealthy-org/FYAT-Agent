@@ -165,3 +165,40 @@ export async function revokeMandateOnchain(input: {
   const row = firstRow(rows);
   return row ? toMandate(row) : null;
 }
+
+export async function findExecutionRef(input: {
+  mandateId: string;
+  ownerPubkey: string;
+}): Promise<{
+  mandatePda: string | null;
+  sessionPubkey: string;
+  action: MandateAction;
+  target: string;
+} | null> {
+  const rows = await query<{
+    mandate_pda: string | null;
+    session_pubkey: string;
+    allowed_action: MandateAction;
+    allowed_target: string;
+  }>(
+    `SELECT m.mandate_pda,
+            m.session_pubkey,
+            m.allowed_action,
+            m.allowed_target
+       FROM mandates AS m
+       JOIN vaults AS v ON v.id = m.vault_id
+      WHERE m.id = $1
+        AND v.owner_pubkey = $2`,
+    [input.mandateId, input.ownerPubkey],
+  );
+
+  const row = firstRow(rows);
+  if (!row) return null;
+
+  return {
+    mandatePda: row.mandate_pda,
+    sessionPubkey: row.session_pubkey,
+    action: row.allowed_action,
+    target: row.allowed_target,
+  };
+}

@@ -78,6 +78,7 @@ async function run(): Promise<void> {
         await client.query("COMMIT");
       } catch (error) {
         await client.query("ROLLBACK");
+        console.error("Migration failed:", error);
         throw error;
       }
 

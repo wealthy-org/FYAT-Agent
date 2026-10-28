@@ -2,7 +2,7 @@ import "server-only";
 
 import type { MandateAction } from "@/features/builder";
 
-import { firstRow, query, requireRow } from "../db/client";
+import { firstRow, isUniqueViolation, query, requireRow } from "../db/client";
 import { toBigInt, toDate } from "../db/mappers";
 import type { Receipt, ReceiptStatus, ReceiptWithSession } from "../models";
 
@@ -63,29 +63,77 @@ function clampLimit(limit: number): number {
  *
  * Catatan: ini cermin pembukuan. Penegak yang sebenarnya adalah program onchain (Step 12).
  */
+/**
+ * Mencatat eksekusi yang SUDAH sukses di chain, dan menyelaraskan `current_spent`
+ * dengan pengeluaran kumulatif menurut chain (hanya naik).
+ *
+ * Tidak ada pemeriksaan revoke, kedaluwarsa, atau budget di sini: chain yang
+ * menegakkan semuanya saat transaksi terjadi, dan DB hanya cermin pembukuan.
+ * Hasil null = signature ini sudah pernah dicatat, atau mandate tidak ada.
+ */
 export async function recordSuccess(input: {
   mandateId: string;
   amount: bigint;
   target: string;
   txSignature: string;
+  /** Pengeluaran kumulatif mandate menurut chain saat pencatatan. */
+  onchainSpent: bigint;
+}): Promise<Receipt | null> {
+  if (input.amount <= 0n) return null;
+
+  try {
+    const rows = await query<ReceiptRow>(
+      `WITH signature_lock AS MATERIALIZED (
+         SELECT pg_advisory_xact_lock(
+           hashtextextended($4::text, 0)
+         )
+       ),
+       recorded AS (
+         UPDATE mandates AS m
+            SET current_spent = GREATEST(m.current_spent, $5::numeric)
+           FROM signature_lock
+          WHERE m.id = $1
+            AND NOT EXISTS (
+              SELECT 1
+                FROM mandate_receipts AS existing
+               WHERE existing.tx_signature = $4
+            )
+         RETURNING m.id, m.allowed_action
+       )
+       INSERT INTO mandate_receipts AS r
+         (mandate_id, action, amount, target, tx_signature, status)
+       SELECT id, allowed_action, $2::numeric, $3::text, $4::text, 'SUCCESS'
+         FROM recorded
+       RETURNING ${COLUMNS}`,
+      [
+        input.mandateId,
+        input.amount.toString(),
+        input.target,
+        input.txSignature,
+        input.onchainSpent.toString(),
+      ],
+    );
+
+    const row = firstRow(rows);
+    return row ? toReceipt(row) : null;
+  } catch (error) {
+    // UNIQUE violation membatalkan seluruh statement, termasuk pembaruan `current_spent`.
+    if (isUniqueViolation(error)) return null;
+    throw error;
+  }
+}
+
+/** Receipt untuk signature tertentu di bawah mandate tertentu. Dipakai agar pencatatan idempoten. */
+export async function findReceiptBySignature(input: {
+  mandateId: string;
+  txSignature: string;
 }): Promise<Receipt | null> {
   const rows = await query<ReceiptRow>(
-    `WITH spent AS (
-       UPDATE mandates
-          SET current_spent = current_spent + $2::numeric
-        WHERE id = $1
-          AND revoked_at IS NULL
-          AND expires_at > now()
-          AND $2::numeric <= max_amount_per_action
-          AND current_spent + $2::numeric <= max_total_budget
-        RETURNING id, allowed_action
-     )
-     INSERT INTO mandate_receipts AS r
-       (mandate_id, action, amount, target, tx_signature, status)
-     SELECT id, allowed_action, $2::numeric, $3::text, $4::text, 'SUCCESS'
-       FROM spent
-     RETURNING ${COLUMNS}`,
-    [input.mandateId, input.amount.toString(), input.target, input.txSignature],
+    `SELECT ${COLUMNS}
+       FROM mandate_receipts AS r
+      WHERE r.mandate_id = $1
+        AND r.tx_signature = $2`,
+    [input.mandateId, input.txSignature],
   );
 
   const row = firstRow(rows);

@@ -27,7 +27,59 @@ export type VerifiedExecution = {
   target: string;
   sessionPubkey: string;
   mandatePda: string;
+  /** Pengeluaran kumulatif mandate menurut chain, setelah transaksi ini. */
+  onchainSpent: bigint;
 };
+
+type TokenBalanceEntry = {
+  accountIndex: number;
+  mint: string;
+  owner?: string;
+  uiTokenAmount: {
+    amount: string;
+  };
+};
+
+function getTokenBalance(
+  balances: TokenBalanceEntry[] | null | undefined,
+  accountIndex: number,
+  mint: string,
+  expectedOwner: string,
+  allowMissing = false,
+): bigint {
+  const matches = balances?.filter(
+    (item) =>
+      item.accountIndex === accountIndex &&
+      item.mint === mint,
+  );
+
+  if (!matches || matches.length === 0) {
+    if (allowMissing) return 0n;
+
+    throw new ExecutionVerificationError(
+      "Token balance metadata is missing",
+    );
+  }
+
+  if (matches.length !== 1) {
+    throw new ExecutionVerificationError(
+      "Token balance metadata is ambiguous",
+    );
+  }
+
+  const balance = matches[0];
+
+  if (
+    balance.owner !== undefined &&
+    balance.owner !== expectedOwner
+  ) {
+    throw new ExecutionVerificationError(
+      "Token account owner does not match the expected owner",
+    );
+  }
+
+  return BigInt(balance.uiTokenAmount.amount);
+}
 
 export async function verifyExecution(
   connection: Connection,
@@ -36,6 +88,7 @@ export async function verifyExecution(
     programId: string;
     mint: string;
     mandatePda: string;
+    sessionPubkey: string;
   },
 ): Promise<VerifiedExecution> {
   const tx = await connection.getTransaction(input.signature, {
@@ -55,34 +108,14 @@ export async function verifyExecution(
     );
   }
 
-  const blockTime = tx.blockTime;
-
-  if (blockTime === null || blockTime === undefined) {
-    throw new ExecutionVerificationError(
-      "Transaction block time is unavailable",
-    );
-  }
-
+    // Sengaja TIDAK ada pemeriksaan status mandate "sekarang" (dicabut/kedaluwarsa).
+  // Transaksi ini sudah sukses di chain, artinya program menegakkan semua aturan
+  // pada saat eksekusi. Membandingkan dengan keadaan hari ini akan menolak eksekusi
+  // yang sah tetapi dicatat setelah owner mencabut mandate atau setelah kedaluwarsa.
   const mandate = await readMandate(connection, {
     mandatePda: input.mandatePda,
     programId: input.programId,
   });
-
-  if (mandate.revokedAt !== 0n) {
-    throw new ExecutionVerificationError(
-      "Mandate has been revoked",
-    );
-  }
-
-  if (BigInt(blockTime) >= mandate.expiresAt) {
-    throw new ExecutionVerificationError(
-      "Mandate had expired when the transaction was processed",
-    );
-  }
-
-  if (BigInt(Math.floor(Date.now() / 1000)) >= mandate.expiresAt) {
-    throw new ExecutionVerificationError("Mandate has expired");
-  }
 
   const message = tx.transaction.message;
 
@@ -90,7 +123,14 @@ export async function verifyExecution(
     accountKeysFromLookups: tx.meta?.loadedAddresses ?? undefined,
   });
 
-  const session = new PublicKey(mandate.session);
+const session = new PublicKey(mandate.session);
+const expectedSession = new PublicKey(input.sessionPubkey);
+
+if (!session.equals(expectedSession)) {
+  throw new ExecutionVerificationError(
+    "Session public key does not match the mandate",
+  );
+}
   const program = new PublicKey(input.programId);
   const mint = new PublicKey(input.mint);
   const vault = new PublicKey(mandate.vault);
@@ -193,9 +233,65 @@ export async function verifyExecution(
     );
   }
 
-  if (mandate.spent + amount > mandate.maxTotal) {
+    const meta = tx.meta;
+
+  if (!meta) {
     throw new ExecutionVerificationError(
-      "Transfer exceeds the mandate's remaining budget",
+      "Transaction metadata is unavailable",
+    );
+  }
+
+  const accountIndexes = ix.accountKeyIndexes;
+  const vaultTokenIndex = accountIndexes[4];
+  const destinationTokenIndex = accountIndexes[5];
+
+  if (
+    vaultTokenIndex === undefined ||
+    destinationTokenIndex === undefined
+  ) {
+    throw new ExecutionVerificationError(
+      "Token account indexes are unavailable",
+    );
+  }
+
+  const preVault = getTokenBalance(
+    meta.preTokenBalances,
+    vaultTokenIndex,
+    input.mint,
+    mandate.vault,
+  );
+
+  const postVault = getTokenBalance(
+    meta.postTokenBalances,
+    vaultTokenIndex,
+    input.mint,
+    mandate.vault,
+  );
+
+  const preDestination = getTokenBalance(
+    meta.preTokenBalances,
+    destinationTokenIndex,
+    input.mint,
+    mandate.recipient,
+    true,
+  );
+
+  const postDestination = getTokenBalance(
+    meta.postTokenBalances,
+    destinationTokenIndex,
+    input.mint,
+    mandate.recipient,
+  );
+
+  if (preVault - postVault !== amount) {
+    throw new ExecutionVerificationError(
+      "Vault token balance change does not match the transfer amount",
+    );
+  }
+
+  if (postDestination - preDestination !== amount) {
+    throw new ExecutionVerificationError(
+      "Recipient token balance change does not match the transfer amount",
     );
   }
 
@@ -204,5 +300,6 @@ export async function verifyExecution(
     target: mandate.recipient,
     sessionPubkey: mandate.session,
     mandatePda: mandate.pda,
+    onchainSpent: mandate.spent,
   };
 }

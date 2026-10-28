@@ -1,4 +1,4 @@
-import type { SimulationState } from "./simulation/types";
+﻿import type { SimulationState } from "./simulation/types";
 import { describeTargets, evaluatePolicy, formatAmount } from "./policy";
 import type { AgentAttempt, MandateConfig, PolicyCheck } from "./types";
 
@@ -31,7 +31,7 @@ const TITLES = {
 } as const satisfies Record<FlowStepId, string>;
 
 const EXECUTE_PENDING =
-  "Session key signs; the program enforces limits onchain (Step 12).";
+  "On-chain execution is not connected yet. No mandate transfer is submitted.";
 
 type StepExtras = Pick<FlowStep, "checks" | "logs">;
 
@@ -75,7 +75,7 @@ function simulationSteps(simulation: SimulationState): [FlowStep, FlowStep] {
 
   if (simulation.status === "running") {
     return [
-      makeStep("simulate", "running", "Simulating on Solana RPC…"),
+      makeStep("simulate", "running", "Simulating on Solana RPCâ€¦"),
       executePending,
     ];
   }
@@ -158,3 +158,4 @@ export function buildFlowSteps(
 
   return [build, verify, ...simulationSteps(simulation)];
 }
+

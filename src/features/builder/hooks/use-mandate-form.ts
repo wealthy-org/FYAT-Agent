@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
@@ -7,7 +7,7 @@ import { mandateConfigSchema } from "../schema";
 import type { MandateFieldName, MandateFormValues } from "../types";
 
 const INITIAL_VALUES: MandateFormValues = {
-  action: "SWAP",
+  action: "TRANSFER",
   venue: "METEORA_DAMM",
   recipient: "",
   maxPerAction: "5",

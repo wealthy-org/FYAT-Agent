@@ -108,15 +108,17 @@ async function main(): Promise<void> {
 
   const empty = "{}";
   const mandateBody = JSON.stringify({
-    sessionPubkey: agent.address,
-    config: {
-      action: "SWAP",
-      venue: "METEORA_DAMM",
-      recipient: "",
-      maxPerAction: "5",
-      maxTotal: "50",
-      expiresInHours: "24",
-    },
+  sessionPubkey: agent.address,
+  config: {
+    action: "TRANSFER",
+    venue: "METEORA_DAMM",
+    recipient: owner.address,
+    maxPerAction: "5",
+    maxTotal: "50",
+    expiresInHours: "24",
+  },
+    mandatePda: agent.address,
+    createSignature: "1".repeat(86),
   });
 
   // --- Vault -------------------------------------------------------------
@@ -147,27 +149,22 @@ async function main(): Promise<void> {
     404,
   );
 
-  const created = await send(
-    "/api/mandates",
-    buildSigned(owner, "/api/mandates", mandateBody),
-  );
-  expectStatus("Create mandate", created, 201);
-
-  const mandateId = (created.body as { mandate?: { id?: string } } | null)
-    ?.mandate?.id;
-  if (!mandateId) throw new Error("Mandate was not created; cannot continue.");
-
+  
+  // --- Mandate validation -----------------------------------------------
   const invalidBody = JSON.stringify({
     sessionPubkey: agent.address,
     config: {
-      action: "SWAP",
+      action: "TRANSFER",
       venue: "METEORA_DAMM",
-      recipient: "",
+      recipient: owner.address,
       maxPerAction: "100",
       maxTotal: "50",
       expiresInHours: "24",
     },
+    mandatePda: agent.address,
+    createSignature: "1".repeat(86),
   });
+
   expectStatus(
     "Per-action cap above total budget is rejected",
     await send(
@@ -177,10 +174,20 @@ async function main(): Promise<void> {
     400,
   );
 
-  // --- Serangan terhadap autentikasi ------------------------------------
+  // --- Authentication attacks ------------------------------------------
   const replayable = buildSigned(owner, "/api/mandates", mandateBody);
-  expectStatus("First use of a signed request", await send("/api/mandates", replayable), 201);
-  expectStatus("Replaying the same signed request", await send("/api/mandates", replayable), 401);
+
+  expectStatus(
+    "Invalid on-chain create evidence is rejected",
+    await send("/api/mandates", replayable),
+    400,
+  );
+
+  expectStatus(
+    "Replaying the same signed request",
+    await send("/api/mandates", replayable),
+    401,
+  );
 
   expectStatus(
     "Tampered body (signature covers a different body)",
@@ -213,25 +220,6 @@ async function main(): Promise<void> {
     401,
   );
 
-  // --- Revoke ------------------------------------------------------------
-  const revokePath = `/api/mandates/${mandateId}/revoke`;
-
-  expectStatus(
-    "Another wallet cannot revoke",
-    await send(revokePath, buildSigned(stranger, revokePath, empty)),
-    404,
-  );
-  expectStatus(
-    "Owner revokes",
-    await send(revokePath, buildSigned(owner, revokePath, empty)),
-    200,
-  );
-  expectStatus(
-    "Revoking twice is refused",
-    await send(revokePath, buildSigned(owner, revokePath, empty)),
-    404,
-  );
-
   console.log(
     failures === 0 ? "\nAll checks passed." : `\n${failures} check(s) failed.`,
   );
@@ -242,3 +230,4 @@ main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
 });
+

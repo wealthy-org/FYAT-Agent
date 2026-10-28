@@ -30,7 +30,47 @@ export class OnchainReadError extends Error {
   }
 }
 
-const big = (value: { toString(): string }): bigint => BigInt(value.toString());
+function decodedField(
+  decoded: Record<string, unknown>,
+  snake: string,
+  camel: string,
+): unknown {
+  return decoded[camel] ?? decoded[snake];
+}
+function readBig(value: unknown, field: string): bigint {
+  if (
+    value === undefined ||
+    value === null ||
+    (typeof value !== "object" && typeof value !== "number" && typeof value !== "bigint" && typeof value !== "string")
+  ) {
+    throw new OnchainReadError(
+      `Mandate field "${field}" tidak ditemukan atau tidak valid. Periksa IDL dan layout akun yang ter-deploy.`,
+    );
+  }
+
+  try {
+    return BigInt(value.toString());
+  } catch {
+    throw new OnchainReadError(
+      `Mandate field "${field}" bukan bilangan yang valid.`,
+    );
+  }
+}
+
+function readPublicKey(value: unknown, field: string): PublicKey {
+  if (
+    value === undefined ||
+    value === null ||
+    typeof value !== "object" ||
+    typeof (value as { toBase58?: unknown }).toBase58 !== "function"
+  ) {
+    throw new OnchainReadError(
+      `Mandate field "${field}" tidak ditemukan atau bukan PublicKey.`,
+    );
+  }
+
+  return value as PublicKey;
+}
 
 /**
  * Membaca akun Mandate dari chain dan memastikan akun itu asli:
@@ -45,41 +85,55 @@ export async function readMandate(
   const programId = new PublicKey(args.programId);
 
   const info = await connection.getAccountInfo(pda, "confirmed");
-  if (!info) throw new OnchainReadError("Mandate account not found on chain");
+
+  if (!info) {
+    throw new OnchainReadError("Mandate account not found on chain");
+  }
+
   if (!info.owner.equals(programId)) {
-    throw new OnchainReadError("Account is not owned by the mandate program");
+    throw new OnchainReadError(
+      "Account is not owned by the mandate program",
+    );
   }
 
   let decoded: Record<string, unknown>;
+
   try {
     decoded = coder.decode("Mandate", info.data) as Record<string, unknown>;
   } catch {
-    throw new OnchainReadError("Account is not a Mandate");
+    throw new OnchainReadError(
+      "Account is not a Mandate. Periksa IDL yang digunakan aplikasi.",
+    );
   }
 
-  const vault = decoded.vault as PublicKey;
-  const id = big(decoded.id as { toString(): string });
+  const vaultKey = readPublicKey(decoded.vault, "vault");
+  const id = readBig(decoded.id, "id");
 
   const expected = findMandatePda({
-    vault: vault.toBase58(),
+    vault: vaultKey.toBase58(),
     id,
     programId: args.programId,
   });
+
   if (expected !== pda.toBase58()) {
-    throw new OnchainReadError("Mandate PDA does not match its vault and id");
+    throw new OnchainReadError(
+      "Mandate PDA does not match its vault and id",
+    );
   }
 
   return {
     pda: pda.toBase58(),
-    vault: vault.toBase58(),
+    vault: vaultKey.toBase58(),
     id,
-    session: (decoded.session as PublicKey).toBase58(),
-    recipient: (decoded.recipient as PublicKey).toBase58(),
-    maxPerAction: big(decoded.maxPerAction as { toString(): string }),
-    maxTotal: big(decoded.maxTotal as { toString(): string }),
-    spent: big(decoded.spent as { toString(): string }),
-    createdAt: big(decoded.createdAt as { toString(): string }),
-    expiresAt: big(decoded.expiresAt as { toString(): string }),
-    revokedAt: big(decoded.revokedAt as { toString(): string }),
+    session: readPublicKey(decoded.session, "session").toBase58(),
+    recipient: readPublicKey(decoded.recipient, "recipient").toBase58(),
+    maxPerAction: readBig(decodedField(decoded, "max_per_action", "maxPerAction"), "maxPerAction"),
+    maxTotal: readBig(decodedField(decoded, "max_total", "maxTotal"), "maxTotal"),
+    spent: readBig(decoded.spent, "spent"),
+    createdAt: readBig(decodedField(decoded, "created_at", "createdAt"), "createdAt"),
+    expiresAt: readBig(decodedField(decoded, "expires_at", "expiresAt"), "expiresAt"),
+    revokedAt: readBig(decodedField(decoded, "revoked_at", "revokedAt"), "revokedAt"),
   };
 }
+
+

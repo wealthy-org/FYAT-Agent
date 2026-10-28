@@ -27,30 +27,39 @@ CREATE UNIQUE INDEX mandates_create_signature_key
   ON mandates (create_signature) WHERE create_signature IS NOT NULL;
 CREATE UNIQUE INDEX mandates_revoke_signature_key
   ON mandates (revoke_signature) WHERE revoke_signature IS NOT NULL;
-CREATE UNIQUE INDEX mandate_receipts_tx_signature_unique
-    ON mandate_receipts (tx_signature) WHERE tx_signature IS NOT NULL;
+
 
 CREATE OR REPLACE FUNCTION guard_mandate_update() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-  IF NEW.id                    IS DISTINCT FROM OLD.id
-     OR NEW.vault_id              IS DISTINCT FROM OLD.vault_id
-     OR NEW.session_pubkey        IS DISTINCT FROM OLD.session_pubkey
-     OR NEW.allowed_action        IS DISTINCT FROM OLD.allowed_action
-     OR NEW.allowed_target        IS DISTINCT FROM OLD.allowed_target
+  IF NEW.id IS DISTINCT FROM OLD.id
+     OR NEW.vault_id IS DISTINCT FROM OLD.vault_id
+     OR NEW.session_pubkey IS DISTINCT FROM OLD.session_pubkey
+     OR NEW.allowed_action IS DISTINCT FROM OLD.allowed_action
+     OR NEW.allowed_target IS DISTINCT FROM OLD.allowed_target
      OR NEW.max_amount_per_action IS DISTINCT FROM OLD.max_amount_per_action
-     OR NEW.max_total_budget      IS DISTINCT FROM OLD.max_total_budget
-     OR NEW.expires_at            IS DISTINCT FROM OLD.expires_at
-     OR NEW.created_at            IS DISTINCT FROM OLD.created_at THEN
+     OR NEW.max_total_budget IS DISTINCT FROM OLD.max_total_budget
+     OR NEW.expires_at IS DISTINCT FROM OLD.expires_at
+     OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
     RAISE EXCEPTION 'mandate terms are immutable; create a new mandate instead';
   END IF;
 
-  IF (OLD.mandate_pda      IS NOT NULL AND NEW.mandate_pda      IS DISTINCT FROM OLD.mandate_pda)
-     OR (OLD.onchain_id       IS NOT NULL AND NEW.onchain_id       IS DISTINCT FROM OLD.onchain_id)
+  IF (OLD.mandate_pda IS NOT NULL AND NEW.mandate_pda IS DISTINCT FROM OLD.mandate_pda)
+     OR (OLD.onchain_id IS NOT NULL AND NEW.onchain_id IS DISTINCT FROM OLD.onchain_id)
      OR (OLD.create_signature IS NOT NULL AND NEW.create_signature IS DISTINCT FROM OLD.create_signature)
      OR (OLD.revoke_signature IS NOT NULL AND NEW.revoke_signature IS DISTINCT FROM OLD.revoke_signature) THEN
     RAISE EXCEPTION 'onchain references are immutable once set';
   END IF;
 
   IF NEW.current_spent < OLD.current_spent THEN
-    RAISE EXCEPTION 'current_spent can
+    RAISE EXCEPTION 'current_spent can only increase';
+  END IF;
+
+  IF OLD.revoked_at IS NOT NULL AND NEW.revoked_at IS DISTINCT FROM OLD.revoked_at THEN
+    RAISE EXCEPTION 'a revoked mandate cannot be changed';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+

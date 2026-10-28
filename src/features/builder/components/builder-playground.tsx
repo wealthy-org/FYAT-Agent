@@ -1,6 +1,7 @@
 "use client";
 
 import { useAgentAttempt } from "../hooks/use-agent-attempt";
+import { useCreateMandate } from "../hooks/use-create-mandate";
 import { useMandateForm } from "../hooks/use-mandate-form";
 import { useSimulation } from "../hooks/use-simulation";
 import { CodePreview } from "./code-preview";
@@ -11,6 +12,7 @@ export function BuilderPlayground() {
   const mandateForm = useMandateForm();
   const attemptForm = useAgentAttempt();
   const simulation = useSimulation(mandateForm.config, attemptForm.attempt);
+  const mandateCreator = useCreateMandate();
 
   return (
     // Ukuran mengikuti lebar wadahnya, bukan lebar layar.
@@ -22,6 +24,7 @@ export function BuilderPlayground() {
           config={mandateForm.config}
           attemptForm={attemptForm}
           simulation={simulation}
+          mandateCreator={mandateCreator}
         />
 
         <div className="min-w-0 @3xl:col-span-2 @7xl:col-span-1">

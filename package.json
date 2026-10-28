@@ -13,7 +13,9 @@
     "api:smoke": "tsx --env-file=.env.local scripts/api-smoke.ts",
     "mint:setup": "tsx --env-file=.env.local scripts/setup-test-mint.ts",
     "db:seed": "tsx --env-file=.env.local scripts/seed-demo.ts",
-    "e2e:devnet": "tsx --env-file=.env.local scripts/devnet-e2e.ts"
+    "e2e:devnet": "tsx --env-file=.env.local scripts/devnet-e2e.ts",
+    "idl:sync": "tsx scripts/sync-idl.ts"
+
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

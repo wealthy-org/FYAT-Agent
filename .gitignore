@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Keypair dev lokal untuk scripts/setup-test-mint.ts. JANGAN pernah di-commit.
 .keys/
+
+# Workspace Anchor hidup di repo sendiri (WSL), bukan di sini
+/fyat_mandate/

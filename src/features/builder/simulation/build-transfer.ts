@@ -1,33 +1,40 @@
+
 import {
-  createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
+  PublicKey,
   TransactionMessage,
   VersionedTransaction,
-  type PublicKey,
 } from "@solana/web3.js";
 
 /**
- * Dengan `replaceRecentBlockhash: true`, RPC mengabaikan nilai ini.
- * Memakai konstanta menghemat satu panggilan jaringan.
+ * Derive akun token untuk simulasi transfer SPL biasa.
  */
-const PLACEHOLDER_BLOCKHASH = "11111111111111111111111111111111";
-
 export function deriveTransferAccounts(
   mint: PublicKey,
   payer: PublicKey,
   recipient: PublicKey,
 ) {
+  const sourceAta = getAssociatedTokenAddressSync(
+    mint,
+    payer,
+  );
+
+  const destinationAta = getAssociatedTokenAddressSync(
+    mint,
+    recipient,
+  );
+
   return {
-    sourceAta: getAssociatedTokenAddressSync(mint, payer),
-    // true: recipient boleh berupa alamat off-curve (misalnya PDA).
-    destinationAta: getAssociatedTokenAddressSync(mint, recipient, true),
+    sourceAta,
+    destinationAta,
   };
 }
 
-type BuildTransferParams = {
+type BuildTransferTransactionParams = {
   payer: PublicKey;
   mint: PublicKey;
   recipient: PublicKey;
@@ -35,36 +42,44 @@ type BuildTransferParams = {
   decimals: number;
 };
 
-/** Membuat token account tujuan bila belum ada (idempoten), lalu transfer. */
+/**
+ * Membangun transaksi SPL Token biasa untuk simulasi.
+ * Ini bukan instruksi execute_transfer FYAT dan tidak mengirim transaksi.
+ */
 export function buildTransferTransaction(
-  params: BuildTransferParams,
+  params: BuildTransferTransactionParams,
 ): VersionedTransaction {
-  const { payer, mint, recipient, amount, decimals } = params;
-  const { sourceAta, destinationAta } = deriveTransferAccounts(
-    mint,
+  const {
     payer,
+    mint,
     recipient,
+    amount,
+    decimals,
+  } = params;
+
+  if (amount <= 0n) {
+    throw new RangeError("Amount must be positive");
+  }
+
+  const { sourceAta, destinationAta } =
+    deriveTransferAccounts(mint, payer, recipient);
+
+  const instruction = createTransferCheckedInstruction(
+    sourceAta,
+    mint,
+    destinationAta,
+    payer,
+    amount,
+    decimals,
+    [],
+    TOKEN_PROGRAM_ID,
   );
 
   const message = new TransactionMessage({
     payerKey: payer,
-    recentBlockhash: PLACEHOLDER_BLOCKHASH,
-    instructions: [
-      createAssociatedTokenAccountIdempotentInstruction(
-        payer,
-        destinationAta,
-        recipient,
-        mint,
-      ),
-      createTransferCheckedInstruction(
-        sourceAta,
-        mint,
-        destinationAta,
-        payer,
-        amount,
-        decimals,
-      ),
-    ],
+    // Placeholder; simulateTransaction akan menggantinya.
+    recentBlockhash: PublicKey.default.toBase58(),
+    instructions: [instruction],
   }).compileToV0Message();
 
   return new VersionedTransaction(message);

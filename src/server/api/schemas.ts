@@ -35,6 +35,11 @@ export const createMandateBodySchema = z.strictObject({
   createSignature: solanaSignatureSchema,
 });
 
+export const recoverMandateBodySchema = z.strictObject({
+  mandatePda: solanaAddressSchema,
+  createSignature: solanaSignatureSchema,
+});
+
 /** Revoke: owner menandatangani di Phantom, klien melaporkan signature-nya. */
 export const revokeMandateBodySchema = z.strictObject({
   revokeSignature: solanaSignatureSchema,

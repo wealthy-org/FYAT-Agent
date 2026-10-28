@@ -12,9 +12,11 @@
     "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
     "api:smoke": "tsx --env-file=.env.local scripts/api-smoke.ts",
     "mint:setup": "tsx --env-file=.env.local scripts/setup-test-mint.ts",
-    "db:seed": "tsx --env-file=.env.local scripts/seed-demo.ts"
+    "db:seed": "tsx --env-file=.env.local scripts/seed-demo.ts",
+    "e2e:devnet": "tsx --env-file=.env.local scripts/devnet-e2e.ts"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
     "@neondatabase/serverless": "^1.2.0",
     "@solana/spl-token": "~0.4.15",
     "@solana/wallet-adapter-phantom": "^0.9.30",

@@ -76,3 +76,47 @@ export const storyStats = [
 ] as const;
 
 export const storyPill = "Solana Devnet";
+
+const NODE_HINTS: Record<string, string> = {
+  swap: "Swap",
+  xfer: "Transfer",
+  rpc: "Solana RPC",
+  pda: "Vault PDA",
+  hash: "Transaction hash",
+  vault: "Vault",
+  usdc: "USDC",
+  exe: "Execute",
+  h24: "Expires in 24h",
+  cap: "Per-action cap",
+  tot: "Total budget",
+  dev: "Devnet",
+  sol: "SOL for fees",
+  key: "Session key",
+  ver: "Verify",
+  bld: "Builder",
+  api: "API",
+  agt: "Agent",
+  own: "Owner wallet",
+  spl: "SPL Token",
+  ses: "Session",
+  liq: "Liquidity",
+  dex: "Meteora DAMM",
+  gas: "Network fee",
+  tx: "Transaction",
+  amm: "AMM pool",
+  dao: "DAO",
+  nft: "NFT",
+  mint: "Token mint",
+  pool: "Pool",
+  node: "RPC node",
+  sign: "Signature",
+  auth: "Authorization",
+  feed: "Receipt feed",
+  pol: "Policy",
+  sim: "Simulate",
+  sync: "Sync",
+};
+
+export function nodeHint(node: StoryNode): string {
+  return NODE_HINTS[node.id] ?? node.label;
+}

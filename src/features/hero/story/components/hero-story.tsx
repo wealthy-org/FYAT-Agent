@@ -14,6 +14,7 @@ import { useHeroStory } from "../use-hero-story";
 import { NodeField } from "./node-field";
 import { StatsStrip } from "./stats-strip";
 import { StoryCopy } from "./story-copy";
+import { NodeTooltip } from "./node-tooltip";
 
 type HeroProps = {
   stats: readonly HeroStat[];
@@ -33,6 +34,7 @@ function HeroStage({ stats }: HeroProps) {
     copy2Ref,
     stripRef,
     darkOverlayRef,
+    tipRef,
   } = useHeroStory(setStripActive);
 
   return (
@@ -124,6 +126,7 @@ function HeroStage({ stats }: HeroProps) {
           className="pointer-events-none absolute inset-x-0 top-[50%] z-30 opacity-0 md:top-[56%]"
         >
           <StatsStrip active={stripActive} />
+          <NodeTooltip tipRef={tipRef} />
         </div>
       </div>
     </section>

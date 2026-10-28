@@ -4,7 +4,7 @@
 import { useEffect, useRef } from "react";
 
 import { PARTICLES, PHASES, SPHERE, STORY } from "./config";
-import { storyNodes } from "./data";
+import { nodeHint, storyNodes } from "./data";
 import { clamp } from "./math";
 import { createParticleField, type ParticleField } from "./particles";
 import { computeStoryFrame, nodeAppear } from "./phases";
@@ -45,6 +45,7 @@ export function useHeroStory(
   const stripRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const darkOverlayRef = useRef<HTMLDivElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
 
   const stripCallback = useRef(onStripActive);
 
@@ -83,6 +84,9 @@ export function useHeroStory(
     let smoothed = 0;
     let lastTime = 0;
     let frameId = 0;
+
+    const hoverMix = new Float32Array(storyNodes.length);
+    let tipIndex = -1;
 
     const layout = () => {
       const rect = canvas.getBoundingClientRect();
@@ -241,17 +245,16 @@ export function useHeroStory(
         { count: 16, radius: 0.48, speed: 0.05 },
       ];
 
-      const orbitProgress = clamp(
-        (progress - orbitStart) / 0.12,
-      );
-
-      const orbitEase =
-        orbitProgress *
-        orbitProgress *
-        (3 - 2 * orbitProgress);
+      const orbitProgress = clamp((progress - orbitStart) / 0.12);
+      const orbitEase = orbitProgress * orbitProgress * (3 - 2 * orbitProgress);
 
       const orbitCenterX = width / 2;
       const orbitCenterY = height / 2;
+
+      const hoverEase = 1 - Math.exp(-dt * 14);
+
+      // Node yang paling dekat dengan kursor; dipakai untuk bubble.
+      let hot = { index: -1, x: 0, y: 0, r: 0, dist: Infinity };
 
       let nodeIndex = 0;
 
@@ -264,22 +267,16 @@ export function useHeroStory(
 
           if (!element || !node) continue;
 
-          const appear = nodeAppear(
-            progress,
-            i,
-            storyNodes.length,
-          );
+          const appear = nodeAppear(progress, i, storyNodes.length);
 
           if (appear <= 0 || orbitEase <= 0) {
             element.style.opacity = "0";
+            hoverMix[i] = 0;
             continue;
           }
 
-          // Satu radius untuk sumbu X dan Y: orbit 2D berbentuk lingkaran.
-          const angle =
-            (j / group.count) * Math.PI * 2 +
-            time * group.speed;
-          
+          const angle = (j / group.count) * Math.PI * 2 + time * group.speed;
+
           const orbitRadius = Math.max(
             0,
             Math.min(
@@ -290,65 +287,78 @@ export function useHeroStory(
             ),
           );
 
-          let x =
-            orbitCenterX +
-            Math.cos(angle) * orbitRadius;
-
-          let y =
-            orbitCenterY +
-            Math.sin(angle) * orbitRadius;
-
-          // Tolakan mouse tanpa efek perspektif 3D.
-          const dx = x - pointer.x;
-          const dy = y - pointer.y;
-
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const mouseRadius = 125;
-
-          if (
-            pointer.active &&
-            pointer.strength > 0.01 &&
-            distance < mouseRadius &&
-            distance > 0.01
-          ) {
-            const force =
-              Math.pow(1 - distance / mouseRadius, 2) *
-              38 *
-              pointer.strength;
-
-            x += (dx / distance) * force;
-            y += (dy / distance) * force;
-          }
-
-          // Node masuk dari pusat menuju lintasan orbit.
+          // Node masuk dari pusat bola menuju lintasan orbit.
           const finalX =
-            centerX + (x - centerX) * orbitEase;
-
+            centerX + (orbitCenterX + Math.cos(angle) * orbitRadius - centerX) * orbitEase;
           const finalY =
-            centerY + (y - centerY) * orbitEase;
+            centerY + (orbitCenterY + Math.sin(angle) * orbitRadius - centerY) * orbitEase;
 
-          const scale =
-            (0.65 + 0.35 * appear) *
-            (1 + darkProgress * 0.65);
-
-          element.style.opacity = (
+          const opacity =
             appear *
             orbitEase *
             (1 - PHASES.nodeDim * story.nodesDim) *
-            (1 - darkProgress)
-          ).toFixed(3);
+            (1 - darkProgress);
 
-        // Node bergerak mendekati pusat sebelum menghilang.
-        const inwardX =
-          finalX + (orbitCenterX - finalX) * darkProgress * 0.55;
+          // Hover hanya aktif selama orbit masih terlihat jelas.
+          const pointerDist = Math.hypot(
+            pointer.targetX - finalX,
+            pointer.targetY - finalY,
+          );
+          const hovered =
+            pointer.active && opacity > 0.6 && pointerDist < node.size / 2 + 8;
 
-        const inwardY =
-          finalY + (orbitCenterY - finalY) * darkProgress * 0.55;
+          hoverMix[i] += ((hovered ? 1 : 0) - hoverMix[i]) * hoverEase;
 
-        element.style.transform =
-          `translate3d(${(inwardX - node.size / 2).toFixed(1)}px, ` +
-          `${(inwardY - node.size / 2).toFixed(1)}px, 0) ` +
-          `scale(${scale.toFixed(3)})`;
+          // Saat scroll turun, node melaju KE DEPAN (mendekati kamera):
+          // membesar dan menjauh dari pusat. Makin besar depth, makin cepat lewat.
+          const flight = Math.pow(darkProgress, 1.5) * (0.8 + node.depth);
+          const spread = 1 + flight * 0.7;
+
+          const posX = orbitCenterX + (finalX - orbitCenterX) * spread;
+          const posY = orbitCenterY + (finalY - orbitCenterY) * spread;
+
+          const scale =
+            (0.65 + 0.35 * appear) * (1 + flight) * (1 + 0.18 * hoverMix[i]);
+
+          if (hovered && pointerDist < hot.dist) {
+            hot = {
+              index: i,
+              x: posX,
+              y: posY,
+              r: (node.size / 2) * scale,
+              dist: pointerDist,
+            };
+          }
+
+          element.style.opacity = opacity.toFixed(3);
+          element.style.transform =
+            `translate3d(${(posX - node.size / 2).toFixed(1)}px, ` +
+            `${(posY - node.size / 2).toFixed(1)}px, 0) ` +
+            `scale(${scale.toFixed(3)})`;
+        }
+      }
+
+      // Bubble: muncul di atas node yang sedang di-hover.
+      const tip = tipRef.current;
+
+      if (tip) {
+        if (hot.index >= 0) {
+          const hotNode = storyNodes[hot.index];
+
+          if (hotNode && tipIndex !== hot.index) {
+            tipIndex = hot.index;
+            const label = tip.firstElementChild;
+            if (label) label.textContent = nodeHint(hotNode);
+          }
+
+          // Jaga agar bubble tidak terpotong di tepi layar.
+          const tipX = Math.min(Math.max(hot.x, 70), width - 70);
+
+          tip.style.transform =
+            `translate3d(${tipX.toFixed(1)}px, ${(hot.y - hot.r - 6).toFixed(1)}px, 0)`;
+          tip.dataset.show = "true";
+        } else if (tip.dataset.show !== "false") {
+          tip.dataset.show = "false";
         }
       }
 
@@ -461,6 +471,7 @@ export function useHeroStory(
     copy2Ref,
     stripRef,
     nodeRefs,
-    darkOverlayRef
+    darkOverlayRef,
+    tipRef,
   };
 }

@@ -1,4 +1,4 @@
-﻿import type { SimulationState } from "./simulation/types";
+import type { SimulationState } from "./simulation/types";
 import { describeTargets, evaluatePolicy, formatAmount } from "./policy";
 import type { AgentAttempt, MandateConfig, PolicyCheck } from "./types";
 

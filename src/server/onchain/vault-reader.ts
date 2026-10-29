@@ -13,7 +13,6 @@ export type OnchainVault = {
   pda: string;
   owner: string;
   mint: string;
-  nextMandateId: bigint;
 };
 
 /**
@@ -58,12 +57,5 @@ export async function readVault(
     throw new OnchainReadError("Vault mint does not match the app token mint");
   }
 
-  return {
-    pda: args.vaultPda,
-    owner,
-    mint,
-    nextMandateId: BigInt(
-      (decoded.nextMandateId as { toString(): string }).toString(),
-    ),
-  };
+    return { pda: args.vaultPda, owner, mint };
 }

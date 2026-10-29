@@ -1,4 +1,4 @@
-﻿import { findVaultPda } from "../src/lib/vault-address";
+import { findVaultPda } from "../src/lib/vault-address";
 
 // Vektor yang sama dengan programs/fyat_mandate/tests/pda_parity.rs
 const EXPECTED = "F2MmgCAU2Y9K7sYresqN7cVMztBCYsmfUfU5UY3wQPAn";

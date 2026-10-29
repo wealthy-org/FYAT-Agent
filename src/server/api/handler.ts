@@ -25,8 +25,15 @@ function errorResponse(error: unknown): Response {
   }
 
   // Error tak terduga: detail HANYA masuk log server, klien cuma menerima requestId.
+    // Error tak terduga: detail HANYA masuk log server, klien cuma menerima requestId.
   const requestId = crypto.randomUUID();
   console.error(`[api] ${requestId}`, error);
+
+  // Hanya di development: tampilkan pesan error agar mudah di-debug.
+  const detail =
+    process.env.NODE_ENV !== "production" && error instanceof Error
+      ? { detail: `${error.name}: ${error.message}` }
+      : {};
 
   return NextResponse.json(
     {
@@ -34,6 +41,7 @@ function errorResponse(error: unknown): Response {
         code: "INTERNAL_ERROR",
         message: "Something went wrong",
         requestId,
+        ...detail,
       },
     },
     { status: 500, headers: NO_STORE },

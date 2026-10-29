@@ -78,7 +78,7 @@ export async function verifyCreate(
 
   if (onchain.revokedAt !== 0n) fail("Mandate is already revoked");
   if (onchain.spent !== 0n) fail("Mandate is not fresh");
-
+  
     /* 4. Signature: transaksi sukses yang memanggil create_mandate,
         ditandatangani owner, dan menyebut PDA ini. */
   await assertOwnerInstruction(connection, {
@@ -88,4 +88,6 @@ export async function verifyCreate(
     discriminator: CREATE_MANDATE_DISCRIMINATOR,
     account: claim.mandatePda,
   });
+
+  return { vaultPda, onchain };
 }

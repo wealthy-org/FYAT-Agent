@@ -58,3 +58,12 @@ export const receiptsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
   cursor: z.string().max(200).optional(),
 });
+
+/** GET bersifat longgar: parameter tak dikenal diabaikan. */
+export const mandatesListQuerySchema = z.object({
+  owner: z
+    .string()
+    .trim()
+    .refine(isValidSolanaAddress, "Enter a valid Solana address"),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});

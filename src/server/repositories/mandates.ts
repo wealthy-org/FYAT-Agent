@@ -202,3 +202,34 @@ export async function findExecutionRef(input: {
     target: row.allowed_target,
   };
 }
+
+export type OwnedMandateRow = {
+  mandate: Mandate;
+  mandatePda: string;
+  onchainId: bigint;
+};
+
+/** Mandate onchain milik satu owner, terbaru dulu. */
+export async function listOnchainMandatesByOwner(input: {
+  ownerPubkey: string;
+  limit: number;
+}): Promise<OwnedMandateRow[]> {
+  const rows = await query<
+    MandateRow & { mandate_pda: string; onchain_id: string }
+  >(
+    `SELECT ${COLUMNS}, m.mandate_pda, m.onchain_id
+       FROM mandates AS m
+       JOIN vaults AS v ON v.id = m.vault_id
+      WHERE v.owner_pubkey = $1
+        AND m.mandate_pda IS NOT NULL
+      ORDER BY m.created_at DESC, m.id DESC
+      LIMIT $2`,
+    [input.ownerPubkey, input.limit],
+  );
+
+  return rows.map((row) => ({
+    mandate: toMandate(row),
+    mandatePda: row.mandate_pda,
+    onchainId: toBigInt(row.onchain_id),
+  }));
+}

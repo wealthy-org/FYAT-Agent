@@ -8,6 +8,7 @@ import { CodePreview } from "./code-preview";
 import { ExecutionFlowPreview } from "./execution-flow-preview";
 import { MandateConfigurator } from "./mandate-configurator";
 import { VaultControlsPanel } from "./vault-controls-panel";
+import { MandateInspector } from "./mandate-inspector";
 
 export function BuilderPlayground() {
   const mandateForm = useMandateForm();
@@ -23,7 +24,12 @@ export function BuilderPlayground() {
         <div className="mt-6 @3xl:max-w-xl">
           <VaultControlsPanel activeMandate={mandateCreator.activeMandate} />
         </div>
-        
+
+        <div className="mt-6 grid gap-6 @3xl:grid-cols-2">
+          <VaultControlsPanel activeMandate={mandateCreator.activeMandate} />
+          <MandateInspector />
+        </div>
+
         <MandateConfigurator form={mandateForm} />
 
         <ExecutionFlowPreview

@@ -21,6 +21,7 @@ export const RATE_LIMITS = {
   mandateRevoke: { name: "mandate-revoke", limit: 30, windowSeconds: 60 },
   mandateExecute: { name: "mandate-execute", limit: 30, windowSeconds: 60 },
   receiptsRead: { name: "receipts-read", limit: 60, windowSeconds: 60 },
+  mandatesRead: { name: "mandates-read", limit: 30, windowSeconds: 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 /** Peluang membersihkan tabel keamanan pada tiap request. */

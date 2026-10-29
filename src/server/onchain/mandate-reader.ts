@@ -1,10 +1,10 @@
 import "server-only";
 
 import { BorshAccountsCoder, type Idl } from "@coral-xyz/anchor";
-import { Connection, PublicKey } from "@solana/web3.js";
-
+import { Connection, PublicKey, type AccountInfo } from "@solana/web3.js";
 import idlJson from "@/lib/idl/fyat_mandate.json";
 import { findMandatePda } from "@/lib/mandate-address";
+
 
 const coder = new BorshAccountsCoder(idlJson as Idl);
 
@@ -71,69 +71,69 @@ function readPublicKey(value: unknown, field: string): PublicKey {
 
   return value as PublicKey;
 }
-
 /**
  * Membaca akun Mandate dari chain dan memastikan akun itu asli:
  * dimiliki program, discriminator-nya Mandate, dan PDA-nya sama dengan
  * turunan dari (vault, id) di dalam akunnya sendiri.
  */
-export async function readMandate(
-  connection: Connection,
+/**
+ * Memvalidasi dan men-decode satu akun Mandate: dimiliki program,
+ * discriminator Mandate, dan PDA cocok dengan turunan (vault, id).
+ */
+export function decodeMandateAccount(
+  info: AccountInfo<Buffer>,
   args: { mandatePda: string; programId: string },
-): Promise<OnchainMandate> {
+): OnchainMandate {
   const pda = new PublicKey(args.mandatePda);
-  const programId = new PublicKey(args.programId);
-
-  const info = await connection.getAccountInfo(pda, "confirmed");
-
-  if (!info) {
-    throw new OnchainReadError("Mandate account not found on chain");
-  }
-
-  if (!info.owner.equals(programId)) {
-    throw new OnchainReadError(
-      "Account is not owned by the mandate program",
-    );
+  if (!info.owner.equals(new PublicKey(args.programId))) {
+    throw new OnchainReadError("Account is not owned by the mandate program");
   }
 
   let decoded: Record<string, unknown>;
-
   try {
     decoded = coder.decode("Mandate", info.data) as Record<string, unknown>;
   } catch {
-    throw new OnchainReadError(
-      "Account is not a Mandate. Periksa IDL yang digunakan aplikasi.",
-    );
+    throw new OnchainReadError("Account is not a Mandate");
   }
 
-  const vaultKey = readPublicKey(decoded.vault, "vault");
-  const id = readBig(decoded.id, "id");
+  const field = (snake: string, camel: string) =>
+    decodedField(decoded, snake, camel);
+
+  const vault = readPublicKey(field("vault", "vault"), "vault");
+  const id = readBig(field("id", "id"), "id");
 
   const expected = findMandatePda({
-    vault: vaultKey.toBase58(),
+    vault: vault.toBase58(),
     id,
     programId: args.programId,
   });
-
   if (expected !== pda.toBase58()) {
-    throw new OnchainReadError(
-      "Mandate PDA does not match its vault and id",
-    );
+    throw new OnchainReadError("Mandate PDA does not match its vault and id");
   }
 
   return {
     pda: pda.toBase58(),
-    vault: vaultKey.toBase58(),
+    vault: vault.toBase58(),
     id,
-    session: readPublicKey(decoded.session, "session").toBase58(),
-    recipient: readPublicKey(decoded.recipient, "recipient").toBase58(),
-    maxPerAction: readBig(decodedField(decoded, "max_per_action", "maxPerAction"), "maxPerAction"),
-    maxTotal: readBig(decodedField(decoded, "max_total", "maxTotal"), "maxTotal"),
-    spent: readBig(decoded.spent, "spent"),
-    createdAt: readBig(decodedField(decoded, "created_at", "createdAt"), "createdAt"),
-    expiresAt: readBig(decodedField(decoded, "expires_at", "expiresAt"), "expiresAt"),
-    revokedAt: readBig(decodedField(decoded, "revoked_at", "revokedAt"), "revokedAt"),
+    session: readPublicKey(field("session", "session"), "session").toBase58(),
+    recipient: readPublicKey(field("recipient", "recipient"), "recipient").toBase58(),
+    maxPerAction: readBig(field("max_per_action", "maxPerAction"), "max_per_action"),
+    maxTotal: readBig(field("max_total", "maxTotal"), "max_total"),
+    spent: readBig(field("spent", "spent"), "spent"),
+    createdAt: readBig(field("created_at", "createdAt"), "created_at"),
+    expiresAt: readBig(field("expires_at", "expiresAt"), "expires_at"),
+    revokedAt: readBig(field("revoked_at", "revokedAt"), "revoked_at"),
   };
 }
 
-
+export async function readMandate(
+  connection: Connection,
+  args: { mandatePda: string; programId: string },
+): Promise<OnchainMandate> {
+  const info = await connection.getAccountInfo(
+    new PublicKey(args.mandatePda),
+    "confirmed",
+  );
+  if (!info) throw new OnchainReadError("Mandate account not found on chain");
+  return decodeMandateAccount(info, args);
+}

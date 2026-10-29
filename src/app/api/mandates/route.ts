@@ -16,8 +16,23 @@ import { findMandateByPda, insertMandate } from "@/server/repositories/mandates"
 import { findVaultByPda } from "@/server/repositories/vaults";
 import { RATE_LIMITS } from "@/server/security/rate-limit";
 import { deriveVaultAddress } from "@/server/solana/vault-address";
+import { parseWith } from "@/server/api/request";
+import { mandatesListQuerySchema } from "@/server/api/schemas";
+import { inspectOwnerMandates } from "@/server/services/mandate-inspector";
 
 export const runtime = "nodejs";
+
+export async function GET(req: NextRequest) {
+  return handleApi(req, RATE_LIMITS.mandatesRead, async () => {
+    const { owner, limit } = parseWith(
+      mandatesListQuerySchema,
+      Object.fromEntries(req.nextUrl.searchParams),
+    );
+
+    const mandates = await inspectOwnerMandates(owner, limit);
+    return NextResponse.json({ mandates });
+  });
+}
 
 export async function POST(req: NextRequest) {
   return handleApi(req, RATE_LIMITS.mandateWrite, async () => {

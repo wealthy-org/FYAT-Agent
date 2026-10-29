@@ -24,6 +24,11 @@ const serverSchema = z.object({
   TOKEN_MINT: solanaAddress,
   DAMM_POOL: solanaAddress.optional(),
   SWAP_OUTPUT_MINT: solanaAddress.optional(),
+  AGENT_SESSION_PUBKEY: solanaAddress.optional(),
+  WORKER_API_SECRET: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{32,128}$/, "must be a 32-128 character URL-safe secret")
+    .optional(),
   SOLANA_RPC_URL: z.url(),
 });
 
@@ -40,15 +45,19 @@ export function getServerEnv(): ServerEnv {
     FYAT_PROGRAM_ID: process.env.FYAT_PROGRAM_ID,
     TOKEN_MINT: process.env.NEXT_PUBLIC_TOKEN_MINT,
     DAMM_POOL: process.env.NEXT_PUBLIC_DAMM_POOL || undefined,
-    SWAP_OUTPUT_MINT:
-      process.env.NEXT_PUBLIC_SWAP_OUTPUT_MINT || undefined,
+    SWAP_OUTPUT_MINT: process.env.NEXT_PUBLIC_SWAP_OUTPUT_MINT || undefined,
+    AGENT_SESSION_PUBKEY:
+      process.env.AGENT_SESSION_PUBKEY ||
+      process.env.NEXT_PUBLIC_AGENT_SESSION_PUBKEY ||
+      undefined,
+    WORKER_API_SECRET: process.env.WORKER_API_SECRET || undefined,
     SOLANA_RPC_URL:
       process.env.SOLANA_RPC_URL ??
       process.env.NEXT_PUBLIC_SOLANA_RPC_URL ??
       "https://api.devnet.solana.com",
   });
 
-    if (!parsed.success) {
+  if (!parsed.success) {
     throw new Error(
       `Invalid server environment variables:\n${z.prettifyError(parsed.error)}`,
     );

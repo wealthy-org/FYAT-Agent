@@ -53,6 +53,25 @@ export const recordExecutionBodySchema = z.strictObject({
   txSignature: solanaSignatureSchema,
 });
 
+export const createAgentJobBodySchema = z.strictObject({
+  requestId: z.uuid(),
+  amount: z
+    .string()
+    .regex(/^[1-9]\d{0,19}$/, "Enter a positive base-unit amount"),
+});
+
+export const completeAgentJobBodySchema = z.discriminatedUnion("status", [
+  z.strictObject({ status: z.literal("SUCCEEDED") }),
+  z.strictObject({
+    status: z.literal("FAILED"),
+    error: z.string().trim().min(1).max(280),
+  }),
+  z.strictObject({
+    status: z.literal("UNKNOWN"),
+    error: z.string().trim().min(1).max(280),
+  }),
+]);
+
 /** GET bersifat longgar: parameter tak dikenal diabaikan, bukan ditolak. */
 export const receiptsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),

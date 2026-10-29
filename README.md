@@ -4,7 +4,7 @@
 
 FYAT Agent is a transaction builder and mandate protocol for autonomous agents on Solana. A wallet owner defines a bounded mandate (spending caps, allowed action, approved recipient, expiry). The agent receives a temporary session key that can act only inside that mandate. The owner's private key never reaches the agent or the server.
 
-> **Status: Devnet prototype.** The onchain program enforces mandates (per-action cap, total budget, approved recipient, expiry, instant revoke) and is covered by tests and a Devnet end-to-end run. An agent runner (CLI) can hold its own session key and execute without the owner. It is triggered manually, so this is not yet a fully autonomous agent. Do not use real funds.
+> **Status: Devnet prototype.** The onchain program enforces mandate limits and supports transfer and Meteora swap execution. A Railway worker can process owner-signed jobs using a dedicated Devnet session key; do not use real funds.
 
 ---
 
@@ -32,7 +32,7 @@ FYAT Agent is a transaction builder and mandate protocol for autonomous agents o
 
 1. The owner connects Phantom or Solflare and creates a **vault** (a program-derived address that holds funds).
 2. The owner creates a **mandate** for an agent's **session key**: max amount per action, max total budget, allowed action (`SWAP` or `TRANSFER`), approved venue or recipient, and an expiry.
-3. The agent signs only with its session key. Every execution is checked against the mandate before funds move.
+3. In Railway mode, the owner signs a job request and the worker signs the transaction with the session key. Every execution is checked against the mandate before funds move.
 4. The owner can **revoke** the session or **withdraw** funds at any moment.
 
 ```
@@ -47,19 +47,19 @@ Owner wallet ──creates──▶ Vault PDA ──holds──▶ funds
 
 ## Project status
 
-| Area | Status |
-|---|---|
-| Landing page, docs pages, Builder playground | Done |
-| Wallet connection (Phantom, Solflare) | Done |
-| Neon database schema and migrations | Done |
-| Signed-request API (vaults, mandates, revoke) and receipts API | Done, called by the UI. `POST /api/vaults` verifies the vault onchain before saving |
-| Anchor program: vault, deposit, withdraw, create mandate, revoke, execute transfer | Done. 32 LiteSVM tests pass |
-| Devnet deployment and end-to-end flow | Done. Create vault, create mandate, execute, rejected execute, revoke |
-| UI: vault, deposit, withdraw, create mandate, mandate inspector, revoke, execute | Done |
-| Session key handling | Two modes: demo (key encrypted in the browser, owner approves each execution) or agent (key held by the agent runner, owner never signs executions) |
-| Agent runner (CLI) with its own session key, receipts written automatically | Done. Triggered manually from a terminal. No scheduler or job queue yet |
-| Swap (`Action::Swap`) | Not built. The program only supports `Transfer` |
-| CI and automated web tests | Not built |
+| Area                                                                               | Status                                                                                                                                              |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing page, docs pages, Builder playground                                       | Done                                                                                                                                                |
+| Wallet connection (Phantom, Solflare)                                              | Done                                                                                                                                                |
+| Neon database schema and migrations                                                | Done                                                                                                                                                |
+| Signed-request API (vaults, mandates, revoke) and receipts API                     | Done, called by the UI. `POST /api/vaults` verifies the vault onchain before saving                                                                 |
+| Anchor program: vault, deposit, withdraw, create mandate, revoke, transfer and swap | Done. 32 LiteSVM tests pass                                                                                                                         |
+| Devnet deployment and end-to-end flow                                              | Done. Create vault, create mandate, execute, rejected execute, revoke                                                                               |
+| UI: vault, deposit, withdraw, create mandate, mandate inspector, revoke, execute   | Done                                                                                                                                                |
+| Session key handling                                                               | Two modes: demo (key encrypted in the browser) or Railway (a dedicated Devnet worker key)                                                         |
+| Agent worker and job queue                                                         | Owner-signed jobs are queued in Neon, executed by Railway, and verified before recording receipts                                                  |
+| Swap (`Action::Swap`)                                                              | Meteora DAMM execution is implemented for the configured pool                                                                                      |
+| CI and automated web tests                                                         | Not built                                                                                                                                           |
 
 ## Tech stack
 
@@ -81,7 +81,7 @@ Owner wallet ──creates──▶ Vault PDA ──holds──▶ funds
 - Node.js `>= 20.9`
 - pnpm (via Corepack: `corepack enable`)
 - A [Neon](https://neon.com) project (free tier is enough)
-- Phantom with **Testnet Mode** set to **Solana Devnet** (*Settings → Developer Settings*)
+- Phantom with **Testnet Mode** set to **Solana Devnet** (_Settings → Developer Settings_)
 
 ### 1. Install
 
@@ -142,42 +142,62 @@ The smoke test uses throwaway wallets and exercises both normal flows and attack
 
 Copy `.env.example` to `.env.local`. Never commit `.env.local`.
 
-| Variable | Scope | Description |
-|---|---|---|
-| `NEXT_PUBLIC_SOLANA_NETWORK` | public | `devnet` or `localnet` |
-| `NEXT_PUBLIC_SOLANA_RPC_URL` | public | RPC endpoint. The CSP `connect-src` follows this value |
-| `NEXT_PUBLIC_TOKEN_MINT` | public | Test token mint (from `pnpm mint:setup`) |
-| `DATABASE_URL` | **server only** | Neon **pooled** connection string (host contains `-pooler`) |
-| `DATABASE_MIGRATION_URL` | **server only** | Neon **direct** connection string, used by migrations and scripts |
-| `APP_URL` | server only | App origin. Its host is bound into signed messages (anti-phishing). Set it per environment |
-| `FYAT_PROGRAM_ID` | server only | Deployed Devnet program ID of `fyat_mandate`. Vault and mandate addresses are derived from it |
-| `SOLANA_RPC_URL` | server only, optional | RPC used by scripts. Falls back to `NEXT_PUBLIC_SOLANA_RPC_URL` |
-| `AGENT_SECRET_KEY` | **server only, secret** | JSON array of the agent's secret key, for running the agent runner on a server. Locally the runner reads `.keys/agent.json` |
+| Variable                           | Scope                    | Description                                                                                                              |
+| ---------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SOLANA_NETWORK`       | public                   | `devnet` or `localnet`                                                                                                   |
+| `NEXT_PUBLIC_SOLANA_RPC_URL`       | public                   | RPC endpoint. The CSP `connect-src` follows this value                                                                   |
+| `NEXT_PUBLIC_TOKEN_MINT`           | public                   | Test token mint (from `pnpm mint:setup`)                                                                                 |
+| `NEXT_PUBLIC_DAMM_POOL`            | public                   | Approved Meteora DAMM pool for swap mandates                                                                             |
+| `NEXT_PUBLIC_SWAP_OUTPUT_MINT`     | public                   | Approved output mint for swap mandates                                                                                   |
+| `NEXT_PUBLIC_AGENT_SESSION_PUBKEY` | public                   | Agent session key assigned to the Railway worker                                                                         |
+| `DATABASE_URL`                     | **server only**          | Neon **pooled** connection string (host contains `-pooler`)                                                              |
+| `DATABASE_MIGRATION_URL`           | **server only**          | Neon **direct** connection string, used by migrations and scripts                                                        |
+| `APP_URL`                          | server only              | App origin. Its host is bound into signed messages (anti-phishing). Set it per environment                               |
+| `FYAT_PROGRAM_ID`                  | server only              | Deployed Devnet program ID of `fyat_mandate`. Vault and mandate addresses are derived from it                            |
+| `SOLANA_RPC_URL`                   | server only, optional    | RPC used by scripts. Falls back to `NEXT_PUBLIC_SOLANA_RPC_URL`                                                          |
+| `AGENT_SESSION_PUBKEY`             | server only              | Must match `NEXT_PUBLIC_AGENT_SESSION_PUBKEY` and the public key derived from the Railway worker key                     |
+| `WORKER_API_SECRET`                | **server only, secret**  | Shared Vercel/Railway credential for authenticated job completion; use a random URL-safe value of at least 32 characters |
+| `AGENT_SECRET_KEY`                 | **Railway only, secret** | JSON byte array for the dedicated Devnet session key. Do not configure this on Vercel                                    |
 
 Rules:
 
 - Anything prefixed `NEXT_PUBLIC_` is visible in the browser. Never put secrets there.
 - If an RPC URL contains an API key, restrict that key by origin at the provider. It is public by design.
 - When `FYAT_PROGRAM_ID` changes, derived vault addresses change too. Reset dev data in the database and reseed.
+- Run `pnpm db:migrate` against the same Neon database before deploying; migration `0004_agent_jobs.sql` adds the durable Railway queue.
+- Set `NEXT_PUBLIC_AGENT_SESSION_PUBKEY` before building the Vercel app. The Vercel and Railway session-key settings must match.
+
+### Vercel and Railway worker
+
+Vercel remains the Next.js web/API deployment. Railway runs the persistent queue consumer, not a second web app:
+
+1. Apply the database migrations once with `pnpm db:migrate`.
+2. On Vercel, configure the public variables above plus `DATABASE_URL`, `APP_URL`, `FYAT_PROGRAM_ID`, `SOLANA_RPC_URL`, `AGENT_SESSION_PUBKEY`, and `WORKER_API_SECRET`.
+3. On Railway, use the same `DATABASE_URL`, `FYAT_PROGRAM_ID`, `SOLANA_RPC_URL`, `AGENT_SESSION_PUBKEY`, and `WORKER_API_SECRET`; also set `AGENT_SECRET_KEY`, `APP_URL` (the deployed Vercel origin), `NEXT_PUBLIC_SOLANA_NETWORK=devnet`, `NEXT_PUBLIC_TOKEN_MINT`, `NEXT_PUBLIC_DAMM_POOL`, and `NEXT_PUBLIC_SWAP_OUTPUT_MINT` when swap support is enabled.
+4. Configure Railway's build command as `pnpm install --frozen-lockfile` and its start command as `pnpm agent:worker`. Do not use `pnpm start` for this service.
+5. Keep a single Railway worker replica for the initial demo. The browser only enqueues a wallet-signed job; the worker checks the mandate on-chain, simulates and submits on Devnet, and Vercel verifies the confirmed transaction before recording a receipt.
+
+Use one dedicated, funded Devnet session key for the demo mandate. The worker stores a transaction signature before broadcasting and will not automatically resubmit a job whose transaction outcome is uncertain.
 
 ---
 
 ## Scripts
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Start the dev server |
-| `pnpm build` / `pnpm start` | Production build and server |
-| `pnpm lint` | ESLint |
-| `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm format` | Prettier |
-| `pnpm db:migrate` | Apply pending SQL migrations |
-| `pnpm db:seed` | Record demo receipts (Devnet and development only) |
-| `pnpm api:smoke` | End-to-end API checks, including attack cases |
-| `pnpm mint:setup` | Create or reuse the Devnet test mint, optionally mint tokens to `--to <address>` |
-| `pnpm e2e:devnet` | Run the four demo scenarios against the deployed Devnet program |
-| `pnpm agent:keygen` | Create the agent keypair in `.keys/agent.json` and print its public key |
-| `pnpm agent:run --mandate <PDA> --amount <n> [--to <wallet>]` | Agent signs `execute_transfer` with its own key and records the receipt |
+| Command                                                       | What it does                                                                     |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `pnpm dev`                                                    | Start the dev server                                                             |
+| `pnpm build` / `pnpm start`                                   | Production build and server                                                      |
+| `pnpm lint`                                                   | ESLint                                                                           |
+| `pnpm typecheck`                                              | `tsc --noEmit`                                                                   |
+| `pnpm format`                                                 | Prettier                                                                         |
+| `pnpm db:migrate`                                             | Apply pending SQL migrations                                                     |
+| `pnpm db:seed`                                                | Record demo receipts (Devnet and development only)                               |
+| `pnpm api:smoke`                                              | End-to-end API checks, including attack cases                                    |
+| `pnpm mint:setup`                                             | Create or reuse the Devnet test mint, optionally mint tokens to `--to <address>` |
+| `pnpm e2e:devnet`                                             | Run the four demo scenarios against the deployed Devnet program                  |
+| `pnpm agent:keygen`                                           | Create the agent keypair in `.keys/agent.json` and print its public key          |
+| `pnpm agent:run --mandate <PDA> --amount <n> [--to <wallet>]` | Agent signs `execute_transfer` with its own key and records the receipt          |
+| `pnpm agent:worker`                                           | Poll Neon and process wallet-authorized Devnet jobs (Railway start command)      |
 
 ---
 
@@ -219,13 +239,13 @@ Rules:
 
 Mutating endpoints require a wallet signature. Reads are public.
 
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| `POST` | `/api/vaults` | signed | Register the caller's vault (idempotent) |
-| `POST` | `/api/mandates` | signed | Create a mandate under the caller's vault |
-| `POST` | `/api/mandates/{id}/revoke` | signed | Revoke a mandate (owner only) |
-| `POST` | `/api/mandates/{id}/execute` | signed | Verify an executed transaction onchain and record its receipt (demo mode) |
-| `GET` | `/api/receipts?limit=&cursor=` | public | Paginated receipts feed (cursor-based) |
+| Method | Path                           | Auth   | Purpose                                                                   |
+| ------ | ------------------------------ | ------ | ------------------------------------------------------------------------- |
+| `POST` | `/api/vaults`                  | signed | Register the caller's vault (idempotent)                                  |
+| `POST` | `/api/mandates`                | signed | Create a mandate under the caller's vault                                 |
+| `POST` | `/api/mandates/{id}/revoke`    | signed | Revoke a mandate (owner only)                                             |
+| `POST` | `/api/mandates/{id}/execute`   | signed | Verify an executed transaction onchain and record its receipt (demo mode) |
+| `GET`  | `/api/receipts?limit=&cursor=` | public | Paginated receipts feed (cursor-based)                                    |
 
 There is intentionally **no public endpoint for writing receipts**. Receipts are written by server code after a transaction is verified.
 
@@ -233,12 +253,12 @@ There is intentionally **no public endpoint for writing receipts**. Receipts are
 
 Each mutating request carries four headers and a JSON body:
 
-| Header | Meaning |
-|---|---|
-| `x-fyat-wallet` | Owner public key |
+| Header             | Meaning                                       |
+| ------------------ | --------------------------------------------- |
+| `x-fyat-wallet`    | Owner public key                              |
 | `x-fyat-signature` | Base64 Ed25519 signature of the message below |
-| `x-fyat-nonce` | 16 random bytes, hex |
-| `x-fyat-issued-at` | ISO-8601 UTC timestamp with milliseconds |
+| `x-fyat-nonce`     | 16 random bytes, hex                          |
+| `x-fyat-issued-at` | ISO-8601 UTC timestamp with milliseconds      |
 
 The server rebuilds the message itself (`src/lib/auth-message.ts`), so the client cannot influence its format:
 
@@ -273,14 +293,14 @@ Unexpected failures return `INTERNAL_ERROR` with a `requestId`. The details stay
 
 PostgreSQL on Neon. Key points (full definitions in `db/migrations/`):
 
-| Table | Purpose |
-|---|---|
-| `vaults` | Registered vaults: owner, vault PDA, token mint |
-| `mandates` | Session permissions: caps, budget, spent, expiry, `revoked_at` |
-| `mandate_receipts` | Public audit tape. **Append-only** (enforced by trigger) |
-| `auth_nonces` | Used signature nonces (replay protection) |
-| `rate_limit_hits` | Counters for database-backed rate limiting |
-| `schema_migrations` | Applied migrations with checksums |
+| Table               | Purpose                                                        |
+| ------------------- | -------------------------------------------------------------- |
+| `vaults`            | Registered vaults: owner, vault PDA, token mint                |
+| `mandates`          | Session permissions: caps, budget, spent, expiry, `revoked_at` |
+| `mandate_receipts`  | Public audit tape. **Append-only** (enforced by trigger)       |
+| `auth_nonces`       | Used signature nonces (replay protection)                      |
+| `rate_limit_hits`   | Counters for database-backed rate limiting                     |
+| `schema_migrations` | Applied migrations with checksums                              |
 
 Integrity is enforced in the database, not only in application code:
 
@@ -322,13 +342,13 @@ Report vulnerabilities privately to the maintainers. Do not open public issues f
 
 The program lives in a **separate Anchor workspace** (`fyat_mandate`), developed in WSL on Windows because Rust builds on `/mnt/c` are very slow. The web app consumes its generated IDL (`src/lib/idl/fyat_mandate.json`).
 
-| Instruction | Signer | Purpose |
-|---|---|---|
-| `initialize_vault` | owner | Create the vault PDA and its token account |
-| `deposit` | owner | Move tokens from the owner into the vault |
-| `withdraw` | owner | Move tokens to the owner's own token account. Independent of mandates |
-| `create_mandate` | owner | Register a session key with per-action cap, total budget, one approved recipient and an expiry (max 30 days) |
-| `revoke_mandate` | owner | Cut off a session immediately. Can only happen once |
+| Instruction        | Signer      | Purpose                                                                                                        |
+| ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| `initialize_vault` | owner       | Create the vault PDA and its token account                                                                     |
+| `deposit`          | owner       | Move tokens from the owner into the vault                                                                      |
+| `withdraw`         | owner       | Move tokens to the owner's own token account. Independent of mandates                                          |
+| `create_mandate`   | owner       | Register a session key with per-action cap, total budget, one approved recipient and an expiry (max 30 days)   |
+| `revoke_mandate`   | owner       | Cut off a session immediately. Can only happen once                                                            |
 | `execute_transfer` | session key | Transfer within the mandate. Checks signer, revocation, expiry, per-action cap, remaining budget and recipient |
 
 Decisions worth knowing:
@@ -363,12 +383,12 @@ cargo test -p fyat_mandate
 
 Each scenario is enforced by the program, not the UI. The same scenarios run in the test suite:
 
-| Scenario | Test |
-|---|---|
-| Transfer within the cap succeeds | `demo_1_transfer_within_the_cap_succeeds` |
-| Transfer above the cap is rejected | `demo_2_transfer_above_the_cap_is_rejected_by_the_program` |
-| Send to the agent's own wallet is rejected | `demo_3_sending_to_the_agents_own_wallet_is_rejected` |
-| Revoke takes effect immediately | `demo_4_revoke_takes_effect_immediately` |
+| Scenario                                   | Test                                                       |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| Transfer within the cap succeeds           | `demo_1_transfer_within_the_cap_succeeds`                  |
+| Transfer above the cap is rejected         | `demo_2_transfer_above_the_cap_is_rejected_by_the_program` |
+| Send to the agent's own wallet is rejected | `demo_3_sending_to_the_agents_own_wallet_is_rejected`      |
+| Revoke takes effect immediately            | `demo_4_revoke_takes_effect_immediately`                   |
 
 The suite also covers the total budget ceiling, exact expiry boundary, wrong signer, double revoke, non-owner actions and every invalid mandate parameter.
 
@@ -388,10 +408,9 @@ The suite also covers the total budget ceiling, exact expiry boundary, wrong sig
 
 ## Known limitations
 
-- **Demo session model.** The session key is generated in the owner's browser and stored encrypted with a passphrase. The owner still approves each execution in the UI. This proves that the program enforces the limits, but it is not yet an autonomous agent.
+- **Demo session model.** Local demo keys are generated in the owner's browser and stored encrypted with a passphrase. The Railway mode uses an explicitly configured Devnet session key and a wallet-signed job queue; it is not a general-purpose autonomous agent.
 - The policy simulation in the Builder is a local preview. The binding limits are the ones enforced by the program.
-- Only `Action::Transfer` exists onchain. Swap is not implemented.
-- Receipts are recorded from real Devnet transactions made through the UI. `pnpm db:seed` still creates demo entries.
+- Receipts are recorded only after the web API verifies real Devnet transactions. `pnpm db:seed` still creates demo entries.
 - Devnet only. The public Devnet RPC is rate limited, so use a dedicated provider for sustained testing.
 - The `@fyat/sdk` package shown in code snippets does not exist yet. The snippets are illustrative and say so.
 - IP-based rate limiting is only reliable behind a proxy that sets the client IP header (for example Vercel).
@@ -399,15 +418,14 @@ The suite also covers the total budget ceiling, exact expiry boundary, wrong sig
 
 ## Roadmap
 
-1. Agent runner that holds the session key and executes without the owner in the browser, with receipts recorded from verified transactions
-2. `Action::Swap` (Meteora adapter), with program tests first
-3. Browser `signedFetch` and a typed client generated from the IDL
-4. Web test suite and CI, then deployment (Vercel and Railway)
-5. Hardening before any mainnet use: nonce-based CSP, multisig upgrade authority, external audit
+1. Web test suite and CI
+2. Expand the Railway worker beyond the single-session Devnet demo
+3. Hardening before any mainnet use: nonce-based CSP, multisig upgrade authority, external audit
 
 ## License
 
 To be decided by the project owners.
+
 ```
 fyat-agent
 ├─ .prettierrc

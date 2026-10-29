@@ -20,6 +20,7 @@ import { SimulationControls } from "./simulation-controls";
 import { useOnchainProbe } from "../hooks/use-onchain-probe";
 import { OnchainProbeSection } from "./onchain-probe-section";
 import { getSwapConfig } from "@/lib/swap-config";
+import { env } from "@/lib/env";
 
 type ExecutionFlowPreviewProps = {
   config: MandateConfig | null;
@@ -40,7 +41,6 @@ export function ExecutionFlowPreview({
   const execution = useExecuteTransfer(mandateCreator.execute);
 
   const probe = useOnchainProbe(mandateCreator);
-
 
   const steps = useMemo(
     () => buildFlowSteps(config, attempt, state, execution.outcome),
@@ -72,7 +72,10 @@ export function ExecutionFlowPreview({
     !!attempt &&
     attempt.target === "ALLOWED" &&
     configMatchesMandate &&
-    !!mandateCreator.sessionPubkey &&
+    (!!mandateCreator.sessionPubkey ||
+      (!!mandateCreator.externalAgent &&
+        mandateCreator.externalAgent ===
+          env.NEXT_PUBLIC_AGENT_SESSION_PUBKEY)) &&
     !mandateCreator.busy &&
     !mandateCreator.sessionBusy &&
     !execution.busy;
@@ -90,29 +93,30 @@ export function ExecutionFlowPreview({
       <div className="flex items-start justify-between gap-4">
         <div>
           <Eyebrow>2 / Execution flow</Eyebrow>
-          <h3 className="mt-2 font-display text-xl font-medium">
+          <h3 className="font-display mt-2 text-xl font-medium">
             Build {"\u2192"} Verify {"\u2192"} Simulate {"\u2192"} Execute
           </h3>
         </div>
 
         <div aria-live="polite" className="shrink-0">
           {policyPassed && (
-            <span className="rounded-full border border-success/40 bg-success/10 px-3 py-1 text-xs font-medium text-success">
+            <span className="border-success/40 bg-success/10 text-success rounded-full border px-3 py-1 text-xs font-medium">
               PASS
             </span>
           )}
 
           {verifyStatus === "blocked" && (
-            <span className="rounded-full border border-danger/40 bg-danger/10 px-3 py-1 text-xs font-medium text-danger">
+            <span className="border-danger/40 bg-danger/10 text-danger rounded-full border px-3 py-1 text-xs font-medium">
               BLOCKED
             </span>
           )}
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-fg-subtle">
-        Demo mode: the session key is stored in this browser, and the owner
-        approves every execution. This is not an autonomous agent.
+      <p className="text-fg-subtle mt-3 text-xs">
+        {mandateCreator.externalAgent
+          ? "External agent mode: the owner signs each job request, then the Railway worker executes it on Devnet."
+          : "Demo mode: the session key is stored in this browser, and the owner approves every execution. This is not an autonomous agent."}
       </p>
 
       <AgentAttemptFields config={config} form={attemptForm} />
@@ -160,7 +164,7 @@ export function ExecutionFlowPreview({
 
       <FlowStepList steps={steps} />
 
-      <p className="mt-8 border-t border-border-subtle pt-4 text-xs text-fg-subtle">
+      <p className="border-border-subtle text-fg-subtle mt-8 border-t pt-4 text-xs">
         The policy simulation is a local preview. The on-chain mandate program
         still enforces the actual action limits.
       </p>

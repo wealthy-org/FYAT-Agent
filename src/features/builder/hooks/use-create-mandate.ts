@@ -120,7 +120,9 @@ export function useCreateMandate() {
           ? new PublicKey(agentPubkey.trim())
           : null;
         if (externalKey && externalKey.equals(owner)) {
-          throw new Error("The session key must not be the same as the owner's key.");
+          throw new Error(
+            "The session key must not be the same as the owner's key.",
+          );
         }
 
         const vaultAddress = new PublicKey(
@@ -303,9 +305,7 @@ export function useCreateMandate() {
         setActiveMandate(nextMandate);
         refreshStoredSessions();
 
-        setStatus(
-          `Mandate created on-chain: ${mandateAddress.toBase58()}`,
-        );
+        setStatus(`Mandate created on-chain: ${mandateAddress.toBase58()}`);
 
         return {
           id: dbMandateId,
@@ -439,7 +439,9 @@ export function useCreateMandate() {
           !vaultAccount.owner.equals(owner) ||
           !vaultAccount.mint.equals(mint)
         ) {
-          throw new Error("The on-chain vault does not match the connected wallet.");
+          throw new Error(
+            "The on-chain vault does not match the connected wallet.",
+          );
         }
 
         if (
@@ -467,8 +469,7 @@ export function useCreateMandate() {
           mandatePda: normalizedPda,
           owner: owner.toBase58(),
           mint: mint.toBase58(),
-          action:
-            "swap" in mandateAccount.action ? "SWAP" : "TRANSFER",
+          action: "swap" in mandateAccount.action ? "SWAP" : "TRANSFER",
           recipient: mandateAccount.recipient.toBase58(),
           maxPerAction: BigInt(mandateAccount.maxPerAction.toString()),
           maxTotal: BigInt(mandateAccount.maxTotal.toString()),
@@ -506,9 +507,21 @@ export function useCreateMandate() {
       }
 
       if (!sessionKey || !activeMandate) {
-        throw new Error(
-          "The active session key or mandate is unavailable. Restore the correct session first.",
-        );
+        if (externalAgent && activeMandate) {
+          if (externalAgent !== env.NEXT_PUBLIC_AGENT_SESSION_PUBKEY) {
+            throw new Error(
+              "This session key is not assigned to the configured Railway worker.",
+            );
+          }
+        } else {
+          throw new Error(
+            "The active session key or mandate is unavailable. Restore the correct session first.",
+          );
+        }
+      }
+
+      if (!activeMandate) {
+        throw new Error("The active mandate is unavailable.");
       }
 
       if (wallet.publicKey.toBase58() !== activeMandate.owner) {
@@ -520,7 +533,9 @@ export function useCreateMandate() {
       }
 
       if (amount > activeMandate.maxPerAction) {
-        throw new Error("The amount exceeds the mandate's per-transaction limit.");
+        throw new Error(
+          "The amount exceeds the mandate's per-transaction limit.",
+        );
       }
 
       setBusy(true);
@@ -528,6 +543,88 @@ export function useCreateMandate() {
       setStatus("Checking the mandate and vault balance...");
 
       try {
+        if (!sessionKey) {
+          const queued = await signedJsonRequest<{
+            jobId: string;
+            token: string;
+            status:
+              "QUEUED" | "PROCESSING" | "SUCCEEDED" | "FAILED" | "UNKNOWN";
+          }>(
+            wallet,
+            `/api/mandates/${encodeURIComponent(activeMandate.id)}/jobs`,
+            "POST",
+            { requestId: crypto.randomUUID(), amount: amount.toString() },
+          );
+          setStatus("Queued for the Railway agent worker...");
+
+          for (let attempt = 0; attempt < 200; attempt += 1) {
+            const response = await fetch(
+              `/api/agent-jobs/${encodeURIComponent(queued.jobId)}`,
+              { headers: { Authorization: `Bearer ${queued.token}` } },
+            );
+            const result: unknown = await response.json().catch(() => null);
+            if (!response.ok) {
+              const message =
+                typeof result === "object" &&
+                result !== null &&
+                "error" in result &&
+                typeof result.error === "object" &&
+                result.error !== null &&
+                "message" in result.error &&
+                typeof result.error.message === "string"
+                  ? result.error.message
+                  : `Could not read agent job status (HTTP ${response.status}).`;
+              throw new Error(message);
+            }
+
+            const job =
+              typeof result === "object" && result !== null && "job" in result
+                ? result.job
+                : null;
+            if (
+              typeof job !== "object" ||
+              job === null ||
+              !("status" in job) ||
+              typeof job.status !== "string"
+            ) {
+              throw new Error(
+                "The agent worker returned an invalid job status.",
+              );
+            }
+            if (job.status === "SUCCEEDED") {
+              if (
+                !("txSignature" in job) ||
+                typeof job.txSignature !== "string"
+              ) {
+                throw new Error(
+                  "The agent job succeeded without a transaction signature.",
+                );
+              }
+              setSignature(job.txSignature);
+              setStatus(`Execution successful: ${job.txSignature}`);
+              return job.txSignature;
+            }
+            if (job.status === "FAILED" || job.status === "UNKNOWN") {
+              const message =
+                "error" in job && typeof job.error === "string"
+                  ? job.error
+                  : `The agent job ended with status ${job.status}.`;
+              throw new Error(message);
+            }
+
+            setStatus(
+              job.status === "PROCESSING"
+                ? "The Railway agent is processing the transaction..."
+                : "Waiting for the Railway agent worker...",
+            );
+            await new Promise((resolve) => window.setTimeout(resolve, 3_000));
+          }
+
+          throw new Error(
+            "The agent job is still pending. Check its status before submitting another execution.",
+          );
+        }
+
         const mint = new PublicKey(activeMandate.mint);
         const owner = new PublicKey(activeMandate.owner);
         const recipient = new PublicKey(activeMandate.recipient);
@@ -696,7 +793,7 @@ export function useCreateMandate() {
         setBusy(false);
       }
     },
-    [activeMandate, connection, sessionKey, wallet],
+    [activeMandate, connection, externalAgent, sessionKey, wallet],
   );
 
   return {

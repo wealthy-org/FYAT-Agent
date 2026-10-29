@@ -1,4 +1,5 @@
 # FYAT AGENT (SOLANA AGENT MANDATE & TRANSACTION BUILDER)
+
 ## Developer Brief & Onboarding Guide for Alfian
 
 **Project Name:** **FYAT Agent** (Adapted from the reference concept: Fides Builder / [fidesbuilder.xyz](https://fidesbuilder.xyz/))  
@@ -7,17 +8,18 @@
 **Core Value Proposition:** A transaction builder and onchain mandate execution protocol on Solana that lets wallet owners authorize AI agents to assemble, simulate, and execute strictly bounded transactions (spending caps, allowed tokens, explicit venues) via session keys without handing over owner private keys.  
 **UI/Aesthetics Guideline:** Copy [fidesbuilder.xyz](https://fidesbuilder.xyz/) layout and UX almost identical (hero headline, action builder playground, signed mandate inspector, receipt feed), with the custom **purple/violet metallic visual branding (`logo.jpeg`)**.  
 **Intended Developer:** Alfian & Frontend/Backend Engineers  
-**Version:** 1.0 — 26 October 2026  
+**Version:** 1.0 — 26 October 2026
 
 ---
 
 ## 1. Executive Summary & Lead Directives for Alfian
 
 Directives from the Team Lead:
+
 1. **Project Name:** **FYAT Agent** (rebranded from Fides Builder reference).
 2. **Target Audience for this Doc:** **Alfian** (developer handoff).
 3. **Core Mandate:**
-   - **Copy the website UI/UX of [fidesbuilder.xyz](https://fidesbuilder.xyz/):** Layout, hero framing (*"Transaction Builder for autonomous agents"*), the mandate builder cards, step-by-step transaction flow, code snippet tabs, and receipt views.
+   - **Copy the website UI/UX of [fidesbuilder.xyz](https://fidesbuilder.xyz/):** Layout, hero framing (_"Transaction Builder for autonomous agents"_), the mandate builder cards, step-by-step transaction flow, code snippet tabs, and receipt views.
    - **Visual Branding:** Use the metallic **Purple/Violet 'F' Logo** ([`logo.jpeg`](file:///Users/mac/Documents/Workspace/Work/Wealth/Oktober/brainstroming/FYT%20Agent/logo.jpeg)) provided in this folder.
 4. **Environment & Budget:**
    - **Solana Devnet First:** Use Devnet faucet USDC and SOL. Zero real capital spent during prototyping.
@@ -28,13 +30,13 @@ Directives from the Team Lead:
 
 ## 2. Conceptual Comparison: Fides vs FYAT Agent
 
-| Dimension | Reference (Fides Builder) | Target Implementation (FYAT Agent) |
-|---|---|---|
-| **Branding / Persona** | Fides (`fidesbuilder.xyz`), silver/white minimalist look | **FYAT Agent**, metallic Violet/Purple 'F' branding |
-| **Blockchain Target** | EVM (Robinhood Chain ID 4663, Base, EIP-712 signatures) | **Solana (Devnet first, native Anchor / PDA)** |
-| **Auth Mechanism** | ERC-7715 / EIP-712 offchain authorization | **Solana PDA Vault + Session Key Signer Checks** |
-| **Scope of Work** | Protocol transaction builder | **Solana Mandate Protocol + Web Builder Dashboard** |
-| **Database & Stack** | Proprietary backend | **Neon DB (PostgreSQL), Next.js (Vercel/Railway), OpenRouter (Free AI)** |
+| Dimension              | Reference (Fides Builder)                                | Target Implementation (FYAT Agent)                                       |
+| ---------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Branding / Persona** | Fides (`fidesbuilder.xyz`), silver/white minimalist look | **FYAT Agent**, metallic Violet/Purple 'F' branding                      |
+| **Blockchain Target**  | EVM (Robinhood Chain ID 4663, Base, EIP-712 signatures)  | **Solana (Devnet first, native Anchor / PDA)**                           |
+| **Auth Mechanism**     | ERC-7715 / EIP-712 offchain authorization                | **Solana PDA Vault + Session Key Signer Checks**                         |
+| **Scope of Work**      | Protocol transaction builder                             | **Solana Mandate Protocol + Web Builder Dashboard**                      |
+| **Database & Stack**   | Proprietary backend                                      | **Neon DB (PostgreSQL), Next.js (Vercel/Railway), OpenRouter (Free AI)** |
 
 ---
 
@@ -43,15 +45,16 @@ Directives from the Team Lead:
 The biggest danger in Web3 AI agents is giving the agent the user's private key. If the agent gets prompt-injected or bugs out, the wallet is drained.
 
 ### The FYAT Agent Security Boundary:
+
 1. **The Owner's Key Never Touches the Agent:**
    - The user connects Phantom / Solflare to FYAT Agent web app.
    - The user creates a **Vault PDA** (Program Derived Address owned by our Mandate program).
    - The user registers a **Session Key** (a temporary keypair generated for the agent bot) and defines rules:
-     - *Max spend per action:* e.g. 5 USDC
-     - *Max total budget:* e.g. 50 USDC
-     - *Allowed action:* `SWAP` or `TRANSFER`
-     - *Allowed tokens:* USDC -> Allowlisted Mint
-     - *Expiry:* 24 hours
+     - _Max spend per action:_ e.g. 5 USDC
+     - _Max total budget:_ e.g. 50 USDC
+     - _Allowed action:_ `SWAP` or `TRANSFER`
+     - _Allowed tokens:_ USDC -> Allowlisted Mint
+     - _Expiry:_ 24 hours
 2. **Execution via Session Key:**
    - The agent only signs with its ephemeral **Session Key**.
    - Our onchain Mandate program checks onchain limits before executing CPI (Cross-Program Invocation).
@@ -65,13 +68,14 @@ The biggest danger in Web3 AI agents is giving the agent the user's private key.
 Alfian should replicate the layout and user experience of [fidesbuilder.xyz](https://fidesbuilder.xyz/):
 
 ### A. Layout Structure & Pages
+
 1. **Header Navigation:**
    - Logo: Purple Metallic 'F' ([`logo.jpeg`](file:///Users/mac/Documents/Workspace/Work/Wealth/Oktober/brainstroming/FYT%20Agent/logo.jpeg)) + "FYAT Agent".
    - Links: `Builder`, `Docs`, `Receipts`, `Security`.
    - Action Button: `Connect Wallet` (Solana Devnet).
 2. **Hero Section:**
    - Big Bold Headline: **"Transaction Builder for autonomous agents."**
-   - Subtitle: *"Builds complete Solana agent transaction flows with mandate authorization built into the execution path."*
+   - Subtitle: _"Builds complete Solana agent transaction flows with mandate authorization built into the execution path."_
    - Interactive Live Counter: `Actions Built` and `Transactions Protected`.
 3. **Interactive Builder Playground (The Core Feature):**
    - Left side: **Mandate Configurator** (Owner sets asset, spending cap, target program, expiry).
@@ -82,6 +86,7 @@ Alfian should replicate the layout and user experience of [fidesbuilder.xyz](htt
      - `Session Key` | `Action` | `Amount` | `Policy Status (PASS/BLOCKED)` | `Solana Explorer Devnet Link`
 
 ### B. Styling & Design Tokens
+
 - **Background:** Deep dark canvas (`#0A0A0C` to `#0F0C1B`).
 - **Accent Glow:** Electric Violet / Purple glow (`#8B5CF6`, `#A855F7`) matching the `logo.jpeg`.
 - **Card Surfaces:** High-end glassmorphism (`backdrop-blur-md`, subtle border `rgba(139, 92, 246, 0.2)`).
@@ -99,7 +104,9 @@ Keep it lean and aligned with our standard workspace architecture:
 - **Free LLM (Optional Agent Reasoning):** **OpenRouter Free Tier** (e.g. `meta-llama/llama-3-8b-instruct:free`).
 
 ### Minimal Database Schema (Neon DB SQL):
+
 Alfian can paste this directly into Neon SQL Console:
+
 ```sql
 -- 1. Vaults registered by wallet owners
 CREATE TABLE vaults (
@@ -140,6 +147,10 @@ CREATE TABLE mandate_receipts (
 
 ---
 
+### Current repository deployment
+
+The schema above is an illustrative starting point; the application uses the append-only migrations in `db/migrations/`. Vercel hosts the Next.js web application and API, Neon stores mandates and queued agent jobs, and Railway runs the persistent worker with `pnpm agent:worker` (not `pnpm start`). The Builder enqueues an execution only after an owner-signed request. The worker uses one configured Devnet session key, checks the on-chain mandate, and reports the transaction signature to the Vercel API for verification and receipt recording. Keep `AGENT_SECRET_KEY` only in Railway; share `WORKER_API_SECRET` between Railway and Vercel.
+
 ## 6. TypeScript SDK Usage Example (For Developer Playground)
 
 Display this in the playground tab on the website so developers see how easy it is to use FYAT Agent:
@@ -150,7 +161,7 @@ import { createFyatClient, FyatMandate } from "@fyat/sdk";
 // 1. Initialize client on Solana Devnet
 const client = createFyatClient({
   network: "devnet",
-  rpcUrl: "https://api.devnet.solana.com"
+  rpcUrl: "https://api.devnet.solana.com",
 });
 
 // 2. Owner defines constrained mandate
@@ -162,15 +173,15 @@ const mandate = await client.createMandate({
     inputMint: "USDC_DEVNET_MINT",
     outputMint: "TOKEN_MINT",
     maxPerAction: 5_000_000, // 5 USDC
-    maxTotal: 50_000_000,    // 50 USDC
-    expiresInHours: 24
-  }
+    maxTotal: 50_000_000, // 50 USDC
+    expiresInHours: 24,
+  },
 });
 
 // 3. Agent plans, simulates, and executes safely
 const plan = await mandate.build({
   amountIn: 3_000_000, // 3 USDC
-  venue: "METEORA_DAMM"
+  venue: "METEORA_DAMM",
 });
 
 await plan.simulate(); // Verifies onchain rules before broadcasting
@@ -183,6 +194,7 @@ console.log("Transaction successfully executed under mandate:", txSignature);
 ## 7. Concrete Launch Demo (Hero Workflow)
 
 To prove this works in demo videos and presentations:
+
 1. Owner connects Phantom on Devnet, creates Vault, deposits 20 Devnet USDC.
 2. Owner creates Mandate for AI Agent with a strict limit: **Max 5 USDC per trade**.
 3. **Test 1 (Normal Execution):** Agent executes a 3 USDC swap -> **SUCCESS**, recorded on Devnet Explorer.
@@ -194,12 +206,12 @@ To prove this works in demo videos and presentations:
 
 ## 8. Development Milestones & Checklist (For Alfian)
 
-| Phase | Milestone | Scope & Deliverables |
-|---|---|---|
-| **Phase 1: Web Interface & Fides Clone** | Replicate [fidesbuilder.xyz](https://fidesbuilder.xyz/) UI | [ ] Next.js app with deep dark canvas and violet metallic branding (`logo.jpeg`)<br>[ ] Hero section with interactive builder cards & SDK code tabs<br>[ ] Solana Wallet Adapter integration (Phantom / Solflare) |
-| **Phase 2: Database & Simulation Engine** | Neon DB + Mandate State | [ ] Setup Neon DB with `vaults`, `mandates`, and `mandate_receipts` tables<br>[ ] API routes to create mandates, calculate limits, and log receipts<br>[ ] Transaction simulation preview using `@solana/web3.js` |
-| **Phase 3: Devnet Program / Vault Flow** | Solana PDA Vault & Session Auth | [ ] Anchor program or PDA vault script on Devnet<br>[ ] Capped token transfer & swap adapter validation<br>[ ] Positive & negative policy enforcement tests |
-| **Phase 4: Public Receipts Tape & Deployment** | Final Polish & Cloud Hosting | [ ] Live transaction tape showing real Devnet transaction signatures<br>[ ] Deploy frontend to Vercel and background workers to Railway |
+| Phase                                          | Milestone                                                  | Scope & Deliverables                                                                                                                                                                                              |
+| ---------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 1: Web Interface & Fides Clone**       | Replicate [fidesbuilder.xyz](https://fidesbuilder.xyz/) UI | [ ] Next.js app with deep dark canvas and violet metallic branding (`logo.jpeg`)<br>[ ] Hero section with interactive builder cards & SDK code tabs<br>[ ] Solana Wallet Adapter integration (Phantom / Solflare) |
+| **Phase 2: Database & Simulation Engine**      | Neon DB + Mandate State                                    | [ ] Setup Neon DB with `vaults`, `mandates`, and `mandate_receipts` tables<br>[ ] API routes to create mandates, calculate limits, and log receipts<br>[ ] Transaction simulation preview using `@solana/web3.js` |
+| **Phase 3: Devnet Program / Vault Flow**       | Solana PDA Vault & Session Auth                            | [ ] Anchor program or PDA vault script on Devnet<br>[ ] Capped token transfer & swap adapter validation<br>[ ] Positive & negative policy enforcement tests                                                       |
+| **Phase 4: Public Receipts Tape & Deployment** | Final Polish & Cloud Hosting                               | [ ] Live transaction tape showing real Devnet transaction signatures<br>[ ] Deploy frontend to Vercel and background workers to Railway                                                                           |
 
 ---
 

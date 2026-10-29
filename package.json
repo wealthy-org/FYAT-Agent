@@ -16,6 +16,7 @@
     "e2e:devnet": "tsx --env-file=.env.local scripts/devnet-e2e.ts",
     "agent:keygen": "tsx scripts/agent-keygen.ts",
     "agent:run": "tsx --env-file=.env.local scripts/agent-run.ts",
+    "agent:worker": "tsx scripts/agent-worker.ts",
     "idl:sync": "tsx scripts/sync-idl.ts"
   },
   "dependencies": {
@@ -33,10 +34,12 @@
     "lucide-react": "^1.61.0",
     "motion": "^14.7.0",
     "next": "16.4.3",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
+    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -48,12 +51,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
-    "pg": "^8.23.1",
     "postcss": "^8.5.31",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4",
-    "tsx": "^4.23.15",
     "typescript": "^5"
   },
   "packageManager": "pnpm@12.15.0"

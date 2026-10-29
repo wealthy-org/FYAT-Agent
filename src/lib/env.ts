@@ -16,6 +16,7 @@ const clientSchema = z.object({
   NEXT_PUBLIC_DAMM_POOL: optionalAddress,
   /** Token output swap (pasangan dari TOKEN_MINT di pool itu). */
   NEXT_PUBLIC_SWAP_OUTPUT_MINT: optionalAddress,
+  NEXT_PUBLIC_AGENT_SESSION_PUBKEY: optionalAddress,
 });
 
 // Next.js hanya meng-inline NEXT_PUBLIC_* jika dirujuk secara eksplisit.
@@ -27,6 +28,8 @@ const parsed = clientSchema.safeParse({
   NEXT_PUBLIC_DAMM_POOL: process.env.NEXT_PUBLIC_DAMM_POOL || undefined,
   NEXT_PUBLIC_SWAP_OUTPUT_MINT:
     process.env.NEXT_PUBLIC_SWAP_OUTPUT_MINT || undefined,
+  NEXT_PUBLIC_AGENT_SESSION_PUBKEY:
+    process.env.NEXT_PUBLIC_AGENT_SESSION_PUBKEY || undefined,
 });
 
 if (!parsed.success) {

@@ -3,9 +3,9 @@ import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/cn";
 
 const sizes = {
-  default: "w-[min(1080px,88%)]",
+  default: "w-[min(1080px,calc(100%-2rem))]",
   /** Untuk area padat seperti Builder Playground. */
-  wide: "w-[min(1320px,94%)]",
+  wide: "w-[min(1320px,calc(100%-2rem))]",
 } as const;
 
 type ContainerProps = ComponentPropsWithoutRef<"div"> & {

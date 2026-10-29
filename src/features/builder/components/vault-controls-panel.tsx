@@ -133,7 +133,7 @@ export function VaultControlsPanel({
           className={INPUT_CLASS}
         />
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
           <Button
             disabled={anyBusy || amountEmpty}
             onClick={() => void funds.deposit(amount)}

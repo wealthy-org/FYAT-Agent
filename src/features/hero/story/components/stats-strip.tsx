@@ -19,11 +19,11 @@ export function StatsStrip({ active, animate = true }: StatsStripProps) {
       </p>
 
       <div className="relative mx-auto w-[min(980px,100%)]">
-        <ul className="relative flex flex-wrap items-center justify-center gap-x-6 gap-y-6 rounded-2xl border border-border-subtle bg-white/3 px-6 py-8 backdrop-blur-md sm:gap-x-10 sm:px-8 sm:py-10">
+        <ul className="relative grid grid-cols-3 items-center justify-items-center gap-x-2 gap-y-5 rounded-2xl border border-border-subtle bg-white/3 px-3 py-6 backdrop-blur-md sm:flex sm:flex-wrap sm:justify-center sm:gap-x-10 sm:gap-y-6 sm:px-8 sm:py-10">
           {storyStats.map((stat, index) => (
             <Fragment key={stat.id}>
               {index > 0 && (
-                <li aria-hidden="true">
+                <li aria-hidden="true" className="hidden sm:block">
                   <ArrowRight className="size-4 text-brand-400 sm:size-5" />
                 </li>
               )}
@@ -55,7 +55,7 @@ export function StatsStrip({ active, animate = true }: StatsStripProps) {
           <li aria-hidden="true" className="hidden sm:block">
             <ArrowRight className="size-5 text-brand-400" />
           </li>
-          <li className="basis-full text-center sm:basis-auto">
+          <li className="col-span-3 text-center sm:basis-auto">
             <span className="inline-block rounded-full border border-border-strong bg-brand-500/10 px-5 py-2 text-sm shadow-glow">
               {storyPill}
             </span>

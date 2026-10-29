@@ -8,7 +8,7 @@ export function Section({
 }: ComponentPropsWithoutRef<"section">) {
   return (
     <section
-      className={cn("scroll-mt-24 py-24 md:py-28", className)}
+      className={cn("scroll-mt-20 py-16 sm:py-20 md:scroll-mt-24 md:py-28", className)}
       {...props}
     />
   );

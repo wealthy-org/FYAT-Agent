@@ -186,6 +186,16 @@
         margin: 1rem;
         min-height: calc(100vh - 2rem); /* 100vh - 2 * margin */
     }
+
+    .wallet-adapter-modal-wrapper {
+        max-width: 100%;
+    }
+
+    .wallet-adapter-modal-title {
+        padding: 56px 24px 32px;
+        font-size: clamp(18px, 5vw, 24px);
+        line-height: 1.4;
+    }
 }
 
 .wallet-adapter-modal-wrapper {

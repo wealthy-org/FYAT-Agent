@@ -41,7 +41,7 @@ export function MandateInspector() {
 
   return (
     <Card className="p-6 md:p-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-3 min-[400px]:flex-row min-[400px]:items-center">
         <div>
           <Eyebrow>Inspector</Eyebrow>
           <h3 className="font-display mt-2 text-xl font-medium">My Mandates</h3>
@@ -108,33 +108,33 @@ export function MandateInspector() {
                   View mandate on Solana Explorer
                 </a>
 
-                <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+                <dl                 className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 text-xs sm:text-sm">
                   <dt className="text-fg-muted">Spent</dt>
-                  <dd className="text-right">
+                  <dd className="min-w-0 break-words text-right">
                     {units(item.spent)} / {units(item.maxTotal)}
                   </dd>
                   <dt className="text-fg-muted">Action</dt>
-                  <dd className="text-right">{item.action}</dd>
+                  <dd className="min-w-0 break-words text-right">{item.action}</dd>
                   <dt className="text-fg-muted">Max per action</dt>
-                  <dd className="text-right">{units(item.maxPerAction)}</dd>
+                  <dd className="min-w-0 break-words text-right">{units(item.maxPerAction)}</dd>
                   <dt className="text-fg-muted">
                     {item.action === "SWAP" ? "Approved pool" : "Recipient"}
                   </dt>
-                  <dd className="text-right">
+                  <dd className="min-w-0 break-all text-right">
                     {shortenAddress(item.recipient)}
                   </dd>
                   <dt className="text-fg-muted">Session</dt>
-                  <dd className="text-right">
+                  <dd className="min-w-0 break-all text-right">
                     {shortenAddress(item.sessionPubkey)}
                   </dd>
                   <dt className="text-fg-muted">Expires</dt>
-                  <dd className="text-right">
+                  <dd className="min-w-0 break-words text-right">
                     {new Date(item.expiresAt).toLocaleString()}
                   </dd>
                   {item.revokedAt && (
                     <>
                       <dt className="text-fg-muted">Revoked</dt>
-                      <dd className="text-right">
+                      <dd className="min-w-0 break-words text-right">
                         {new Date(item.revokedAt).toLocaleString()}
                       </dd>
                     </>

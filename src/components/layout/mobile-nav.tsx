@@ -33,25 +33,26 @@ export function MobileNav({ items, actions }: MobileNavProps) {
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={open ? "Close menu" : "Open menu"}
-        className="grid size-11 place-items-center rounded-full border border-border-subtle text-fg transition duration-200 hover:border-border-strong hover:bg-surface-raised active:scale-90"      >
+        className="grid size-11 place-items-center rounded-full border border-border-subtle text-fg transition duration-200 hover:border-border-strong hover:bg-surface-raised active:scale-90"
+      >
         {open ? <X className="size-4" /> : <Menu className="size-4" />}
       </button>
 
       {open && (
         <div
           id={panelId}
-          className="absolute inset-x-0 top-full border-b border-border-subtle bg-canvas/95 backdrop-blur-md"
+          className="absolute inset-x-0 top-full max-h-[calc(100svh-4rem)] overflow-y-auto overscroll-contain border-b border-border-subtle bg-canvas/95 backdrop-blur-md"
         >
           <nav
             aria-label="Mobile"
-            className="mx-auto flex w-[min(1080px,88%)] flex-col gap-1 py-4"
+            className="mx-auto flex w-[min(1080px,calc(100%-2rem))] flex-col gap-1 py-4"
           >
             {items.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                                className="rounded-lg px-3 py-3.5 text-base text-fg-muted hover:bg-surface hover:text-fg"
+                className="rounded-lg px-3 py-3.5 text-base text-fg-muted hover:bg-surface hover:text-fg"
               >
                 {item.label}
               </a>

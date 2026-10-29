@@ -13,8 +13,8 @@ type DocsShellProps = {
 
 const layouts = {
   article:
-    "lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_220px]",
-  wide: "lg:grid-cols-[280px_minmax(0,1fr)]",
+    "lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_200px]",
+  wide: "lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)]",
 } as const;
 
 /** Sidebar kiri, konten, dan (untuk artikel) "On this page" di kanan. Sidebar dan TOC sticky. */
@@ -22,7 +22,7 @@ export function DocsShell({ sidebar, toc, wide = false, children }: DocsShellPro
   return (
     <div
       className={cn(
-        "mx-auto grid w-full max-w-380 gap-14 px-6 pb-24 pt-28",
+        "mx-auto grid w-full max-w-380 gap-8 px-4 pb-16 pt-24 sm:gap-10 sm:px-6 sm:pb-24 sm:pt-28 lg:gap-10",
         wide ? layouts.wide : layouts.article,
       )}
     >

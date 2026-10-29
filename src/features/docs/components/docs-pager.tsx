@@ -14,7 +14,7 @@ export function DocsPager({ prev, next }: DocsPagerProps) {
   return (
     <nav
       aria-label="Pagination"
-      className="mt-16 grid grid-cols-2 gap-4 border-t border-border-subtle pt-8"
+      className="mt-12 grid grid-cols-1 gap-3 border-t border-border-subtle pt-6 sm:mt-16 sm:grid-cols-2 sm:gap-4 sm:pt-8"
     >
       {prev ? (
         <Link href={prev.href} className={cardClass}>
@@ -24,7 +24,7 @@ export function DocsPager({ prev, next }: DocsPagerProps) {
           <span className="mt-1 block text-sm text-fg">{prev.label}</span>
         </Link>
       ) : (
-        <span />
+        <span className="hidden sm:block" />
       )}
 
       {next ? (

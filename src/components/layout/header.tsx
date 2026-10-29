@@ -18,7 +18,7 @@ type HeaderProps = {
 export function Header({ actions, hideOnScrollFrom }: HeaderProps) {
   return (
     <HeaderShell hideOnScrollFrom={hideOnScrollFrom}>
-      <Container className="flex h-20 items-center justify-between">
+      <Container className="flex h-16 items-center justify-between sm:h-20">
         <Logo />
 
         <NavMenu items={siteConfig.nav} actions={actions} />

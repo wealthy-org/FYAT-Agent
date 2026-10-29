@@ -10,7 +10,7 @@ export function DocsTitleCard({ eyebrow, title }: DocsTitleCardProps) {
         {eyebrow}
       </p>
 
-      <div className="relative mt-4 overflow-hidden rounded-2xl px-8 py-9 md:py-11">
+      <div className="relative mt-4 overflow-hidden rounded-2xl px-5 py-7 sm:px-8 sm:py-9 md:py-11">
         {/* Gradien ungu */}
         <div
           aria-hidden="true"
@@ -22,7 +22,7 @@ export function DocsTitleCard({ eyebrow, title }: DocsTitleCardProps) {
           className="absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.4)_1px,transparent_1px)] bg-size-[14px_14px] mask-[linear-gradient(90deg,transparent,#000_70%)]"
         />
 
-        <h1 className="relative font-display text-4xl font-light tracking-tight text-white md:text-5xl">
+        <h1 className="relative font-display text-balance text-3xl font-light tracking-tight text-white sm:text-4xl md:text-5xl">
           {title}
         </h1>
       </div>

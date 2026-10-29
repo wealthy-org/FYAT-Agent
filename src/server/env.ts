@@ -22,6 +22,8 @@ const serverSchema = z.object({
     .default("http://localhost:3000"),
   FYAT_PROGRAM_ID: solanaAddress,
   TOKEN_MINT: solanaAddress,
+  DAMM_POOL: solanaAddress.optional(),
+  SWAP_OUTPUT_MINT: solanaAddress.optional(),
   SOLANA_RPC_URL: z.url(),
 });
 
@@ -37,6 +39,9 @@ export function getServerEnv(): ServerEnv {
     APP_URL: process.env.APP_URL,
     FYAT_PROGRAM_ID: process.env.FYAT_PROGRAM_ID,
     TOKEN_MINT: process.env.NEXT_PUBLIC_TOKEN_MINT,
+    DAMM_POOL: process.env.NEXT_PUBLIC_DAMM_POOL || undefined,
+    SWAP_OUTPUT_MINT:
+      process.env.NEXT_PUBLIC_SWAP_OUTPUT_MINT || undefined,
     SOLANA_RPC_URL:
       process.env.SOLANA_RPC_URL ??
       process.env.NEXT_PUBLIC_SOLANA_RPC_URL ??

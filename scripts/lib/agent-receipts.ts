@@ -10,6 +10,7 @@ export const POLICY_ERRORS: ReadonlySet<string> = new Set([
   "ExceedsPerActionLimit",
   "ExceedsTotalBudget",
   "DestinationNotAllowed",
+  "PoolNotAllowed",
 ]);
 
 export type AttemptOutcome =
@@ -27,6 +28,7 @@ const MAX_REASON_LENGTH = 280;
  */
 export async function recordAgentAttempt(input: {
   mandatePda: string;
+  action: "TRANSFER" | "SWAP";
   amount: bigint;
   target: string;
   signature: string;
@@ -74,16 +76,23 @@ export async function recordAgentAttempt(input: {
       await client.query(
         `INSERT INTO mandate_receipts
            (mandate_id, action, amount, target, tx_signature, status)
-         VALUES ($1, 'TRANSFER', $2, $3, $4, 'SUCCESS')`,
-        [mandateId, input.amount.toString(), input.target, input.signature],
+         VALUES ($1, $2, $3, $4, $5, 'SUCCESS')`,
+        [
+          mandateId,
+          input.action,
+          input.amount.toString(),
+          input.target,
+          input.signature,
+        ],
       );
     } else {
       await client.query(
         `INSERT INTO mandate_receipts
            (mandate_id, action, amount, target, tx_signature, status, reason)
-         VALUES ($1, 'TRANSFER', $2, $3, $4, 'REJECTED_BY_POLICY', $5)`,
+         VALUES ($1, $2, $3, $4, $5, 'REJECTED_BY_POLICY', $6)`,
         [
           mandateId,
+          input.action,
           input.amount.toString(),
           input.target,
           input.signature,

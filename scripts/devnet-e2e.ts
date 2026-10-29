@@ -112,7 +112,7 @@ async function sendAsAgent(
       confirmed = true;
     }
   }
-  if (!confirmed) throw new Error(`Transaksi ${signature} belum terkonfirmasi setelah 60 detik`);
+  if (!confirmed) throw new Error(`Transaction ${signature} was not confirmed after 60 seconds`);
 
   let logs: string[] = [];
   for (let i = 0; i < 10 && logs.length === 0; i++) {
@@ -335,7 +335,7 @@ async function main(): Promise<void> {
   assert.equal(await balanceOf(merchantAta), 3n * UNIT);
   assert.equal(await balanceOf(vaultAta), vaultBefore - 3n * UNIT);
   assert.equal(await spent(), 3n * UNIT);
-  results.push({ scenario: "1. Transfer 3 USDC (cap 5)", verdict: "BERHASIL", signature: d1.signature });
+  results.push({ scenario: "1. Transfer 3 USDC (cap 5)", verdict: "SUCCESS", signature: d1.signature });
   console.log("demo 1 OK", explorerTx(d1.signature));
 
   /* ---- Demo 2: 10 USDC, di atas cap -> DITOLAK PROGRAM -------------------- */
@@ -343,7 +343,7 @@ async function main(): Promise<void> {
   assertRejectedWith("demo 2", d2, idl.errors, "ExceedsPerActionLimit");
   assert.equal(await balanceOf(merchantAta), 3n * UNIT);
   assert.equal(await spent(), 3n * UNIT);
-  results.push({ scenario: "2. Transfer 10 USDC (di atas cap)", verdict: "DITOLAK: ExceedsPerActionLimit", signature: d2.signature });
+  results.push({ scenario: "2. Transfer 10 USDC (over cap)", verdict: "REJECTED: ExceedsPerActionLimit", signature: d2.signature });
   console.log("demo 2 OK", explorerTx(d2.signature));
 
 
@@ -351,7 +351,7 @@ async function main(): Promise<void> {
   const d3 = await sendAsAgent(connection, agent, await executeIx(agentAta, 3n * UNIT));
   assertRejectedWith("demo 3", d3, idl.errors, "DestinationNotAllowed");
   assert.equal(await balanceOf(agentAta), 0n);
-  results.push({ scenario: "3. Kirim ke wallet agent sendiri", verdict: "DITOLAK: DestinationNotAllowed", signature: d3.signature });
+  results.push({ scenario: "3. Send to the agent's own wallet", verdict: "REJECTED: DestinationNotAllowed", signature: d3.signature });
   console.log("demo 3 OK", explorerTx(d3.signature));
 
   /* ---- Demo 4: owner mencabut, transaksi berikutnya langsung ditolak ------ */
@@ -364,15 +364,15 @@ async function main(): Promise<void> {
   const d4 = await sendAsAgent(connection, agent, await executeIx(merchantAta, UNIT));
   assertRejectedWith("demo 4", d4, idl.errors, "MandateIsRevoked");
   assert.equal(await balanceOf(merchantAta), 3n * UNIT);
-  results.push({ scenario: "4. Transfer setelah revoke", verdict: "DITOLAK: MandateIsRevoked", signature: d4.signature });
+  results.push({ scenario: "4. Transfer after revoke", verdict: "REJECTED: MandateIsRevoked", signature: d4.signature });
   console.log("demo 4 OK", explorerTx(d4.signature));
 
   /* ---- Ringkasan ---------------------------------------------------------- */
-  console.log("\n================ HASIL ================");
+  console.log("\n================ RESULTS ================");
   for (const r of results) {
     console.log(`${r.scenario}\n  -> ${r.verdict}\n  ${explorerTx(r.signature)}`);
   }
-  console.log("\nSemua assert lulus: aturan ditegakkan oleh program onchain.");
+  console.log("\nAll assertions passed: the on-chain program enforced the rules.");
 }
 
 main().catch((error: unknown) => {

@@ -17,10 +17,10 @@
     "agent:keygen": "tsx scripts/agent-keygen.ts",
     "agent:run": "tsx --env-file=.env.local scripts/agent-run.ts",
     "idl:sync": "tsx scripts/sync-idl.ts"
-
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
+    "@meteora-ag/cp-amm-sdk": "^1.5.1",
     "@neondatabase/serverless": "^1.2.0",
     "@solana/spl-token": "~0.4.15",
     "@solana/wallet-adapter-phantom": "^0.9.30",

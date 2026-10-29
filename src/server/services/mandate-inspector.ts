@@ -1,6 +1,7 @@
 import "server-only";
 
 import { PublicKey } from "@solana/web3.js";
+import type { MandateAction } from "@/features/builder";
 
 import { getServerEnv } from "../env";
 import { getConnection } from "../onchain/connection";
@@ -18,6 +19,7 @@ export type InspectedMandate = {
   mandatePda: string;
   onchainId: string;
   sessionPubkey: string;
+  action: MandateAction;
   recipient: string;
   maxPerAction: string;
   maxTotal: string;
@@ -74,6 +76,7 @@ export async function inspectOwnerMandates(
       mandatePda,
       onchainId: onchainId.toString(),
       sessionPubkey: mandate.sessionPubkey,
+      action: onchain?.action ?? mandate.action,
       recipient: mandate.target,
       maxPerAction: mandate.maxPerAction.toString(),
       maxTotal: mandate.maxTotal.toString(),

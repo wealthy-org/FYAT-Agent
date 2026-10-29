@@ -31,7 +31,7 @@ const TITLES = {
 } as const satisfies Record<FlowStepId, string>;
 
 const EXECUTE_PENDING =
-  "Not run yet. Use Execute Transfer below once the simulation passes.";
+  "Not run yet. Use the execute action below once the simulation passes.";
 
 /** Hasil eksekusi on-chain di sesi ini. Dikirim dari hook eksekusi. */
 export type ExecutionState =
@@ -133,13 +133,13 @@ function applyExecution(
         return makeStep(
           "execute",
           "running",
-          "Submitting the transfer to Solana.",
+          "Submitting the action to Solana.",
         );
       case "success":
         return makeStep(
           "execute",
           "complete",
-          `Transfer confirmed on-chain. Signature: ${execution.signature}`,
+          `Action confirmed on-chain. Signature: ${execution.signature}`,
         );
       case "failed":
         return makeStep(

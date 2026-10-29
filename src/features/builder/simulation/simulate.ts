@@ -1,8 +1,14 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey, type Connection } from "@solana/web3.js";
+import {
+  PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
+  type Connection,
+} from "@solana/web3.js";
 
 import { withTimeout } from "@/lib/async";
 import { env } from "@/lib/env";
+import { getSwapConfig } from "@/lib/swap-config";
 
 import { USDC_DECIMALS } from "../constants";
 import { evaluatePolicy } from "../policy";
@@ -10,9 +16,9 @@ import {
   buildTransferTransaction,
   deriveTransferAccounts,
 } from "./build-transfer";
+import { buildExecuteSwapInstructions } from "./build-swap";
 import { classifyFailure } from "./classify";
 import type { SimulationOutcome, SimulationRequest } from "./types";
-
 const RPC_TIMEOUT_MS = 15_000;
 const MAX_LOG_LINES = 12;
 const MAX_LOG_LENGTH = 200;
@@ -38,12 +44,71 @@ export async function runSimulation(
     };
   }
 
-  if (config.action !== "TRANSFER") {
-    return {
-      kind: "UNSUPPORTED",
-      message:
-        "Swap simulation arrives with the Meteora adapter (Step 12). Transfers can be simulated now.",
-    };
+  if (config.action === "SWAP") {
+    if (
+      !request.program ||
+      !request.sessionPubkey ||
+      !request.activeMandate ||
+      request.activeMandate.action !== "SWAP" ||
+      request.activeMandate.recipient !== getSwapConfig()?.pool ||
+      request.activeMandate.maxPerAction !== config.maxPerAction ||
+      request.activeMandate.maxTotal !== config.maxTotal
+    ) {
+      return {
+        kind: "UNSUPPORTED",
+        message:
+          "Create or restore a swap mandate before running the on-chain swap simulation.",
+      };
+    }
+
+    try {
+      const { instructions } = await buildExecuteSwapInstructions({
+        connection,
+        program: request.program,
+        payer,
+        session: request.sessionPubkey,
+        mandatePda: request.activeMandate.mandatePda,
+        amountIn: attempt.amount,
+      });
+      const transaction = new VersionedTransaction(
+        new TransactionMessage({
+          payerKey: payer,
+          recentBlockhash: PublicKey.default.toBase58(),
+          instructions,
+        }).compileToV0Message(),
+      );
+      const { value } = await withTimeout(
+        connection.simulateTransaction(transaction, {
+          sigVerify: false,
+          replaceRecentBlockhash: true,
+          commitment: "confirmed",
+        }),
+        RPC_TIMEOUT_MS,
+        "Swap simulation",
+      );
+      const logs = cleanLogs(value.logs);
+
+      if (value.err) {
+        return { kind: "FAILED", ...classifyFailure(value.err, logs), logs };
+      }
+
+      return {
+        kind: "PASSED",
+        unitsConsumed: value.unitsConsumed ?? null,
+        logs,
+      };
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[swap simulation]", error);
+      }
+      return {
+        kind: "ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Could not simulate the swap. Check the pool configuration and RPC connection.",
+      };
+    }
   }
 
   if (!env.NEXT_PUBLIC_TOKEN_MINT) {

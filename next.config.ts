@@ -55,6 +55,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  transpilePackages: ["@meteora-ag/cp-amm-sdk"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -63,11 +63,11 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
   return (
     <Card className="p-6 md:p-8">
       <Eyebrow>Vault</Eyebrow>
-      <h3 className="mt-2 font-display text-xl font-medium">Dana &amp; Akses</h3>
+      <h3 className="mt-2 font-display text-xl font-medium">Funds &amp; Access</h3>
 
-      {/* ------------------------------ Saldo ------------------------------ */}
+      {/* ------------------------------ Balance ------------------------------ */}
       <section className="mt-6 rounded-2xl border border-border-subtle p-4">
-        <h4 className="font-medium">Saldo</h4>
+        <h4 className="font-medium">Balance</h4>
         <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-fg-muted">Vault</dt>
@@ -91,26 +91,26 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
           disabled={anyBusy}
           onClick={() => void funds.refreshBalances()}
         >
-          Muat ulang saldo
+          Refresh balance
         </Button>
       </section>
 
       {/* ------------------------ Deposit & Withdraw ----------------------- */}
       <section className="mt-6 rounded-2xl border border-border-subtle p-4">
-        <h4 className="font-medium">Setor &amp; Tarik</h4>
+        <h4 className="font-medium">Deposit &amp; Withdraw</h4>
         <p className="mt-1 text-sm text-fg-muted">
-          Hanya owner yang dapat menyetor dan menarik. Penarikan selalu ke token
-          account milik owner sendiri.
+          Only the owner can deposit and withdraw. Withdrawals always go to the
+          owners own token account.
         </p>
 
         <label htmlFor="vault-amount" className="mt-4 block text-sm font-medium">
-          Jumlah ({ASSET_SYMBOL})
+          Amount ({ASSET_SYMBOL})
         </label>
         <input
           id="vault-amount"
           inputMode="decimal"
           autoComplete="off"
-          placeholder="mis. 5 atau 2.5"
+          placeholder="e.g. 5 or 2.5"
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
           className={INPUT_CLASS}
@@ -121,13 +121,13 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
             disabled={anyBusy || amountEmpty}
             onClick={() => void funds.deposit(amount)}
           >
-            {funds.busy ? "Memproses..." : "Setor"}
+            {funds.busy ? "Processing..." : "Deposit"}
           </Button>
           <Button
             disabled={anyBusy || amountEmpty}
             onClick={() => void funds.withdraw(amount)}
           >
-            {funds.busy ? "Memproses..." : "Tarik"}
+            {funds.busy ? "Processing..." : "Withdraw"}
           </Button>
         </div>
 
@@ -148,17 +148,17 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
             rel="noopener noreferrer"
             className="mt-2 inline-block text-sm text-brand-400 underline"
           >
-            Lihat di Explorer
+            View in Explorer
           </a>
         )}
       </section>
 
       {/* ------------------------------ Revoke ----------------------------- */}
       <section className="mt-6 rounded-2xl border border-border-subtle p-4">
-        <h4 className="font-medium">Cabut Mandate</h4>
+        <h4 className="font-medium">Revoke Mandate</h4>
         <p className="mt-1 text-sm text-fg-muted">
-          Setelah dicabut, setiap transaksi agent langsung ditolak program
-          (MandateIsRevoked). Pencabutan tidak bisa dibatalkan.
+          Once revoked, every agent transaction is immediately rejected by the
+          program (MandateIsRevoked). Revocation cannot be undone.
         </p>
 
         {activeMandate ? (
@@ -167,7 +167,7 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
           </p>
         ) : (
           <p className="mt-3 text-sm text-fg-muted">
-            Belum ada mandate aktif. Buat atau pulihkan mandate dulu.
+            No active mandate yet. Create or restore one first.
           </p>
         )}
 
@@ -177,10 +177,10 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
           onClick={() => void handleRevoke()}
         >
           {revokeFlow.busy
-            ? "Mencabut..."
+            ? "Revoking..."
             : revoked
-              ? "Mandate sudah dicabut"
-              : "Cabut Mandate"}
+              ? "Mandate revoked"
+              : "Revoke Mandate"}
         </Button>
 
         {revokeFlow.status && (
@@ -200,7 +200,7 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
             rel="noopener noreferrer"
             className="mt-2 inline-block text-sm text-brand-400 underline"
           >
-            Lihat di Explorer
+            View in Explorer
           </a>
         )}
       </section>

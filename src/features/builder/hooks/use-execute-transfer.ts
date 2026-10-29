@@ -19,13 +19,13 @@ export function useExecuteTransfer(
     setOutcome({ kind: "running" });
 
     try {
-      setStatus("Mengirim transaksi execute ke Solana...");
+      setStatus("Sending the execute transaction to Solana...");
       const txSignature = await execute(amount);
-      setStatus(`Transfer berhasil dikonfirmasi: ${txSignature}`);
+      setStatus(`Action confirmed: ${txSignature}`);
       setOutcome({ kind: "success", signature: txSignature });
     } catch (cause) {
       const message =
-        cause instanceof Error ? cause.message : "Eksekusi transfer gagal.";
+        cause instanceof Error ? cause.message : "Action execution failed.";
       setError(message);
       setStatus("");
       setOutcome({ kind: "failed", message });

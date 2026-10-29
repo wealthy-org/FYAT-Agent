@@ -108,6 +108,100 @@ export type FyatMandate = {
       ]
     },
     {
+      "name": "createSwapMandate",
+      "discriminator": [
+        188,
+        18,
+        42,
+        240,
+        108,
+        39,
+        167,
+        13
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.owner",
+                "account": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "vault.nextMandateId",
+                "account": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "createMandateParams"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "deposit",
       "discriminator": [
         242,
@@ -262,6 +356,447 @@ export type FyatMandate = {
       "args": [
         {
           "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "executeSwap",
+      "discriminator": [
+        56,
+        182,
+        124,
+        215,
+        155,
+        140,
+        157,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "session",
+          "signer": true,
+          "relations": [
+            "mandate"
+          ]
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.owner",
+                "account": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "vault"
+              }
+            ]
+          },
+          "relations": [
+            "mandate"
+          ]
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.id",
+                "account": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "Token input = mint vault. Budget mandate dihitung dalam token ini."
+          ],
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "vaultTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "outputMint"
+        },
+        {
+          "name": "vaultOutputTokenAccount",
+          "docs": [
+            "Hasil swap HARUS masuk ke ATA milik vault. Agent tidak bisa mengalihkannya."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "outputMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "poolAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                9,
+                45,
+                33,
+                53,
+                101,
+                122,
+                21,
+                156,
+                43,
+                135,
+                212,
+                182,
+                106,
+                112,
+                219,
+                142,
+                151,
+                82,
+                56,
+                159,
+                247,
+                106,
+                175,
+                32,
+                108,
+                237,
+                6,
+                58,
+                56,
+                249,
+                90,
+                237
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenAVault",
+          "writable": true
+        },
+        {
+          "name": "tokenBVault",
+          "writable": true
+        },
+        {
+          "name": "tokenAMint"
+        },
+        {
+          "name": "tokenBMint"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "eventAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                9,
+                45,
+                33,
+                53,
+                101,
+                122,
+                21,
+                156,
+                43,
+                135,
+                212,
+                182,
+                106,
+                112,
+                219,
+                142,
+                151,
+                82,
+                56,
+                159,
+                247,
+                106,
+                175,
+                32,
+                108,
+                237,
+                6,
+                58,
+                56,
+                249,
+                90,
+                237
+              ]
+            }
+          }
+        },
+        {
+          "name": "ammProgram",
+          "address": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG"
+        }
+      ],
+      "args": [
+        {
+          "name": "amountIn",
+          "type": "u64"
+        },
+        {
+          "name": "minimumAmountOut",
           "type": "u64"
         }
       ]
@@ -924,6 +1459,19 @@ export type FyatMandate = {
       ]
     },
     {
+      "name": "swapExecuted",
+      "discriminator": [
+        150,
+        166,
+        26,
+        225,
+        28,
+        89,
+        38,
+        79
+      ]
+    },
+    {
       "name": "transferExecuted",
       "discriminator": [
         8,
@@ -1017,6 +1565,26 @@ export type FyatMandate = {
       "code": 6015,
       "name": "mathOverflow",
       "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6016,
+      "name": "poolNotAllowed",
+      "msg": "Pool is not the mandate's approved pool"
+    },
+    {
+      "code": 6017,
+      "name": "invalidSwapAccounts",
+      "msg": "Swap accounts do not match the vault or the pool"
+    },
+    {
+      "code": 6018,
+      "name": "swapOverspent",
+      "msg": "Swap spent more than the requested input amount"
+    },
+    {
+      "code": 6019,
+      "name": "slippageExceeded",
+      "msg": "Swap output is below the minimum amount out"
     }
   ],
   "types": [
@@ -1031,6 +1599,9 @@ export type FyatMandate = {
         "variants": [
           {
             "name": "transfer"
+          },
+          {
+            "name": "swap"
           }
         ]
       }
@@ -1190,6 +1761,38 @@ export type FyatMandate = {
           {
             "name": "revokedAt",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "swapExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "amountIn",
+            "type": "u64"
+          },
+          {
+            "name": "amountOut",
+            "type": "u64"
+          },
+          {
+            "name": "spent",
+            "type": "u64"
           }
         ]
       }

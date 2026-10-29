@@ -36,10 +36,10 @@ export function useVaultFunds() {
   /** Alamat-alamat yang dibutuhkan deposit, withdraw, dan pembacaan saldo. */
   const resolveAddresses = useCallback(() => {
     if (!wallet.publicKey) {
-      throw new Error("Hubungkan wallet terlebih dahulu.");
+      throw new Error("Connect your wallet first.");
     }
     if (!env.NEXT_PUBLIC_TOKEN_MINT) {
-      throw new Error("NEXT_PUBLIC_TOKEN_MINT belum dikonfigurasi.");
+      throw new Error("NEXT_PUBLIC_TOKEN_MINT is not configured.");
     }
 
     const owner = wallet.publicKey;
@@ -99,20 +99,20 @@ export function useVaultFunds() {
 
       try {
         const amount = parseUnits(amountText.trim(), USDC_DECIMALS);
-        if (amount <= 0n) throw new Error("Jumlah harus lebih dari 0.");
+        if (amount <= 0n) throw new Error("The amount must be greater than 0.");
 
         const a = resolveAddresses();
         const program = createFyatProgram(connection, wallet);
 
         const vaultInfo = await connection.getAccountInfo(a.vault, "confirmed");
         if (!vaultInfo) {
-          throw new Error("Vault belum dibuat. Buat mandate pertama dulu.");
+          throw new Error("The vault has not been created. Create your first mandate first.");
         }
 
         setStatus(
           kind === "deposit"
-            ? "Menunggu persetujuan setoran..."
-            : "Menunggu persetujuan penarikan...",
+            ? "Approve the deposit in your wallet..."
+            : "Approve the withdrawal in your wallet...",
         );
 
         // Token account owner dibuat bila belum ada (idempoten).
@@ -143,15 +143,15 @@ export function useVaultFunds() {
           .preInstructions([ensureOwnerAta])
           .rpc();
 
-        setStatus("Menunggu konfirmasi...");
+        setStatus("Waiting for confirmation...");
         await confirmOrThrow(
           connection,
           txSignature,
-          kind === "deposit" ? "Setoran gagal dikonfirmasi." : "Penarikan gagal dikonfirmasi.",
+          kind === "deposit" ? "The deposit failed to confirm." : "The withdrawal failed to confirm.",
         );
 
         setSignature(txSignature);
-        setStatus(kind === "deposit" ? "Setoran berhasil." : "Penarikan berhasil.");
+        setStatus(kind === "deposit" ? "Deposit successful." : "Withdrawal successful.");
         await refreshBalances();
         return txSignature;
       } catch (e) {

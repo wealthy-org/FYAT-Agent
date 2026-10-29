@@ -13,8 +13,13 @@ import { VaultControlsPanel } from "./vault-controls-panel";
 export function BuilderPlayground() {
   const mandateForm = useMandateForm();
   const attemptForm = useAgentAttempt();
-  const simulation = useSimulation(mandateForm.config, attemptForm.attempt);
   const mandateCreator = useCreateMandate();
+  const simulation = useSimulation(
+    mandateForm.config,
+    attemptForm.attempt,
+    mandateCreator.activeMandate,
+    mandateCreator.sessionPubkey || mandateCreator.externalAgent,
+  );
 
   return (
     // Ukuran mengikuti lebar wadahnya, bukan lebar layar.

@@ -14,7 +14,7 @@ const dir = path.join(process.cwd(), ".keys");
 const file = path.join(dir, "agent.json");
 
 if (existsSync(file)) {
-  console.error(`Sudah ada: ${file}. Hapus dulu kalau mau membuat kunci baru.`);
+  console.error(`${file} already exists. Delete it first to generate a new key.`);
   process.exitCode = 1;
 } else {
   mkdirSync(dir, { recursive: true });
@@ -22,5 +22,5 @@ if (existsSync(file)) {
   writeFileSync(file, JSON.stringify(Array.from(agent.secretKey)), { mode: 0o600 });
   console.log("Agent public key (tempel ini di form mandate):");
   console.log(agent.publicKey.toBase58());
-  console.log("\nIsi SOL Devnet untuk fee, mis. di https://faucet.solana.com");
+  console.log("\nFund it with Devnet SOL for transaction fees, e.g. https://faucet.solana.com");
 }

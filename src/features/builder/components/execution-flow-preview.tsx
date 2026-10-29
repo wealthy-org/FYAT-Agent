@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 
@@ -17,6 +17,9 @@ import { FlowStepList } from "./flow-step-list";
 import { MandateCreateSection } from "./mandate-create-section";
 import { SessionVaultSection } from "./session-vault-section";
 import { SimulationControls } from "./simulation-controls";
+import { useOnchainProbe } from "../hooks/use-onchain-probe";
+import { OnchainProbeSection } from "./onchain-probe-section";
+import { getSwapConfig } from "@/lib/swap-config";
 
 type ExecutionFlowPreviewProps = {
   config: MandateConfig | null;
@@ -36,6 +39,9 @@ export function ExecutionFlowPreview({
 
   const execution = useExecuteTransfer(mandateCreator.execute);
 
+  const probe = useOnchainProbe(mandateCreator);
+
+
   const steps = useMemo(
     () => buildFlowSteps(config, attempt, state, execution.outcome),
     [config, attempt, state, execution.outcome],
@@ -44,12 +50,18 @@ export function ExecutionFlowPreview({
   const verifyStatus = steps.find((step) => step.id === "verify")?.status;
   const policyPassed = verifyStatus === "complete";
   const activeMandate = mandateCreator.activeMandate;
+  const mandateTarget =
+    config?.action === "SWAP"
+      ? getSwapConfig()?.pool
+      : config?.action === "TRANSFER"
+        ? config.recipient
+        : undefined;
 
   const configMatchesMandate =
     !!config &&
     !!activeMandate &&
-    config.action === "TRANSFER" &&
-    config.recipient === activeMandate.recipient &&
+    config.action === activeMandate.action &&
+    mandateTarget === activeMandate.recipient &&
     config.maxPerAction === activeMandate.maxPerAction &&
     config.maxTotal === activeMandate.maxTotal;
 
@@ -99,13 +111,14 @@ export function ExecutionFlowPreview({
       </div>
 
       <p className="mt-3 text-xs text-fg-subtle">
-        Mode demo: session key disimpan di browser ini dan setiap eksekusi
-        disetujui oleh owner. Ini belum agent otonom.
+        Demo mode: the session key is stored in this browser, and the owner
+        approves every execution. This is not an autonomous agent.
       </p>
 
       <AgentAttemptFields config={config} form={attemptForm} />
 
       <SimulationControls
+        action={config?.action ?? null}
         walletConnected={walletConnected}
         policyPassed={policyPassed}
         running={state.status === "running"}
@@ -137,11 +150,19 @@ export function ExecutionFlowPreview({
         onExecute={handleExecute}
       />
 
+      {config?.action !== "SWAP" && (
+        <OnchainProbeSection
+          state={probe.state}
+          ready={probe.ready}
+          onRun={() => attempt && void probe.run(attempt)}
+        />
+      )}
+
       <FlowStepList steps={steps} />
 
       <p className="mt-8 border-t border-border-subtle pt-4 text-xs text-fg-subtle">
-        Simulasi policy adalah preview lokal. Batas transfer yang sebenarnya
-        tetap ditegakkan oleh program mandate on-chain.
+        The policy simulation is a local preview. The on-chain mandate program
+        still enforces the actual action limits.
       </p>
     </Card>
   );

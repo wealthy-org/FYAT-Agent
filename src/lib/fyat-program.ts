@@ -19,7 +19,7 @@ export function createFyatProgram(
     !connectedWallet.signAllTransactions
   ) {
     throw new Error(
-      "Hubungkan wallet yang mendukung penandatanganan transaksi terlebih dahulu.",
+      "Connect a wallet that supports transaction signing first.",
     );
   }
 

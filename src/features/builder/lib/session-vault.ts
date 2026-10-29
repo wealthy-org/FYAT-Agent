@@ -1,5 +1,6 @@
 
 import { Keypair } from "@solana/web3.js";
+import type { MandateAction } from "../types";
 
 const PREFIX = "fyat:encrypted-session:v1:";
 const ITERATIONS = 600_000;
@@ -9,6 +10,7 @@ export type StoredSession = {
   mandatePda: string;
   owner: string;
   mint: string;
+  action?: MandateAction;
   recipient: string;
   maxPerAction: string;
   maxTotal: string;
@@ -83,7 +85,7 @@ async function deriveKey(
 
 function assertBrowser(): void {
   if (typeof window === "undefined" || !window.crypto?.subtle) {
-    throw new Error("Browser tidak mendukung Web Crypto.");
+    throw new Error("This browser does not support Web Crypto.");
   }
 }
 
@@ -96,7 +98,7 @@ export function isPassphraseValid(passphrase: string): boolean {
 
 function validatePassphrase(passphrase: string): void {
   if (!isPassphraseValid(passphrase)) {
-    throw new Error(`Passphrase minimal ${MIN_PASSPHRASE_LENGTH} karakter.`);
+    throw new Error(`Passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters.`);
   }
 }
 
@@ -155,7 +157,7 @@ export async function saveEncryptedSession(args: {
     !session.sessionPublicKey ||
     session.secretKey.length !== 64
   ) {
-    throw new Error("Data session key tidak lengkap atau tidak valid.");
+    throw new Error("The session key data is incomplete or invalid.");
   }
 
   const keypair = Keypair.fromSecretKey(
@@ -163,7 +165,7 @@ export async function saveEncryptedSession(args: {
   );
 
   if (keypair.publicKey.toBase58() !== session.sessionPublicKey) {
-    throw new Error("Session key tidak cocok dengan public key.");
+    throw new Error("The session key does not match the public key.");
   }
 
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -216,7 +218,7 @@ export async function restoreEncryptedSession(args: {
   const raw = localStorage.getItem(storageKey(owner, mandatePda));
 
   if (!raw) {
-    throw new Error("Data sesi terenkripsi tidak ditemukan.");
+    throw new Error("No encrypted session data was found.");
   }
 
   let parsedEnvelope: unknown;
@@ -224,11 +226,11 @@ export async function restoreEncryptedSession(args: {
   try {
     parsedEnvelope = JSON.parse(raw);
   } catch {
-    throw new Error("Data sesi tersimpan bukan JSON yang valid.");
+    throw new Error("The stored session data is not valid JSON.");
   }
 
   if (!isEnvelope(parsedEnvelope)) {
-    throw new Error("Format data sesi tidak valid.");
+    throw new Error("The session data format is invalid.");
   }
 
   const salt = fromBase64(parsedEnvelope.salt);
@@ -236,7 +238,7 @@ export async function restoreEncryptedSession(args: {
   const ciphertext = fromBase64(parsedEnvelope.ciphertext);
 
   if (salt.length !== 16 || iv.length !== 12 || ciphertext.length < 16) {
-    throw new Error("Data sesi terenkripsi rusak atau tidak lengkap.");
+    throw new Error("The encrypted session data is corrupted or incomplete.");
   }
 
   const key = await deriveKey(passphrase, salt);
@@ -253,7 +255,7 @@ export async function restoreEncryptedSession(args: {
       ciphertext,
     );
   } catch {
-    throw new Error("Passphrase salah atau data sesi rusak.");
+    throw new Error("The passphrase is incorrect or the session data is corrupted.");
   }
 
   let session: StoredSession;
@@ -263,7 +265,7 @@ export async function restoreEncryptedSession(args: {
       new TextDecoder().decode(plaintextBuffer),
     ) as StoredSession;
   } catch {
-    throw new Error("Isi data sesi tidak valid.");
+    throw new Error("The session data contents are invalid.");
   }
 
   if (
@@ -286,7 +288,7 @@ export async function restoreEncryptedSession(args: {
     )
   ) {
     throw new Error(
-      "Data sesi tidak cocok dengan wallet atau mandate.",
+      "The session data does not match the wallet or mandate.",
     );
   }
 
@@ -297,11 +299,11 @@ export async function restoreEncryptedSession(args: {
       Uint8Array.from(session.secretKey),
     );
   } catch {
-    throw new Error("Secret key tersimpan tidak valid.");
+    throw new Error("The stored secret key is invalid.");
   }
 
   if (keypair.publicKey.toBase58() !== session.sessionPublicKey) {
-    throw new Error("Session key tidak cocok dengan public key.");
+    throw new Error("The session key does not match the public key.");
   }
 
   return { session, keypair };

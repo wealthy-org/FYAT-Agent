@@ -1,6 +1,7 @@
 import "server-only";
 
-import { Connection } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { CpAmm } from "@meteora-ag/cp-amm-sdk";
 
 import { findVaultPda } from "@/lib/vault-address";
 
@@ -13,6 +14,9 @@ export { VerificationError };
 
 /** Discriminator instruksi create_mandate dari IDL. */
 export const CREATE_MANDATE_DISCRIMINATOR = [230, 170, 158, 68, 33, 169, 16, 158];
+export const CREATE_SWAP_MANDATE_DISCRIMINATOR = [
+  188, 18, 42, 240, 108, 39, 167, 13,
+];
 
 /**
  * Klien menghitung expiresAt sebelum Phantom menyetujui, sedangkan created_at
@@ -27,9 +31,15 @@ export type CreateClaim = {
   mandatePda: string;
   createSignature: string;
   sessionPubkey: string;
-  config: {
-    action: "TRANSFER";
-    recipient: string;
+  config: (
+    | { action: "TRANSFER"; target: string }
+    | {
+        action: "SWAP";
+        target: string;
+        venue: "METEORA_DAMM";
+        outputMint: string;
+      }
+  ) & {
     maxPerAction: bigint;
     maxTotal: bigint;
     expiresInHours: number;
@@ -67,7 +77,8 @@ export async function verifyCreate(
 
   /* 3. Isi akun harus sama dengan config yang dikirim klien. */
   if (onchain.session !== claim.sessionPubkey) fail("Session key mismatch");
-  if (onchain.recipient !== claim.config.recipient) fail("Recipient mismatch");
+  if (onchain.action !== claim.config.action) fail("Mandate action mismatch");
+  if (onchain.recipient !== claim.config.target) fail("Mandate target mismatch");
   if (onchain.maxPerAction !== claim.config.maxPerAction) fail("Per-action cap mismatch");
   if (onchain.maxTotal !== claim.config.maxTotal) fail("Total budget mismatch");
 
@@ -81,11 +92,35 @@ export async function verifyCreate(
   
     /* 4. Signature: transaksi sukses yang memanggil create_mandate,
         ditandatangani owner, dan menyebut PDA ini. */
+  if (claim.config.action === "SWAP") {
+    let poolState;
+    try {
+      poolState = await new CpAmm(connection).fetchPoolState(
+        new PublicKey(claim.config.target),
+      );
+    } catch {
+      fail("Configured DAMM pool could not be verified");
+    }
+    const mintA = poolState.tokenAMint.toBase58();
+    const mintB = poolState.tokenBMint.toBase58();
+    if (
+      !(
+        (mintA === claim.mint && mintB === claim.config.outputMint) ||
+        (mintB === claim.mint && mintA === claim.config.outputMint)
+      )
+    ) {
+      fail("Configured DAMM pool does not match the approved token pair");
+    }
+  }
+
   await assertOwnerInstruction(connection, {
     signature: claim.createSignature,
     owner: claim.ownerWallet,
     programId: claim.programId,
-    discriminator: CREATE_MANDATE_DISCRIMINATOR,
+    discriminator:
+      claim.config.action === "TRANSFER"
+        ? CREATE_MANDATE_DISCRIMINATOR
+        : CREATE_SWAP_MANDATE_DISCRIMINATOR,
     account: claim.mandatePda,
   });
 

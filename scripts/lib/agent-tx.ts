@@ -27,7 +27,7 @@ export function loadAgentKeypair(): Keypair {
   }
   const file = path.join(process.cwd(), ".keys", "agent.json");
   if (!existsSync(file)) {
-    throw new Error("Belum ada kunci agent. Jalankan `pnpm agent:keygen`.");
+    throw new Error("No agent key found. Run `pnpm agent:keygen`.");
   }
   return Keypair.fromSecretKey(
     Uint8Array.from(JSON.parse(readFileSync(file, "utf8")) as number[]),
@@ -50,10 +50,12 @@ export function errorNameFromLogs(logs: string[]): string | null {
 export async function sendAsAgent(
   connection: Connection,
   agent: Keypair,
-  instruction: TransactionInstruction,
+  instruction: TransactionInstruction | TransactionInstruction[],
 ): Promise<Outcome> {
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  const tx = new Transaction().add(instruction);
+  const tx = new Transaction().add(
+    ...(Array.isArray(instruction) ? instruction : [instruction]),
+  );
   const latest = await connection.getLatestBlockhash("confirmed");
   tx.feePayer = agent.publicKey;
   tx.recentBlockhash = latest.blockhash;
@@ -80,7 +82,7 @@ export async function sendAsAgent(
   }
   if (!confirmed) {
     throw new Error(
-      `Transaksi ${signature} belum terkonfirmasi setelah 60 detik`,
+      `Transaction ${signature} was not confirmed after 60 seconds`,
     );
   }
 
@@ -95,3 +97,4 @@ export async function sendAsAgent(
   }
   return { signature, err, logs };
 }
+

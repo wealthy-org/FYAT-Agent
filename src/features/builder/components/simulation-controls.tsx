@@ -3,6 +3,7 @@ import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SimulationControlsProps = {
+  action: "TRANSFER" | "SWAP" | null;
   walletConnected: boolean;
   /** Hasil Verify: hanya attempt yang lolos mandate yang boleh disimulasikan. */
   policyPassed: boolean;
@@ -20,6 +21,7 @@ function disabledReason(
 }
 
 export function SimulationControls({
+  action,
   walletConnected,
   policyPassed,
   running,
@@ -41,7 +43,9 @@ export function SimulationControls({
 
       <p className="mt-2 text-xs text-fg-subtle">
         {reason ??
-          "Dry-run only: simulates a plain token transfer from your wallet. Nothing is signed or sent."}
+          (action === "SWAP"
+            ? "Dry-run only: simulates the approved Meteora DAMM swap from the vault. Nothing is signed or sent."
+            : "Dry-run only: simulates a plain token transfer from your wallet. Nothing is signed or sent.")}
       </p>
     </div>
   );

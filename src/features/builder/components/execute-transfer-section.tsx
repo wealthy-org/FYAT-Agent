@@ -28,19 +28,22 @@ export function ExecuteTransferSection({
   error,
   onExecute,
 }: ExecuteTransferSectionProps) {
+  const isSwap = activeMandate?.action === "SWAP";
+
   return (
     <section className="mt-6 rounded-2xl border border-border-subtle p-4">
-      <h4 className="font-medium">Execute Transfer</h4>
+      <h4 className="font-medium">{isSwap ? "Execute Swap" : "Execute Transfer"}</h4>
 
       <p className="mt-1 text-sm text-fg-muted">
-        Mengirim token sungguhan dari vault ke penerima yang tercatat pada
-        mandate. Pastikan jumlah, penerima, jaringan, dan saldo sudah benar.
+        {isSwap
+          ? "Swap real tokens from the vault through the approved Meteora DAMM pool. Review the amount, pool, network, and balance before continuing."
+          : "Send real tokens from the vault to the recipient recorded in the mandate. Make sure the amount, recipient, network, and balance are correct."}
       </p>
 
       {attemptAmount !== null && (
         <div className="mt-3 space-y-1 text-sm">
           <p>
-            Jumlah percobaan:{" "}
+            Attempt amount:{" "}
             <span className="font-medium">
               {(Number(attemptAmount) / 10 ** USDC_DECIMALS).toLocaleString(
                 "en-US",
@@ -51,33 +54,40 @@ export function ExecuteTransferSection({
           </p>
 
           <p className="break-all text-fg-muted">
-            Penerima mandate: {activeMandate?.recipient ?? "Belum tersedia"}
+            {isSwap ? "Approved pool: " : "Mandate recipient: "}
+            {activeMandate?.recipient ?? "Not available"}
           </p>
         </div>
       )}
 
       {!activeMandate && (
         <p className="mt-3 text-sm text-fg-muted">
-          Buat mandate atau pulihkan session terlebih dahulu.
+          Create a mandate or restore a session first.
         </p>
       )}
 
       {activeMandate && !configMatchesMandate && (
         <p className="mt-3 text-sm text-danger">
-          Konfigurasi saat ini berbeda dari mandate aktif. Gunakan recipient
-          dan batas yang sama dengan mandate tersebut.
+          The current configuration differs from the active mandate. Use the
+          same recipient and limits as that mandate.
         </p>
       )}
 
       {!policyPassed && (
         <p className="mt-3 text-sm text-fg-muted">
-          Jalankan simulasi dan pastikan pemeriksaan policy berstatus PASS
-          sebelum mengeksekusi transfer.
+          Run the simulation and make sure the policy check passes before
+          executing this action.
         </p>
       )}
 
       <Button className="mt-4 w-full" disabled={!canExecute} onClick={onExecute}>
-        {busy ? "Mengeksekusi transfer..." : "Execute Transfer"}
+        {busy
+          ? isSwap
+            ? "Executing swap..."
+            : "Executing transfer..."
+          : isSwap
+            ? "Execute Swap"
+            : "Execute Transfer"}
       </Button>
 
       {status && (

@@ -34,11 +34,11 @@ export function SessionVaultSection({
 
     try {
       await controller.saveSession(passphrase);
-      setMessage("Session berhasil dienkripsi dan disimpan di browser ini.");
+      setMessage("The session was encrypted and saved in this browser.");
       controller.refreshStoredSessions();
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Gagal menyimpan session.",
+        cause instanceof Error ? cause.message : "Failed to save the session.",
       );
     }
   }
@@ -48,18 +48,18 @@ export function SessionVaultSection({
     setMessage("");
 
     if (!restorePda.trim()) {
-      setError("Pilih mandate PDA yang ingin dipulihkan.");
+      setError("Select the mandate PDA you want to restore.");
       return;
     }
 
     try {
       await controller.restoreSession(restorePda, passphrase);
       setMessage(
-        "Session berhasil dipulihkan dan diverifikasi dengan data on-chain.",
+        "The session was restored and verified against the on-chain data.",
       );
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Gagal memulihkan session.",
+        cause instanceof Error ? cause.message : "Failed to restore the session.",
       );
     }
   }
@@ -69,8 +69,8 @@ export function SessionVaultSection({
       <h4 className="font-medium">Session Key Vault</h4>
 
       <p className="mt-1 text-sm text-fg-muted">
-        Simpan session key dengan passphrase agar dapat dipulihkan setelah
-        halaman dimuat ulang. Passphrase tidak boleh dibagikan.
+        Save the session key with a passphrase so it can be restored after
+        reloading the page. Do not share your passphrase.
       </p>
 
       <label
@@ -87,7 +87,7 @@ export function SessionVaultSection({
         value={passphrase}
         onChange={(event) => setPassphrase(event.target.value)}
         minLength={MIN_PASSPHRASE_LENGTH}
-        placeholder={`Minimal ${MIN_PASSPHRASE_LENGTH} karakter`}
+        placeholder={`At least ${MIN_PASSPHRASE_LENGTH} characters`}
         className={inputClass}
       />
 
@@ -105,13 +105,13 @@ export function SessionVaultSection({
         onClick={() => void handleSave()}
       >
         {controller.sessionBusy
-          ? "Menyimpan session..."
-          : "Enkripsi & Simpan Session"}
+          ? "Saving session..."
+          : "Encrypt & Save Session"}
       </Button>
 
       <div className="mt-5 border-t border-border-subtle pt-4">
         <label htmlFor="restore-mandate" className="block text-sm font-medium">
-          Pulihkan session berdasarkan mandate PDA
+          Restore session by mandate PDA
         </label>
 
         <select
@@ -120,7 +120,7 @@ export function SessionVaultSection({
           onChange={(event) => setRestorePda(event.target.value)}
           className={inputClass}
         >
-          <option value="">Pilih session tersimpan...</option>
+          <option value="">Select a saved session...</option>
 
           {controller.storedSessions.map((pda) => (
             <option key={pda} value={pda}>
@@ -133,7 +133,7 @@ export function SessionVaultSection({
           htmlFor="restore-manual-pda"
           className="mt-3 block text-sm font-medium"
         >
-          Atau masukkan PDA secara manual
+          Or enter the PDA manually
         </label>
 
         <input
@@ -158,8 +158,8 @@ export function SessionVaultSection({
           onClick={() => void handleRestore()}
         >
           {controller.sessionBusy
-            ? "Memulihkan session..."
-            : "Pulihkan & Verifikasi Session"}
+            ? "Restoring session..."
+            : "Restore & Verify Session"}
         </Button>
       </div>
 
@@ -176,8 +176,8 @@ export function SessionVaultSection({
       )}
 
       <p className="mt-3 text-xs text-fg-subtle">
-        Session tersimpan di browser ini. Menghapus data browser dapat
-        menghilangkan salinan terenkripsi. Simpan passphrase dengan aman.
+        The session is stored in this browser. Clearing browser data may
+        remove the encrypted copy. Store your passphrase securely.
       </p>
     </section>
   );

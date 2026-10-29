@@ -60,16 +60,18 @@ export async function POST(
       ]);
     }
 
-    if (ref.action !== "TRANSFER") {
+    const env = getServerEnv();
+    if (
+      ref.action === "SWAP" &&
+      (!env.SWAP_OUTPUT_MINT || env.DAMM_POOL !== ref.target)
+    ) {
       throw ApiErrors.validation([
         {
           path: "id",
-          message: "Only TRANSFER mandates support onchain execution",
+          message: "The approved DAMM pool or output mint is not configured",
         },
       ]);
     }
-
-    const env = getServerEnv();
 
     let verified: Awaited<ReturnType<typeof verifyExecution>>;
     try {
@@ -79,6 +81,9 @@ export async function POST(
         mint: env.TOKEN_MINT,
         mandatePda: ref.mandatePda,
         sessionPubkey: ref.sessionPubkey,
+        action: ref.action,
+        target: ref.target,
+        outputMint: env.SWAP_OUTPUT_MINT,
       });
     } catch (error) {
       if (

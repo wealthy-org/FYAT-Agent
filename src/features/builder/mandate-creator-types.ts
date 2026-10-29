@@ -1,4 +1,4 @@
-import type { MandateConfig } from "./types";
+import type { MandateAction, MandateConfig } from "./types";
 
 export type CreatedMandate = {
   signature: string;
@@ -13,6 +13,7 @@ export type ActiveMandate = {
   mandatePda: string;
   owner: string;
   mint: string;
+  action: MandateAction;
   recipient: string;
   maxPerAction: bigint;
   maxTotal: bigint;

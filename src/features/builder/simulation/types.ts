@@ -1,5 +1,9 @@
 import type { PublicKey } from "@solana/web3.js";
+import type { Program } from "@coral-xyz/anchor";
 
+import type { FyatMandate } from "@/lib/idl/fyat_mandate.types";
+
+import type { ActiveMandate } from "../mandate-creator-types";
 import type { AgentAttempt, MandateConfig } from "../types";
 
 export type SimulationRequest = {
@@ -7,6 +11,9 @@ export type SimulationRequest = {
   attempt: AgentAttempt;
   /** Wallet yang terhubung. Hanya public key, tanpa kunci rahasia. */
   payer: PublicKey;
+  program?: Program<FyatMandate>;
+  sessionPubkey?: PublicKey;
+  activeMandate?: ActiveMandate | null;
 };
 
 export type SimulationFailureCode =
@@ -19,7 +26,7 @@ export type SimulationFailureCode =
 /**
  * PASSED       : jaringan menyatakan transaksi akan berhasil.
  * FAILED       : jaringan menolak (jawaban sah, bukan error aplikasi).
- * UNSUPPORTED  : simulasi tidak bisa dijalankan untuk kasus ini (swap, belum dikonfigurasi).
+ * UNSUPPORTED  : simulasi tidak tersedia untuk konfigurasi atau mandate ini.
  * ERROR        : gagal menghubungi RPC (timeout, jaringan, rate limit).
  */
 export type SimulationOutcome =

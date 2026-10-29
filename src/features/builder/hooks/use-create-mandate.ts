@@ -2,7 +2,12 @@
 
 import { useCallback, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -26,6 +31,12 @@ import {
   saveEncryptedSession,
 } from "../lib/session-vault";
 import { FYAT_PROGRAM_ID } from "@/lib/program-id";
+import { getSwapConfig } from "@/lib/swap-config";
+import {
+  buildExecuteSwapInstructions,
+  fetchConfiguredSwapPool,
+} from "../simulation/build-swap";
+import type { ActiveMandate } from "../mandate-creator-types";
 
 const PROGRAM_ID = new PublicKey(FYAT_PROGRAM_ID);
 
@@ -34,15 +45,7 @@ type CreateResponse = {
   id?: string;
 };
 
-export type ActiveMandate = {
-  id: string;
-  mandatePda: string;
-  owner: string;
-  mint: string;
-  recipient: string;
-  maxPerAction: bigint;
-  maxTotal: bigint;
-};
+export type { ActiveMandate } from "../mandate-creator-types";
 
 export function useCreateMandate() {
   const { connection } = useConnection();
@@ -78,36 +81,46 @@ export function useCreateMandate() {
         !wallet.signMessage
       ) {
         throw new Error(
-          "Hubungkan wallet yang mendukung transaksi terlebih dahulu.",
+          "Connect a wallet that supports transactions and message signing first.",
         );
-      }
-
-      if (config.action !== "TRANSFER") {
-        throw new Error("Tahap ini hanya mendukung mandate TRANSFER.");
       }
 
       setBusy(true);
       setError("");
-      setStatus("Memeriksa vault...");
+      setStatus("Checking vault...");
       setSignature("");
 
       try {
         const mintValue = env.NEXT_PUBLIC_TOKEN_MINT;
 
         if (!mintValue) {
-          throw new Error("NEXT_PUBLIC_TOKEN_MINT belum dikonfigurasi.");
+          throw new Error("NEXT_PUBLIC_TOKEN_MINT is not configured.");
         }
 
         const mint = new PublicKey(mintValue);
         const owner = wallet.publicKey;
-        const recipient = new PublicKey(config.recipient);
+        const swapConfig = config.action === "SWAP" ? getSwapConfig() : null;
+        if (config.action === "SWAP" && !swapConfig) {
+          throw new Error(
+            "Swap is not configured. Set NEXT_PUBLIC_DAMM_POOL and NEXT_PUBLIC_SWAP_OUTPUT_MINT.",
+          );
+        }
+        const target =
+          config.action === "TRANSFER" ? config.recipient : swapConfig?.pool;
+        if (!target) {
+          throw new Error("The approved Meteora DAMM pool is not configured.");
+        }
+        if (config.action === "SWAP") {
+          await fetchConfiguredSwapPool(connection, swapConfig);
+        }
+        const recipient = new PublicKey(target);
 
         // Opsional: session key milik agent. Kosong = mode demo (kunci dibuat di browser).
         const externalKey = agentPubkey?.trim()
           ? new PublicKey(agentPubkey.trim())
           : null;
         if (externalKey && externalKey.equals(owner)) {
-          throw new Error("Session key tidak boleh sama dengan kunci owner.");
+          throw new Error("The session key must not be the same as the owner's key.");
         }
 
         const vaultAddress = new PublicKey(
@@ -133,7 +146,7 @@ export function useCreateMandate() {
         );
 
         if (!vaultInfo) {
-          setStatus("Menunggu persetujuan pembuatan vault...");
+          setStatus("Approve vault creation in your wallet...");
 
           const initSignature = await program.methods
             .initializeVault()
@@ -154,13 +167,13 @@ export function useCreateMandate() {
           );
 
           if (initConfirmation.value.err) {
-            throw new Error("Pembuatan vault gagal dikonfirmasi.");
+            throw new Error("Vault creation failed to confirm.");
           }
 
           setSignature(initSignature);
         }
 
-        setStatus("Memverifikasi vault on-chain...");
+        setStatus("Verifying vault on-chain...");
 
         const vaultAccount = await program.account.vault.fetch(vaultAddress);
 
@@ -169,11 +182,11 @@ export function useCreateMandate() {
           !vaultAccount.mint.equals(mint)
         ) {
           throw new Error(
-            "Vault on-chain tidak cocok dengan wallet atau token mint.",
+            "The on-chain vault does not match the connected wallet or token mint.",
           );
         }
 
-        setStatus("Mendaftarkan vault ke aplikasi...");
+        setStatus("Registering vault with the app...");
 
         await signedJsonRequest<{ vault: { id: string } }>(
           wallet,
@@ -199,17 +212,21 @@ export function useCreateMandate() {
         const expiresAt =
           Math.floor(Date.now() / 1000) + config.expiresInHours * 60 * 60;
 
-        setStatus("Menunggu persetujuan pembuatan mandate...");
+        setStatus("Approve mandate creation in your wallet...");
 
-        const createSignature = await program.methods
-          .createMandate({
-            session: sessionPublicKey,
-            recipient,
-            maxPerAction: new BN(config.maxPerAction.toString()),
-            maxTotal: new BN(config.maxTotal.toString()),
-            expiresAt: new BN(expiresAt.toString()),
-          })
-          .accounts({
+        const createParams = {
+          session: sessionPublicKey,
+          recipient,
+          maxPerAction: new BN(config.maxPerAction.toString()),
+          maxTotal: new BN(config.maxTotal.toString()),
+          expiresAt: new BN(expiresAt.toString()),
+        };
+        const createBuilder =
+          config.action === "TRANSFER"
+            ? program.methods.createMandate(createParams)
+            : program.methods.createSwapMandate(createParams);
+        const createSignature = await createBuilder
+          .accountsPartial({
             owner,
             vault: vaultAddress,
             mandate: mandateAddress,
@@ -223,11 +240,11 @@ export function useCreateMandate() {
         );
 
         if (createConfirmation.value.err) {
-          throw new Error("Pembuatan mandate gagal dikonfirmasi.");
+          throw new Error("Mandate creation failed to confirm.");
         }
 
         setSignature(createSignature);
-        setStatus("Mendaftarkan mandate ke aplikasi...");
+        setStatus("Registering mandate with the app...");
 
         const response = await signedJsonRequest<CreateResponse>(
           wallet,
@@ -235,13 +252,28 @@ export function useCreateMandate() {
           "POST",
           {
             sessionPubkey: sessionPublicKey.toBase58(),
-            config: {
-              action: config.action,
-              recipient: recipient.toBase58(),
-              maxPerAction: formatUnits(config.maxPerAction, USDC_DECIMALS),
-              maxTotal: formatUnits(config.maxTotal, USDC_DECIMALS),
-              expiresInHours: String(config.expiresInHours),
-            },
+            config:
+              config.action === "TRANSFER"
+                ? {
+                    action: config.action,
+                    recipient: recipient.toBase58(),
+                    maxPerAction: formatUnits(
+                      config.maxPerAction,
+                      USDC_DECIMALS,
+                    ),
+                    maxTotal: formatUnits(config.maxTotal, USDC_DECIMALS),
+                    expiresInHours: String(config.expiresInHours),
+                  }
+                : {
+                    action: config.action,
+                    venue: config.venue,
+                    maxPerAction: formatUnits(
+                      config.maxPerAction,
+                      USDC_DECIMALS,
+                    ),
+                    maxTotal: formatUnits(config.maxTotal, USDC_DECIMALS),
+                    expiresInHours: String(config.expiresInHours),
+                  },
             mandatePda: mandateAddress.toBase58(),
             createSignature,
           },
@@ -251,7 +283,7 @@ export function useCreateMandate() {
 
         if (!dbMandateId) {
           throw new Error(
-            "Mandate sudah dibuat on-chain, tetapi ID API tidak ditemukan. Jangan membuat mandate baru.",
+            "The mandate was created on-chain, but its API ID was not found. Do not create another mandate.",
           );
         }
 
@@ -260,6 +292,7 @@ export function useCreateMandate() {
           mandatePda: mandateAddress.toBase58(),
           owner: owner.toBase58(),
           mint: mint.toBase58(),
+          action: config.action,
           recipient: recipient.toBase58(),
           maxPerAction: config.maxPerAction,
           maxTotal: config.maxTotal,
@@ -271,7 +304,7 @@ export function useCreateMandate() {
         refreshStoredSessions();
 
         setStatus(
-          `Mandate berhasil dibuat on-chain: ${mandateAddress.toBase58()}`,
+          `Mandate created on-chain: ${mandateAddress.toBase58()}`,
         );
 
         return {
@@ -283,7 +316,7 @@ export function useCreateMandate() {
         };
       } catch (cause) {
         const message =
-          cause instanceof Error ? cause.message : "Transaksi gagal.";
+          cause instanceof Error ? cause.message : "Transaction failed.";
 
         setError(message);
         setStatus("");
@@ -298,26 +331,26 @@ export function useCreateMandate() {
   const saveSession = useCallback(
     async (passphrase: string) => {
       if (!wallet.publicKey) {
-        throw new Error("Hubungkan wallet pemilik mandate.");
+        throw new Error("Connect the mandate owner's wallet.");
       }
 
       if (!sessionKey || !activeMandate) {
-        throw new Error("Belum ada session aktif yang dapat disimpan.");
+        throw new Error("There is no active session to save.");
       }
 
       if (wallet.publicKey.toBase58() !== activeMandate.owner) {
-        throw new Error("Wallet saat ini bukan pemilik mandate.");
+        throw new Error("The connected wallet does not own this mandate.");
       }
 
       if (!isPassphraseValid(passphrase)) {
         throw new Error(
-          `Passphrase minimal ${MIN_PASSPHRASE_LENGTH} karakter.`,
+          `Passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters.`,
         );
       }
 
       setSessionBusy(true);
       setError("");
-      setStatus("Mengenkripsi dan menyimpan session...");
+      setStatus("Encrypting and saving session...");
 
       try {
         const storedSession = {
@@ -326,6 +359,7 @@ export function useCreateMandate() {
           mandatePda: activeMandate.mandatePda,
           mint: activeMandate.mint,
           recipient: activeMandate.recipient,
+          action: activeMandate.action,
           maxPerAction: activeMandate.maxPerAction.toString(),
           maxTotal: activeMandate.maxTotal.toString(),
           sessionPublicKey: sessionKey.publicKey.toBase58(),
@@ -335,10 +369,10 @@ export function useCreateMandate() {
         await saveEncryptedSession({ passphrase, session: storedSession });
 
         refreshStoredSessions();
-        setStatus("Session terenkripsi berhasil disimpan.");
+        setStatus("Encrypted session saved successfully.");
       } catch (cause) {
         const message =
-          cause instanceof Error ? cause.message : "Gagal menyimpan session.";
+          cause instanceof Error ? cause.message : "Failed to save session.";
 
         setError(message);
         setStatus("");
@@ -353,12 +387,12 @@ export function useCreateMandate() {
   const restoreSession = useCallback(
     async (mandatePda: string, passphrase: string) => {
       if (!wallet.publicKey) {
-        throw new Error("Hubungkan wallet pemilik mandate.");
+        throw new Error("Connect the mandate owner's wallet.");
       }
 
       if (!isPassphraseValid(passphrase)) {
         throw new Error(
-          `Passphrase minimal ${MIN_PASSPHRASE_LENGTH} karakter.`,
+          `Passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters.`,
         );
       }
 
@@ -366,7 +400,7 @@ export function useCreateMandate() {
 
       setSessionBusy(true);
       setError("");
-      setStatus("Membuka session terenkripsi...");
+      setStatus("Opening encrypted session...");
 
       try {
         const restored = await restoreEncryptedSession({
@@ -379,7 +413,7 @@ export function useCreateMandate() {
         const mintValue = env.NEXT_PUBLIC_TOKEN_MINT;
 
         if (!mintValue) {
-          throw new Error("NEXT_PUBLIC_TOKEN_MINT belum dikonfigurasi.");
+          throw new Error("NEXT_PUBLIC_TOKEN_MINT is not configured.");
         }
 
         const owner = wallet.publicKey;
@@ -405,7 +439,7 @@ export function useCreateMandate() {
           !vaultAccount.owner.equals(owner) ||
           !vaultAccount.mint.equals(mint)
         ) {
-          throw new Error("Vault on-chain tidak cocok dengan wallet.");
+          throw new Error("The on-chain vault does not match the connected wallet.");
         }
 
         if (
@@ -413,19 +447,19 @@ export function useCreateMandate() {
           !mandateAccount.session.equals(restoredKeypair.publicKey)
         ) {
           throw new Error(
-            "Session key atau vault tidak cocok dengan mandate on-chain.",
+            "The session key or vault does not match the on-chain mandate.",
           );
         }
 
         if (mandateAccount.revokedAt.toString() !== "0") {
-          throw new Error("Mandate ini sudah dicabut.");
+          throw new Error("This mandate has already been revoked.");
         }
 
         if (
           Number(mandateAccount.expiresAt.toString()) <=
           Math.floor(Date.now() / 1000)
         ) {
-          throw new Error("Mandate ini sudah kedaluwarsa.");
+          throw new Error("This mandate has expired.");
         }
 
         const restoredMandate: ActiveMandate = {
@@ -433,6 +467,8 @@ export function useCreateMandate() {
           mandatePda: normalizedPda,
           owner: owner.toBase58(),
           mint: mint.toBase58(),
+          action:
+            "swap" in mandateAccount.action ? "SWAP" : "TRANSFER",
           recipient: mandateAccount.recipient.toBase58(),
           maxPerAction: BigInt(mandateAccount.maxPerAction.toString()),
           maxTotal: BigInt(mandateAccount.maxTotal.toString()),
@@ -441,12 +477,12 @@ export function useCreateMandate() {
         setSessionKey(restoredKeypair);
         setExternalAgent("");
         setActiveMandate(restoredMandate);
-        setStatus(`Session berhasil dipulihkan: ${normalizedPda}`);
+        setStatus(`Session restored: ${normalizedPda}`);
 
         return restoredMandate;
       } catch (cause) {
         const message =
-          cause instanceof Error ? cause.message : "Gagal memulihkan session.";
+          cause instanceof Error ? cause.message : "Failed to restore session.";
 
         setError(message);
         setStatus("");
@@ -466,30 +502,30 @@ export function useCreateMandate() {
         !wallet.signAllTransactions ||
         !wallet.signMessage
       ) {
-        throw new Error("Hubungkan wallet pemilik mandate terlebih dahulu.");
+        throw new Error("Connect the mandate owner's wallet first.");
       }
 
       if (!sessionKey || !activeMandate) {
         throw new Error(
-          "Session key atau mandate aktif tidak tersedia. Pulihkan session yang benar terlebih dahulu.",
+          "The active session key or mandate is unavailable. Restore the correct session first.",
         );
       }
 
       if (wallet.publicKey.toBase58() !== activeMandate.owner) {
-        throw new Error("Wallet saat ini bukan pemilik mandate.");
+        throw new Error("The connected wallet does not own this mandate.");
       }
 
       if (amount <= 0n) {
-        throw new Error("Jumlah transfer harus lebih besar dari nol.");
+        throw new Error("The action amount must be greater than zero.");
       }
 
       if (amount > activeMandate.maxPerAction) {
-        throw new Error("Jumlah melebihi batas per transaksi mandate.");
+        throw new Error("The amount exceeds the mandate's per-transaction limit.");
       }
 
       setBusy(true);
       setError("");
-      setStatus("Memeriksa mandate dan saldo vault...");
+      setStatus("Checking the mandate and vault balance...");
 
       try {
         const mint = new PublicKey(activeMandate.mint);
@@ -513,14 +549,6 @@ export function useCreateMandate() {
           ASSOCIATED_TOKEN_PROGRAM_ID,
         );
 
-        const destinationTokenAccount = getAssociatedTokenAddressSync(
-          mint,
-          recipient,
-          false,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-        );
-
         const program = createFyatProgram(connection, wallet);
 
         const [vaultAccount, mandateAccount] = await Promise.all([
@@ -532,7 +560,7 @@ export function useCreateMandate() {
           !vaultAccount.owner.equals(owner) ||
           !vaultAccount.mint.equals(mint)
         ) {
-          throw new Error("Data vault on-chain tidak cocok.");
+          throw new Error("The on-chain vault data does not match.");
         }
 
         if (
@@ -541,19 +569,19 @@ export function useCreateMandate() {
           !mandateAccount.recipient.equals(recipient)
         ) {
           throw new Error(
-            "Mandate, session key, atau recipient tidak cocok dengan data on-chain.",
+            "The mandate, session key, or recipient does not match the on-chain data.",
           );
         }
 
         if (mandateAccount.revokedAt.toString() !== "0") {
-          throw new Error("Mandate sudah dicabut.");
+          throw new Error("The mandate has been revoked.");
         }
 
         if (
           Number(mandateAccount.expiresAt.toString()) <=
           Math.floor(Date.now() / 1000)
         ) {
-          throw new Error("Mandate sudah kedaluwarsa.");
+          throw new Error("The mandate has expired.");
         }
 
         const onchainMaxPerAction = BigInt(
@@ -563,11 +591,11 @@ export function useCreateMandate() {
         const onchainSpent = BigInt(mandateAccount.spent.toString());
 
         if (amount > onchainMaxPerAction) {
-          throw new Error("Jumlah melampaui batas per aksi on-chain.");
+          throw new Error("The amount exceeds the on-chain per-action limit.");
         }
 
         if (onchainSpent + amount > onchainMaxTotal) {
-          throw new Error("Jumlah melampaui sisa anggaran mandate.");
+          throw new Error("The amount exceeds the mandate's remaining budget.");
         }
 
         const balance = await connection.getTokenAccountBalance(
@@ -577,40 +605,63 @@ export function useCreateMandate() {
 
         if (BigInt(balance.value.amount) < amount) {
           throw new Error(
-            "Saldo USDC vault tidak mencukupi. Deposit ke vault terlebih dahulu.",
-          );
-        }
-
-        const destinationInfo = await connection.getAccountInfo(
-          destinationTokenAccount,
-          "confirmed",
-        );
-
-        if (!destinationInfo) {
-          throw new Error(
-            "Token account penerima belum ada. Buat ATA penerima terlebih dahulu sebelum execute.",
+            "The vault does not have enough USDC. Deposit funds into the vault first.",
           );
         }
 
         setStatus(
-          "Menunggu wallet menyetujui biaya transaksi. Session key menandatangani instruksi.",
+          "Approve the transaction fee in your wallet. The session key will sign the instruction.",
         );
 
-        const txSignature = await program.methods
-          .executeTransfer(new BN(amount.toString()))
-          .accountsPartial({
-            session: sessionKey.publicKey,
-            vault,
-            mandate,
+        let txSignature: string;
+        if (activeMandate.action === "TRANSFER") {
+          const destinationTokenAccount = getAssociatedTokenAddressSync(
             mint,
-            vaultTokenAccount,
+            recipient,
+            false,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+          );
+          const destinationInfo = await connection.getAccountInfo(
             destinationTokenAccount,
-            tokenProgram: TOKEN_PROGRAM_ID,
-          })
-          .signers([sessionKey])
-          .rpc();
+            "confirmed",
+          );
+          if (!destinationInfo) {
+            throw new Error(
+              "The recipient's token account does not exist. Create the recipient's ATA before executing.",
+            );
+          }
 
-        setStatus("Menunggu konfirmasi transaksi...");
+          txSignature = await program.methods
+            .executeTransfer(new BN(amount.toString()))
+            .accountsPartial({
+              session: sessionKey.publicKey,
+              vault,
+              mandate,
+              mint,
+              vaultTokenAccount,
+              destinationTokenAccount,
+              tokenProgram: TOKEN_PROGRAM_ID,
+            })
+            .signers([sessionKey])
+            .rpc();
+        } else {
+          const { instructions } = await buildExecuteSwapInstructions({
+            connection,
+            program,
+            payer: owner,
+            session: sessionKey.publicKey,
+            mandatePda: mandate.toBase58(),
+            amountIn: amount,
+          });
+          txSignature = await wallet.sendTransaction(
+            new Transaction().add(...instructions),
+            connection,
+            { signers: [sessionKey] },
+          );
+        }
+
+        setStatus("Waiting for transaction confirmation...");
 
         const confirmation = await connection.confirmTransaction(
           txSignature,
@@ -618,10 +669,10 @@ export function useCreateMandate() {
         );
 
         if (confirmation.value.err) {
-          throw new Error("Transaksi execute gagal di blockchain.");
+          throw new Error("The execute transaction failed on the blockchain.");
         }
 
-        setStatus("Memverifikasi transaksi dan mencatat receipt...");
+        setStatus("Verifying the transaction and recording the receipt...");
 
         await signedJsonRequest<unknown>(
           wallet,
@@ -631,12 +682,12 @@ export function useCreateMandate() {
         );
 
         setSignature(txSignature);
-        setStatus(`Eksekusi berhasil: ${txSignature}`);
+        setStatus(`Execution successful: ${txSignature}`);
 
         return txSignature;
       } catch (cause) {
         const message =
-          cause instanceof Error ? cause.message : "Eksekusi gagal.";
+          cause instanceof Error ? cause.message : "Execution failed.";
 
         setError(message);
         setStatus("");

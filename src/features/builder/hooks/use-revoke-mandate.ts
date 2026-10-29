@@ -33,10 +33,10 @@ export function useRevokeMandate() {
 
       try {
         if (!wallet.publicKey) {
-          throw new Error("Hubungkan wallet terlebih dahulu.");
+          throw new Error("Connect your wallet first.");
         }
         if (!env.NEXT_PUBLIC_TOKEN_MINT) {
-          throw new Error("NEXT_PUBLIC_TOKEN_MINT belum dikonfigurasi.");
+          throw new Error("NEXT_PUBLIC_TOKEN_MINT is not configured.");
         }
 
         const owner = wallet.publicKey;
@@ -50,7 +50,7 @@ export function useRevokeMandate() {
 
         const program = createFyatProgram(connection, wallet);
 
-        setStatus("Menunggu persetujuan pencabutan...");
+        setStatus("Approve the revocation in your wallet...");
         const revokeSignature = await program.methods
           .revokeMandate()
           .accountsPartial({
@@ -60,15 +60,15 @@ export function useRevokeMandate() {
           })
           .rpc();
 
-        setStatus("Menunggu konfirmasi...");
+        setStatus("Waiting for confirmation...");
         await confirmOrThrow(
           connection,
           revokeSignature,
-          "Pencabutan mandate gagal dikonfirmasi.",
+          "The mandate revocation failed to confirm.",
         );
         setSignature(revokeSignature);
 
-        setStatus("Mencatat pencabutan ke aplikasi...");
+        setStatus("Recording the revocation in the app...");
         await signedJsonRequest(
           wallet,
           `/api/mandates/${mandateId}/revoke`,
@@ -76,7 +76,7 @@ export function useRevokeMandate() {
           { revokeSignature },
         );
 
-        setStatus("Mandate berhasil dicabut.");
+        setStatus("Mandate revoked successfully.");
         return true;
       } catch (e) {
         setError(toErrorMessage(e));

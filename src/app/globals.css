@@ -58,6 +58,16 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  select,
+  select option {
+    color-scheme: dark;
+  }
+
+  select option {
+    background-color: var(--color-canvas-deep);
+    color: var(--color-fg);
+  }
+
   ::selection {
     background: rgb(139 92 246 / 0.4);
   }

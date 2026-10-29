@@ -42,16 +42,6 @@ export async function POST(req: NextRequest) {
     );
     const { sessionPubkey, config, mandatePda, createSignature } = body;
 
-    // Program onchain hanya mengenal TRANSFER.
-    if (config.action !== "TRANSFER") {
-      throw ApiErrors.validation([
-        {
-          path: "config.action",
-          message: "Only TRANSFER mandates can be created onchain",
-        },
-      ]);
-    }
-
     if (sessionPubkey === wallet) {
       throw ApiErrors.validation([
         {
@@ -74,6 +64,25 @@ export async function POST(req: NextRequest) {
     }
 
     const env = getServerEnv();
+    let target: string;
+    if (config.action === "TRANSFER") {
+      target = config.recipient;
+    } else {
+      if (config.venue !== "METEORA_DAMM") {
+        throw ApiErrors.validation([
+          { path: "config.venue", message: "Unsupported swap venue" },
+        ]);
+      }
+      if (!env.DAMM_POOL || !env.SWAP_OUTPUT_MINT) {
+        throw ApiErrors.validation([
+          {
+            path: "config.venue",
+            message: "The approved DAMM pool and output mint are not configured",
+          },
+        ]);
+      }
+      target = env.DAMM_POOL;
+    }
 
     // Chain adalah sumber kebenaran: klien hanya melaporkan, server memverifikasi.
     let verified;
@@ -85,13 +94,24 @@ export async function POST(req: NextRequest) {
         mandatePda,
         createSignature,
         sessionPubkey,
-        config: {
-          action: "TRANSFER",
-          recipient: config.recipient,
-          maxPerAction: config.maxPerAction,
-          maxTotal: config.maxTotal,
-          expiresInHours: config.expiresInHours,
-        },
+        config:
+          config.action === "TRANSFER"
+            ? {
+                action: config.action,
+                target,
+                maxPerAction: config.maxPerAction,
+                maxTotal: config.maxTotal,
+                expiresInHours: config.expiresInHours,
+              }
+            : {
+                action: config.action,
+                target,
+                venue: config.venue,
+                outputMint: env.SWAP_OUTPUT_MINT!,
+                maxPerAction: config.maxPerAction,
+                maxTotal: config.maxTotal,
+                expiresInHours: config.expiresInHours,
+              },
       });
     } catch (error) {
       if (
@@ -116,7 +136,7 @@ export async function POST(req: NextRequest) {
     const mandate = await insertMandate({
       vaultId: vault.id,
       sessionPubkey: onchain.session,
-      action: "TRANSFER",
+      action: onchain.action,
       target: onchain.recipient,
       maxPerAction: onchain.maxPerAction,
       maxTotal: onchain.maxTotal,

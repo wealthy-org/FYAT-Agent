@@ -26,11 +26,11 @@ export async function signedJsonRequest<T>(
   payload: unknown,
 ): Promise<T> {
   if (!wallet.publicKey || !wallet.signMessage) {
-    throw new Error("Wallet tidak mendukung tanda tangan pesan.");
+    throw new Error("The wallet does not support message signing.");
   }
 
   if (!path.startsWith("/") || path.startsWith("//")) {
-    throw new Error("Path API tidak valid.");
+    throw new Error("The API path is invalid.");
   }
 
   const body = JSON.stringify(payload);
@@ -95,7 +95,7 @@ export async function signedJsonRequest<T>(
         ?.map((issue) => `${issue.path}: ${issue.message}`)
         .join("; ");
 
-      const message = error.message ?? "Permintaan API gagal.";
+      const message = error.message ?? "The API request failed.";
       const code = error.code ? `[${error.code}] ` : "";
 
       throw new Error(
@@ -103,7 +103,7 @@ export async function signedJsonRequest<T>(
       );
     }
 
-    throw new Error(`Permintaan API gagal (${response.status}).`);
+    throw new Error(`The API request failed (${response.status}).`);
   }
 
   return result as T;

@@ -8,6 +8,7 @@ export type InspectedMandateDto = {
   mandatePda: string;
   onchainId: string;
   sessionPubkey: string;
+  action: "TRANSFER" | "SWAP";
   recipient: string;
   maxPerAction: string;
   maxTotal: string;
@@ -20,7 +21,7 @@ export type InspectedMandateDto = {
   dbInSync: boolean;
 };
 
-const FAILED = "Gagal memuat mandate.";
+const FAILED = "Failed to load mandates.";
 
 async function fetchMandates(owner: string): Promise<InspectedMandateDto[]> {
   const res = await fetch(

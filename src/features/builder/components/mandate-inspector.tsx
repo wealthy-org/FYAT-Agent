@@ -39,28 +39,28 @@ export function MandateInspector() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Eyebrow>Inspector</Eyebrow>
-          <h3 className="mt-2 font-display text-xl font-medium">Mandate Saya</h3>
+          <h3 className="mt-2 font-display text-xl font-medium">My Mandates</h3>
         </div>
         <Button disabled={!list.connected || list.refreshing || revokeFlow.busy} onClick={() => void list.refresh()}>
-          {list.refreshing ? "Memuat..." : "Muat ulang"}
+          {list.refreshing ? "Loading..." : "Refresh"}
         </Button>
       </div>
 
       <p className="mt-2 text-sm text-fg-muted">
-        Status dan pengeluaran dibaca langsung dari akun di chain.
+        Status and spending are read directly from the on-chain account.
       </p>
 
       {!list.connected && (
-        <p className="mt-4 text-sm text-fg-muted">Hubungkan wallet untuk melihat mandate.</p>
+        <p className="mt-4 text-sm text-fg-muted">Connect your wallet to view your mandates.</p>
       )}
       {list.error && (
         <p role="alert" className="mt-4 break-all text-sm text-danger">{list.error}</p>
       )}
       {list.connected && !list.error && list.items === null && (
-        <p className="mt-4 text-sm text-fg-muted">Memuat...</p>
+        <p className="mt-4 text-sm text-fg-muted">Loading...</p>
       )}
       {list.items?.length === 0 && (
-        <p className="mt-4 text-sm text-fg-muted">Belum ada mandate onchain.</p>
+        <p className="mt-4 text-sm text-fg-muted">No on-chain mandates yet.</p>
       )}
 
       <ul className="mt-4 space-y-3">
@@ -76,24 +76,28 @@ export function MandateInspector() {
                 #{item.onchainId} · {shortenAddress(item.mandatePda)}
               </a>
               <span className={`rounded-full border px-3 py-1 text-xs font-medium ${STATUS_STYLE[item.status]}`}>
-                {item.status === "UNVERIFIED" ? "TIDAK TERVERIFIKASI" : item.status}
+                {item.status === "UNVERIFIED" ? "UNVERIFIED" : item.status}
               </span>
             </div>
 
             <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
-              <dt className="text-fg-muted">Terpakai</dt>
+              <dt className="text-fg-muted">Spent</dt>
               <dd className="text-right">{units(item.spent)} / {units(item.maxTotal)}</dd>
-              <dt className="text-fg-muted">Maks per aksi</dt>
+              <dt className="text-fg-muted">Action</dt>
+              <dd className="text-right">{item.action}</dd>
+              <dt className="text-fg-muted">Max per action</dt>
               <dd className="text-right">{units(item.maxPerAction)}</dd>
-              <dt className="text-fg-muted">Penerima</dt>
+              <dt className="text-fg-muted">
+                {item.action === "SWAP" ? "Approved pool" : "Recipient"}
+              </dt>
               <dd className="text-right">{shortenAddress(item.recipient)}</dd>
               <dt className="text-fg-muted">Session</dt>
               <dd className="text-right">{shortenAddress(item.sessionPubkey)}</dd>
-              <dt className="text-fg-muted">Kedaluwarsa</dt>
+              <dt className="text-fg-muted">Expires</dt>
               <dd className="text-right">{new Date(item.expiresAt).toLocaleString()}</dd>
               {item.revokedAt && (
                 <>
-                  <dt className="text-fg-muted">Dicabut</dt>
+                  <dt className="text-fg-muted">Revoked</dt>
                   <dd className="text-right">{new Date(item.revokedAt).toLocaleString()}</dd>
                 </>
               )}
@@ -101,13 +105,13 @@ export function MandateInspector() {
 
             {!item.chainVerified && (
               <p className="mt-3 text-xs text-fg-subtle">
-                Akun tidak terbaca di chain. Nilai di atas dari database.
+                The account could not be read on-chain. Values above are from the database.
               </p>
             )}
             {item.chainVerified && !item.dbInSync && (
               <p className="mt-3 text-xs text-fg-subtle">
-                Database belum sama dengan chain (eksekusi atau pencabutan belum
-                tercatat). Chain yang berlaku.
+                The database is out of sync with the chain (the execution or
+                revocation has not been recorded). The chain is authoritative.
               </p>
             )}
 
@@ -117,7 +121,7 @@ export function MandateInspector() {
                 disabled={revokeFlow.busy}
                 onClick={() => void handleRevoke(item)}
               >
-                {revokeFlow.busy ? "Mencabut..." : "Cabut Mandate"}
+                {revokeFlow.busy ? "Revoking..." : "Revoke Mandate"}
               </Button>
             )}
           </li>

@@ -1,4 +1,4 @@
-﻿import type { MandateConfig } from "./types";
+import type { MandateConfig } from "./types";
 
 export type CreatedMandate = {
   signature: string;
@@ -19,7 +19,10 @@ export type ActiveMandate = {
 };
 
 export type MandateCreatorController = {
-  create: (config: MandateConfig) => Promise<CreatedMandate>;
+  create: (
+    config: MandateConfig,
+    agentPubkey?: string,
+  ) => Promise<CreatedMandate>;
   execute: (amount: bigint) => Promise<string>;
   saveSession: (passphrase: string) => Promise<void>;
   restoreSession: (
@@ -29,6 +32,8 @@ export type MandateCreatorController = {
   storedSessions: string[];
   sessionBusy: boolean;
   refreshStoredSessions: () => void;
+  /** Public key agent bila session key dipegang agent, bukan browser. */
+  externalAgent: string;
   busy: boolean;
   status: string;
   error: string;

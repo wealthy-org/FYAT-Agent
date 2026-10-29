@@ -14,6 +14,8 @@
     "mint:setup": "tsx --env-file=.env.local scripts/setup-test-mint.ts",
     "db:seed": "tsx --env-file=.env.local scripts/seed-demo.ts",
     "e2e:devnet": "tsx --env-file=.env.local scripts/devnet-e2e.ts",
+    "agent:keygen": "tsx scripts/agent-keygen.ts",
+    "agent:run": "tsx --env-file=.env.local scripts/agent-run.ts",
     "idl:sync": "tsx scripts/sync-idl.ts"
 
   },

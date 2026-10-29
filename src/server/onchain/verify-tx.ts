@@ -2,7 +2,7 @@ import "server-only";
 
 import { Connection, PublicKey } from "@solana/web3.js";
 
-import { VerificationError } from "./verify-create";
+import { VerificationError } from "./verification-error";
 
 /**
  * Memastikan signature adalah transaksi sukses, ditandatangani owner, dan

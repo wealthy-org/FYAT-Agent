@@ -1,26 +1,24 @@
 import "server-only";
 
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 
 import { findVaultPda } from "@/lib/vault-address";
 
 import { readMandate, type OnchainMandate } from "./mandate-reader";
+import { VerificationError } from "./verification-error";
+import { assertOwnerInstruction } from "./verify-tx";
+
+// Nama lama tetap bisa diimpor dari file ini.
+export { VerificationError };
 
 /** Discriminator instruksi create_mandate dari IDL. */
-const CREATE_MANDATE_DISCRIMINATOR = [230, 170, 158, 68, 33, 169, 16, 158];
+export const CREATE_MANDATE_DISCRIMINATOR = [230, 170, 158, 68, 33, 169, 16, 158];
 
 /**
  * Klien menghitung expiresAt sebelum Phantom menyetujui, sedangkan created_at
  * dicatat saat transaksi masuk blok. Selisihnya beberapa detik sampai menit.
  */
 const EXPIRY_TOLERANCE_SECONDS = 600n;
-
-export class VerificationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "VerificationError";
-  }
-}
 
 export type CreateClaim = {
   ownerWallet: string; // wallet yang menandatangani request API (dari auth)
@@ -81,38 +79,13 @@ export async function verifyCreate(
   if (onchain.revokedAt !== 0n) fail("Mandate is already revoked");
   if (onchain.spent !== 0n) fail("Mandate is not fresh");
 
-  /* 4. Signature: transaksi sukses yang memanggil create_mandate,
+    /* 4. Signature: transaksi sukses yang memanggil create_mandate,
         ditandatangani owner, dan menyebut PDA ini. */
-  const tx = await connection.getTransaction(claim.createSignature, {
-    commitment: "confirmed",
-    maxSupportedTransactionVersion: 0,
+  await assertOwnerInstruction(connection, {
+    signature: claim.createSignature,
+    owner: claim.ownerWallet,
+    programId: claim.programId,
+    discriminator: CREATE_MANDATE_DISCRIMINATOR,
+    account: claim.mandatePda,
   });
-  if (!tx) fail("Create transaction not found");
-  if (tx.meta?.err) fail("Create transaction failed onchain");
-
-  const keys = tx.transaction.message.getAccountKeys({
-    accountKeysFromLookups: tx.meta?.loadedAddresses,
-  });
-  const owner = new PublicKey(claim.ownerWallet);
-  const program = new PublicKey(claim.programId);
-  const mandate = new PublicKey(claim.mandatePda);
-
-  const ownerIndex = keys.staticAccountKeys.findIndex((k) => k.equals(owner));
-  const requiredSigners = tx.transaction.message.header.numRequiredSignatures;
-  if (ownerIndex < 0 || ownerIndex >= requiredSigners) {
-    fail("Transaction was not signed by the owner");
-  }
-
-  const matched = tx.transaction.message.compiledInstructions.some((ix) => {
-    const ixProgram = keys.get(ix.programIdIndex);
-    if (!ixProgram?.equals(program)) return false;
-    const startsWithDiscriminator = CREATE_MANDATE_DISCRIMINATOR.every(
-      (byte, i) => ix.data[i] === byte,
-    );
-    if (!startsWithDiscriminator) return false;
-    return ix.accountKeyIndexes.some((i) => keys.get(i)?.equals(mandate));
-  });
-  if (!matched) fail("Transaction is not a create_mandate for this account");
-
-  return { vaultPda, onchain };
 }

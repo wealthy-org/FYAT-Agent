@@ -84,7 +84,7 @@ function simulationSteps(simulation: SimulationState): [FlowStep, FlowStep] {
 
   if (simulation.status === "running") {
     return [
-      makeStep("simulate", "running", "Simulating on Solana RPCâ€¦"),
+      makeStep("simulate", "running", "Simulating on Solana RPC\u2026"),
       executePending,
     ];
   }

@@ -31,7 +31,16 @@ const TITLES = {
 } as const satisfies Record<FlowStepId, string>;
 
 const EXECUTE_PENDING =
-  "On-chain execution is not connected yet. No mandate transfer is submitted.";
+  "Not run yet. Use Execute Transfer below once the simulation passes.";
+
+/** Hasil eksekusi on-chain di sesi ini. Dikirim dari hook eksekusi. */
+export type ExecutionState =
+  | { kind: "idle" }
+  | { kind: "running" }
+  | { kind: "success"; signature: string }
+  | { kind: "failed"; message: string };
+
+export const EXECUTION_IDLE: ExecutionState = { kind: "idle" };
 
 type StepExtras = Pick<FlowStep, "checks" | "logs">;
 
@@ -104,19 +113,49 @@ function simulationSteps(simulation: SimulationState): [FlowStep, FlowStep] {
         executeSkipped,
       ];
     case "ERROR":
-      return [
-        makeStep("simulate", "failed", outcome.message),
-        executeSkipped,
-      ];
+      return [makeStep("simulate", "failed", outcome.message), executeSkipped];
     case "UNSUPPORTED":
       return [makeStep("simulate", "pending", outcome.message), executePending];
   }
+}
+
+function applyExecution(
+  steps: readonly FlowStep[],
+  execution: ExecutionState,
+): readonly FlowStep[] {
+  if (execution.kind === "idle") return steps;
+
+  return steps.map((step) => {
+    if (step.id !== "execute") return step;
+
+    switch (execution.kind) {
+      case "running":
+        return makeStep(
+          "execute",
+          "running",
+          "Submitting the transfer to Solana.",
+        );
+      case "success":
+        return makeStep(
+          "execute",
+          "complete",
+          `Transfer confirmed on-chain. Signature: ${execution.signature}`,
+        );
+      case "failed":
+        return makeStep(
+          "execute",
+          "failed",
+          `Not executed: ${execution.message}`,
+        );
+    }
+  });
 }
 
 export function buildFlowSteps(
   config: MandateConfig | null,
   attempt: AgentAttempt | null,
   simulation: SimulationState,
+  execution: ExecutionState = EXECUTION_IDLE,
 ): readonly FlowStep[] {
   if (!config) return waitingSteps("Complete the mandate configurator.");
   if (!attempt) {
@@ -156,6 +195,8 @@ export function buildFlowSteps(
     { checks: evaluation.checks },
   );
 
-  return [build, verify, ...simulationSteps(simulation)];
+  return applyExecution(
+    [build, verify, ...simulationSteps(simulation)],
+    execution,
+  );
 }
-

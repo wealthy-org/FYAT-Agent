@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 
@@ -37,8 +37,8 @@ export function ExecutionFlowPreview({
   const execution = useExecuteTransfer(mandateCreator.execute);
 
   const steps = useMemo(
-    () => buildFlowSteps(config, attempt, state),
-    [config, attempt, state],
+    () => buildFlowSteps(config, attempt, state, execution.outcome),
+    [config, attempt, state, execution.outcome],
   );
 
   const verifyStatus = steps.find((step) => step.id === "verify")?.status;

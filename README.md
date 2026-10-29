@@ -150,7 +150,7 @@ Copy `.env.example` to `.env.local`. Never commit `.env.local`.
 | `DATABASE_URL` | **server only** | Neon **pooled** connection string (host contains `-pooler`) |
 | `DATABASE_MIGRATION_URL` | **server only** | Neon **direct** connection string, used by migrations and scripts |
 | `APP_URL` | server only | App origin. Its host is bound into signed messages (anti-phishing). Set it per environment |
-| `FYAT_PROGRAM_ID` | server only | Mandate program ID. Currently a placeholder (`1111…1111`) until the program is deployed |
+| `FYAT_PROGRAM_ID` | server only | Deployed Devnet program ID of `fyat_mandate`. Vault and mandate addresses are derived from it |
 
 Rules:
 

@@ -17,6 +17,7 @@
     "agent:keygen": "tsx scripts/agent-keygen.ts",
     "agent:run": "tsx --env-file=.env.local scripts/agent-run.ts",
     "agent:worker": "tsx scripts/agent-worker.ts",
+    "faucet:keygen": "tsx scripts/faucet-keygen.ts",
     "idl:sync": "tsx scripts/sync-idl.ts"
   },
   "dependencies": {

@@ -9,7 +9,7 @@ export const siteConfig = {
       label: "Builder",
       href: "/docs/playground",
       children: [
-        { label: "Playground", href: "/docs/playground", description: "Configure a mandate and preview the flow" },
+        { label: "Use FYAT", href: "/docs/playground", description: "Configure a mandate and preview the flow" },
         { label: "Builder overview", href: "/docs/builder-overview", description: "How the transaction builder works" },
         { label: "Scope verification", href: "/docs/scope-verification", description: "Checks that run before execution" },
         { label: "Simulation", href: "/docs/simulation", description: "Simulation and planning" },
@@ -40,7 +40,7 @@ export const siteConfig = {
       title: "Product",
       links: [
         { label: "Platform", href: "/#platform" },
-        { label: "Playground", href: "/docs/playground" },
+        { label: "Use FYAT", href: "/docs/playground" },
         { label: "Receipts", href: "/docs/live-receipts" },
       ],
     },

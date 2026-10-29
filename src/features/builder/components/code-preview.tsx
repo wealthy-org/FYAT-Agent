@@ -15,7 +15,7 @@ type CodePreviewProps = {
 
 function EmptyCode() {
   return (
-    <p className="rounded-xl border border-dashed border-border-subtle p-6 text-sm text-fg-muted">
+    <p className="border-border-subtle text-fg-muted rounded-xl border border-dashed p-6 text-sm">
       Complete the mandate configurator to generate code.
     </p>
   );
@@ -56,14 +56,14 @@ export function CodePreview({ config, attempt }: CodePreviewProps) {
 
   return (
     <Card className="p-6 md:p-8">
-      <Eyebrow>3 / Code</Eyebrow>
-      <h3 className="mb-6 mt-2 font-display text-xl font-medium">
+      <Eyebrow>Step 6 / Review</Eyebrow>
+      <h3 className="font-display mt-2 mb-6 text-xl font-medium">
         Generated from your mandate
       </h3>
 
       <Tabs label="Code preview" tabs={tabs} />
 
-      <p className="mt-6 text-xs text-fg-subtle">
+      <p className="text-fg-subtle mt-6 text-xs">
         Illustrative API example. Not production SDK documentation.
       </p>
     </Card>

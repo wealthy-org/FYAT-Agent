@@ -27,8 +27,26 @@ const serverSchema = z.object({
   AGENT_SESSION_PUBKEY: solanaAddress.optional(),
   WORKER_API_SECRET: z
     .string()
-    .regex(/^[A-Za-z0-9_-]{32,128}$/, "must be a 32-128 character URL-safe secret")
+    .regex(
+      /^[A-Za-z0-9_-]{32,128}$/,
+      "must be a 32-128 character URL-safe secret",
+    )
     .optional(),
+  FAUCET_TREASURY_SECRET_KEY: z.string().optional(),
+  FAUCET_SOL_DRIP_LAMPORTS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(Number.MAX_SAFE_INTEGER)
+    .default(100_000_000),
+  FAUCET_TOKEN_DRIP_UNITS: z
+    .string()
+    .regex(/^[1-9]\d{0,19}$/)
+    .refine(
+      (value) => BigInt(value) <= 18_446_744_073_709_551_615n,
+      "must fit into a u64",
+    )
+    .default("50000000"),
   SOLANA_RPC_URL: z.url(),
 });
 
@@ -51,6 +69,10 @@ export function getServerEnv(): ServerEnv {
       process.env.NEXT_PUBLIC_AGENT_SESSION_PUBKEY ||
       undefined,
     WORKER_API_SECRET: process.env.WORKER_API_SECRET || undefined,
+    FAUCET_TREASURY_SECRET_KEY:
+      process.env.FAUCET_TREASURY_SECRET_KEY || undefined,
+    FAUCET_SOL_DRIP_LAMPORTS: process.env.FAUCET_SOL_DRIP_LAMPORTS,
+    FAUCET_TOKEN_DRIP_UNITS: process.env.FAUCET_TOKEN_DRIP_UNITS || undefined,
     SOLANA_RPC_URL:
       process.env.SOLANA_RPC_URL ??
       process.env.NEXT_PUBLIC_SOLANA_RPC_URL ??

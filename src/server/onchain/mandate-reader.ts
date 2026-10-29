@@ -6,7 +6,6 @@ import idlJson from "@/lib/idl/fyat_mandate.json";
 import { findMandatePda } from "@/lib/mandate-address";
 import type { MandateAction } from "@/features/builder";
 
-
 const coder = new BorshAccountsCoder(idlJson as Idl);
 
 export type OnchainMandate = {
@@ -43,7 +42,10 @@ function readBig(value: unknown, field: string): bigint {
   if (
     value === undefined ||
     value === null ||
-    (typeof value !== "object" && typeof value !== "number" && typeof value !== "bigint" && typeof value !== "string")
+    (typeof value !== "object" &&
+      typeof value !== "number" &&
+      typeof value !== "bigint" &&
+      typeof value !== "string")
   ) {
     throw new OnchainReadError(
       `Mandate field "${field}" was not found or is invalid. Check the IDL and deployed account layout.`,
@@ -75,12 +77,23 @@ function readPublicKey(value: unknown, field: string): PublicKey {
 }
 
 function readAction(value: unknown): MandateAction {
-  if (value && typeof value === "object") {
-    if ("transfer" in value) return "TRANSFER";
-    if ("swap" in value) return "SWAP";
+  const variant =
+    typeof value === "string"
+      ? value
+      : value !== null &&
+          typeof value === "object" &&
+          !Array.isArray(value) &&
+          Object.keys(value).length === 1
+        ? Object.keys(value)[0]
+        : undefined;
+
+  switch (variant?.toLowerCase()) {
+    case "transfer":
+      return "TRANSFER";
+    case "swap":
+      return "SWAP";
   }
-  if (value === "transfer") return "TRANSFER";
-  if (value === "swap") return "SWAP";
+
   throw new OnchainReadError("Mandate action is missing or invalid.");
 }
 /**
@@ -129,8 +142,14 @@ export function decodeMandateAccount(
     id,
     session: readPublicKey(field("session", "session"), "session").toBase58(),
     action: readAction(field("action", "action")),
-    recipient: readPublicKey(field("recipient", "recipient"), "recipient").toBase58(),
-    maxPerAction: readBig(field("max_per_action", "maxPerAction"), "max_per_action"),
+    recipient: readPublicKey(
+      field("recipient", "recipient"),
+      "recipient",
+    ).toBase58(),
+    maxPerAction: readBig(
+      field("max_per_action", "maxPerAction"),
+      "max_per_action",
+    ),
     maxTotal: readBig(field("max_total", "maxTotal"), "max_total"),
     spent: readBig(field("spent", "spent"), "spent"),
     createdAt: readBig(field("created_at", "createdAt"), "created_at"),

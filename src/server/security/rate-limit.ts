@@ -22,6 +22,7 @@ export const RATE_LIMITS = {
   mandateExecute: { name: "mandate-execute", limit: 30, windowSeconds: 60 },
   receiptsRead: { name: "receipts-read", limit: 60, windowSeconds: 60 },
   mandatesRead: { name: "mandates-read", limit: 30, windowSeconds: 60 },
+  faucetClaim: { name: "faucet-claim", limit: 1, windowSeconds: 86_400 },
 } as const satisfies Record<string, RateLimitRule>;
 
 /** Peluang membersihkan tabel keamanan pada tiap request. */

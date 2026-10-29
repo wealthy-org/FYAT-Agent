@@ -21,13 +21,14 @@ export function MandateConfigurator({ form }: MandateConfiguratorProps) {
   const { values, setField, touchField, errorFor } = form;
 
   return (
-    <Card className="p-6 md:p-8">
-      <Eyebrow>1 / Configure</Eyebrow>
-      <h3 className="mt-2 font-display text-xl font-medium">
+    <Card id="playground-configure" className="scroll-mt-24 p-5 md:p-6">
+      <Eyebrow>Step 2 / Configure</Eyebrow>
+      <h3 className="font-display mt-2 text-xl font-medium">
         Mandate Configurator
       </h3>
-      <p className="mt-2 text-sm text-fg-muted">
-        Define exactly what the agent&apos;s session key is allowed to do.
+      <p className="text-fg-muted mt-2 text-sm">
+        Set the allowed action, destination, spending caps, and expiry. The next
+        step creates this mandate on-chain.
       </p>
 
       {/* Tidak ada submit di step ini; cegah Enter me-reload halaman */}
@@ -45,8 +46,8 @@ export function MandateConfigurator({ form }: MandateConfiguratorProps) {
         />
 
         <div>
-          <span className="mb-2 block text-xs text-fg-muted">Asset</span>
-          <p className="flex h-11 items-center rounded-xl border border-border-subtle bg-surface-raised px-4 text-sm text-fg-muted">
+          <span className="text-fg-muted mb-2 block text-xs">Asset</span>
+          <p className="border-border-subtle bg-surface-raised text-fg-muted flex h-11 items-center rounded-xl border px-4 text-sm">
             {ASSET_LABEL}
           </p>
         </div>

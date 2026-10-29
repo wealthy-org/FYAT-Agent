@@ -8,7 +8,10 @@ import { env } from "@/lib/env";
 import { shortenAddress } from "@/lib/solana";
 
 import { ASSET_SYMBOL, USDC_DECIMALS } from "../constants";
-import { useMandateList, type InspectedMandateDto } from "../hooks/use-mandate-list";
+import {
+  useMandateList,
+  type InspectedMandateDto,
+} from "../hooks/use-mandate-list";
 import { useRevokeMandate } from "../hooks/use-revoke-mandate";
 
 const STATUS_STYLE: Record<InspectedMandateDto["status"], string> = {
@@ -19,11 +22,13 @@ const STATUS_STYLE: Record<InspectedMandateDto["status"], string> = {
 };
 
 function explorerAccount(address: string): string {
-  const cluster = env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "?cluster=devnet" : "";
+  const cluster =
+    env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "?cluster=devnet" : "";
   return `https://explorer.solana.com/address/${address}${cluster}`;
 }
 
-const units = (value: string) => `${formatUnits(BigInt(value), USDC_DECIMALS)} ${ASSET_SYMBOL}`;
+const units = (value: string) =>
+  `${formatUnits(BigInt(value), USDC_DECIMALS)} ${ASSET_SYMBOL}`;
 
 export function MandateInspector() {
   const list = useMandateList();
@@ -39,100 +44,141 @@ export function MandateInspector() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Eyebrow>Inspector</Eyebrow>
-          <h3 className="mt-2 font-display text-xl font-medium">My Mandates</h3>
+          <h3 className="font-display mt-2 text-xl font-medium">My Mandates</h3>
         </div>
-        <Button disabled={!list.connected || list.refreshing || revokeFlow.busy} onClick={() => void list.refresh()}>
+        <Button
+          disabled={!list.connected || list.refreshing || revokeFlow.busy}
+          onClick={() => void list.refresh()}
+        >
           {list.refreshing ? "Loading..." : "Refresh"}
         </Button>
       </div>
 
-      <p className="mt-2 text-sm text-fg-muted">
+      <p className="text-fg-muted mt-2 text-sm">
         Status and spending are read directly from the on-chain account.
       </p>
 
       {!list.connected && (
-        <p className="mt-4 text-sm text-fg-muted">Connect your wallet to view your mandates.</p>
+        <p className="text-fg-muted mt-4 text-sm">
+          Connect your wallet to view your mandates.
+        </p>
       )}
       {list.error && (
-        <p role="alert" className="mt-4 break-all text-sm text-danger">{list.error}</p>
+        <p role="alert" className="text-danger mt-4 text-sm break-all">
+          {list.error}
+        </p>
       )}
       {list.connected && !list.error && list.items === null && (
-        <p className="mt-4 text-sm text-fg-muted">Loading...</p>
+        <p className="text-fg-muted mt-4 text-sm">Loading...</p>
       )}
       {list.items?.length === 0 && (
-        <p className="mt-4 text-sm text-fg-muted">No on-chain mandates yet.</p>
+        <p className="text-fg-muted mt-4 text-sm">No on-chain mandates yet.</p>
       )}
 
       <ul className="mt-4 space-y-3">
         {list.items?.map((item) => (
-          <li key={item.id} className="rounded-2xl border border-border-subtle p-4 text-sm">
-            <div className="flex items-center justify-between gap-3">
-              <a
-                href={explorerAccount(item.mandatePda)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-brand-400 underline"
-              >
-                #{item.onchainId} · {shortenAddress(item.mandatePda)}
-              </a>
-              <span className={`rounded-full border px-3 py-1 text-xs font-medium ${STATUS_STYLE[item.status]}`}>
-                {item.status === "UNVERIFIED" ? "UNVERIFIED" : item.status}
-              </span>
-            </div>
+          <li
+            key={item.id}
+            className="border-border-subtle rounded-2xl border p-4 text-sm"
+          >
+            <details>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="text-fg block font-medium">
+                    #{item.onchainId} · {item.action}
+                  </span>
+                  <span className="text-fg-subtle mt-1 block font-mono text-xs">
+                    {shortenAddress(item.mandatePda)}
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${STATUS_STYLE[item.status]}`}
+                >
+                  {item.status}
+                </span>
+              </summary>
 
-            <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
-              <dt className="text-fg-muted">Spent</dt>
-              <dd className="text-right">{units(item.spent)} / {units(item.maxTotal)}</dd>
-              <dt className="text-fg-muted">Action</dt>
-              <dd className="text-right">{item.action}</dd>
-              <dt className="text-fg-muted">Max per action</dt>
-              <dd className="text-right">{units(item.maxPerAction)}</dd>
-              <dt className="text-fg-muted">
-                {item.action === "SWAP" ? "Approved pool" : "Recipient"}
-              </dt>
-              <dd className="text-right">{shortenAddress(item.recipient)}</dd>
-              <dt className="text-fg-muted">Session</dt>
-              <dd className="text-right">{shortenAddress(item.sessionPubkey)}</dd>
-              <dt className="text-fg-muted">Expires</dt>
-              <dd className="text-right">{new Date(item.expiresAt).toLocaleString()}</dd>
-              {item.revokedAt && (
-                <>
-                  <dt className="text-fg-muted">Revoked</dt>
-                  <dd className="text-right">{new Date(item.revokedAt).toLocaleString()}</dd>
-                </>
-              )}
-            </dl>
+              <div className="border-border-subtle mt-3 border-t pt-3">
+                <a
+                  href={explorerAccount(item.mandatePda)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-400 text-xs underline"
+                >
+                  View mandate on Solana Explorer
+                </a>
 
-            {!item.chainVerified && (
-              <p className="mt-3 text-xs text-fg-subtle">
-                The account could not be read on-chain. Values above are from the database.
-              </p>
-            )}
-            {item.chainVerified && !item.dbInSync && (
-              <p className="mt-3 text-xs text-fg-subtle">
-                The database is out of sync with the chain (the execution or
-                revocation has not been recorded). The chain is authoritative.
-              </p>
-            )}
+                <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+                  <dt className="text-fg-muted">Spent</dt>
+                  <dd className="text-right">
+                    {units(item.spent)} / {units(item.maxTotal)}
+                  </dd>
+                  <dt className="text-fg-muted">Action</dt>
+                  <dd className="text-right">{item.action}</dd>
+                  <dt className="text-fg-muted">Max per action</dt>
+                  <dd className="text-right">{units(item.maxPerAction)}</dd>
+                  <dt className="text-fg-muted">
+                    {item.action === "SWAP" ? "Approved pool" : "Recipient"}
+                  </dt>
+                  <dd className="text-right">
+                    {shortenAddress(item.recipient)}
+                  </dd>
+                  <dt className="text-fg-muted">Session</dt>
+                  <dd className="text-right">
+                    {shortenAddress(item.sessionPubkey)}
+                  </dd>
+                  <dt className="text-fg-muted">Expires</dt>
+                  <dd className="text-right">
+                    {new Date(item.expiresAt).toLocaleString()}
+                  </dd>
+                  {item.revokedAt && (
+                    <>
+                      <dt className="text-fg-muted">Revoked</dt>
+                      <dd className="text-right">
+                        {new Date(item.revokedAt).toLocaleString()}
+                      </dd>
+                    </>
+                  )}
+                </dl>
 
-            {item.status === "ACTIVE" && (
-              <Button
-                className="mt-3 w-full"
-                disabled={revokeFlow.busy}
-                onClick={() => void handleRevoke(item)}
-              >
-                {revokeFlow.busy ? "Revoking..." : "Revoke Mandate"}
-              </Button>
-            )}
+                {!item.chainVerified && (
+                  <p className="text-fg-subtle mt-3 text-xs">
+                    The account could not be read on-chain. Values above are
+                    from the database.
+                  </p>
+                )}
+                {item.chainVerified && !item.dbInSync && (
+                  <p className="text-fg-subtle mt-3 text-xs">
+                    The database is out of sync with the chain (the execution or
+                    revocation has not been recorded). The chain is
+                    authoritative.
+                  </p>
+                )}
+
+                {item.status === "ACTIVE" && (
+                  <Button
+                    className="mt-3 w-full"
+                    disabled={revokeFlow.busy}
+                    onClick={() => void handleRevoke(item)}
+                  >
+                    {revokeFlow.busy ? "Revoking..." : "Revoke Mandate"}
+                  </Button>
+                )}
+              </div>
+            </details>
           </li>
         ))}
       </ul>
 
       {revokeFlow.status && (
-        <p aria-live="polite" className="mt-3 break-all text-sm text-fg-muted">{revokeFlow.status}</p>
+        <p aria-live="polite" className="text-fg-muted mt-3 text-sm break-all">
+          {revokeFlow.status}
+        </p>
       )}
       {revokeFlow.error && (
-        <p role="alert" className="mt-3 break-all text-sm text-danger">{revokeFlow.error}</p>
+        <p role="alert" className="text-danger mt-3 text-sm break-all">
+          {revokeFlow.error}
+        </p>
       )}
     </Card>
   );

@@ -3,6 +3,7 @@ import { loadOrCreatePayer } from "./lib/dev-payer";
 import {
   TOKEN_PROGRAM_ID,
   createMint,
+  getMint,
   getOrCreateAssociatedTokenAccount,
   mintTo,
 } from "@solana/spl-token";
@@ -28,7 +29,10 @@ function readRecipientArg(): PublicKey | null {
   return new PublicKey(value);
 }
 
-async function ensureSol(connection: Connection, payer: Keypair): Promise<void> {
+async function ensureSol(
+  connection: Connection,
+  payer: Keypair,
+): Promise<void> {
   const balance = await connection.getBalance(payer.publicKey, "confirmed");
   if (balance >= MIN_BALANCE) return;
 
@@ -60,8 +64,14 @@ async function resolveMint(
       const existing = new PublicKey(configured);
       const info = await connection.getAccountInfo(existing, "confirmed");
       if (info?.owner.equals(TOKEN_PROGRAM_ID)) {
-        console.log(`Using existing mint ${existing.toBase58()}`);
-        return existing;
+        const mint = await getMint(connection, existing, "confirmed");
+        if (mint.decimals === DECIMALS) {
+          console.log(`Using existing mint ${existing.toBase58()}`);
+          return existing;
+        }
+        console.warn(
+          `Configured mint uses ${mint.decimals} decimals; creating a new ${DECIMALS}-decimal test mint.`,
+        );
       }
     } catch {
       // Env berisi placeholder/alamat tidak valid → buat mint baru.

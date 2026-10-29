@@ -24,7 +24,7 @@ type PageProps = { params: Promise<{ slug: string }> };
 
 const liveLeads: Record<LiveDocSlug, string> = {
   playground:
-    "Configure a bounded mandate, preview the execution flow and copy the SDK code. Previewing needs no funds.",
+    "Claim Devnet test funds, configure and create a mandate, then simulate before executing. The dry-run is free; execution sends a real Devnet transaction.",
   "live-receipts":
     "Every attempt under a mandate leaves a public record: what the agent tried, and whether the policy let it through.",
 };

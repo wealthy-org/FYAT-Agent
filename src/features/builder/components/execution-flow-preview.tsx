@@ -89,85 +89,125 @@ export function ExecutionFlowPreview({
   }
 
   return (
-    <Card className="p-6 md:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Eyebrow>2 / Execution flow</Eyebrow>
-          <h3 className="font-display mt-2 text-xl font-medium">
-            Build {"\u2192"} Verify {"\u2192"} Simulate {"\u2192"} Execute
-          </h3>
-        </div>
+    <>
+      <Card id="playground-create" className="scroll-mt-24 p-5 md:p-6">
+        <Eyebrow>Step 3 / Create</Eyebrow>
+        <h3 className="font-display mt-2 text-xl font-medium">
+          Create your on-chain mandate
+        </h3>
+        <p className="text-fg-muted mt-1 text-sm">
+          Approve the mandate in your wallet. If you do not have a vault yet,
+          this step creates it automatically; no tokens move yet.
+        </p>
 
-        <div aria-live="polite" className="shrink-0">
-          {policyPassed && (
-            <span className="border-success/40 bg-success/10 text-success rounded-full border px-3 py-1 text-xs font-medium">
-              PASS
-            </span>
-          )}
-
-          {verifyStatus === "blocked" && (
-            <span className="border-danger/40 bg-danger/10 text-danger rounded-full border px-3 py-1 text-xs font-medium">
-              BLOCKED
-            </span>
-          )}
-        </div>
-      </div>
-
-      <p className="text-fg-subtle mt-3 text-xs">
-        {mandateCreator.externalAgent
-          ? "External agent mode: the owner signs each job request, then the Railway worker executes it on Devnet."
-          : "Demo mode: the session key is stored in this browser, and the owner approves every execution. This is not an autonomous agent."}
-      </p>
-
-      <AgentAttemptFields config={config} form={attemptForm} />
-
-      <SimulationControls
-        action={config?.action ?? null}
-        walletConnected={walletConnected}
-        policyPassed={policyPassed}
-        running={state.status === "running"}
-        onRun={() => void start()}
-      />
-
-      <MandateCreateSection
-        config={config}
-        walletConnected={walletConnected}
-        executeBusy={execution.busy}
-        controller={mandateCreator}
-      />
-
-      <SessionVaultSection
-        walletConnected={walletConnected}
-        executeBusy={execution.busy}
-        controller={mandateCreator}
-      />
-
-      <ExecuteTransferSection
-        attemptAmount={attempt ? attempt.amount : null}
-        activeMandate={activeMandate}
-        configMatchesMandate={configMatchesMandate}
-        policyPassed={policyPassed}
-        canExecute={canExecute}
-        busy={execution.busy}
-        status={execution.status}
-        error={execution.error}
-        onExecute={handleExecute}
-      />
-
-      {config?.action !== "SWAP" && (
-        <OnchainProbeSection
-          state={probe.state}
-          ready={probe.ready}
-          onRun={() => attempt && void probe.run(attempt)}
+        <MandateCreateSection
+          config={config}
+          walletConnected={walletConnected}
+          executeBusy={execution.busy}
+          controller={mandateCreator}
         />
-      )}
 
-      <FlowStepList steps={steps} />
+        <details className="border-border-subtle mt-4 rounded-xl border p-4">
+          <summary className="text-fg-muted hover:text-fg cursor-pointer text-sm font-medium">
+            Save or restore a browser session
+          </summary>
+          <SessionVaultSection
+            walletConnected={walletConnected}
+            executeBusy={execution.busy}
+            controller={mandateCreator}
+          />
+        </details>
+      </Card>
 
-      <p className="border-border-subtle text-fg-subtle mt-8 border-t pt-4 text-xs">
-        The policy simulation is a local preview. The on-chain mandate program
-        still enforces the actual action limits.
-      </p>
-    </Card>
+      <Card id="playground-simulate" className="scroll-mt-24 p-5 md:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Eyebrow>Step 4 / Simulate</Eyebrow>
+            <h3 className="font-display mt-2 text-xl font-medium">
+              Test the action before sending
+            </h3>
+          </div>
+          <div aria-live="polite" className="shrink-0">
+            {policyPassed && (
+              <span className="border-success/40 bg-success/10 text-success rounded-full border px-3 py-1 text-xs font-medium">
+                POLICY PASS
+              </span>
+            )}
+            {verifyStatus === "blocked" && (
+              <span className="border-danger/40 bg-danger/10 text-danger rounded-full border px-3 py-1 text-xs font-medium">
+                BLOCKED
+              </span>
+            )}
+          </div>
+        </div>
+
+        <p className="text-fg-muted mt-2 text-sm">
+          Set the attempt amount and run a dry-run. Simulation does not sign or
+          send a transaction and does not move funds.
+        </p>
+        <AgentAttemptFields config={config} form={attemptForm} />
+        <SimulationControls
+          action={config?.action ?? null}
+          walletConnected={walletConnected}
+          policyPassed={policyPassed}
+          running={state.status === "running"}
+          onRun={() => void start()}
+        />
+
+        <details className="border-border-subtle mt-5 border-t pt-4">
+          <summary className="text-fg-muted hover:text-fg cursor-pointer text-sm font-medium">
+            View policy checks and simulation logs
+          </summary>
+          <FlowStepList steps={steps} />
+        </details>
+      </Card>
+
+      <Card id="playground-execute" className="scroll-mt-24 p-5 md:p-6">
+        <Eyebrow>Step 5 / Execute</Eyebrow>
+        <h3 className="font-display mt-2 text-xl font-medium">
+          Send the action on Devnet
+        </h3>
+        <p className="text-fg-muted mt-1 text-sm">
+          This sends a real Devnet transaction. Create the mandate, deposit test
+          USDC into its vault, and pass the policy check before continuing.
+        </p>
+
+        <p className="text-fg-subtle mt-3 text-xs">
+          {mandateCreator.externalAgent
+            ? "External agent mode: you sign this job request; the Railway worker executes it on Devnet."
+            : "Demo mode: the session key is stored in this browser, and your wallet approves every execution."}
+        </p>
+
+        <ExecuteTransferSection
+          attemptAmount={attempt ? attempt.amount : null}
+          activeMandate={activeMandate}
+          configMatchesMandate={configMatchesMandate}
+          policyPassed={policyPassed}
+          canExecute={canExecute}
+          busy={execution.busy}
+          status={execution.status}
+          error={execution.error}
+          onExecute={handleExecute}
+        />
+
+        {config?.action !== "SWAP" && (
+          <details className="border-border-subtle mt-4 rounded-xl border p-4">
+            <summary className="text-fg-muted hover:text-fg cursor-pointer text-sm font-medium">
+              Advanced on-chain probe
+            </summary>
+            <OnchainProbeSection
+              state={probe.state}
+              ready={probe.ready}
+              onRun={() => attempt && void probe.run(attempt)}
+            />
+          </details>
+        )}
+
+        <p className="border-border-subtle text-fg-subtle mt-5 border-t pt-4 text-xs">
+          The local policy preview is for guidance. The on-chain mandate program
+          is the authority for action limits and permissions.
+        </p>
+      </Card>
+    </>
   );
 }

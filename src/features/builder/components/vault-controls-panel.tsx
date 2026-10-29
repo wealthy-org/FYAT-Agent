@@ -20,22 +20,27 @@ type PanelMandate = {
 type VaultControlsPanelProps = {
   /** Mandate aktif dari useCreateMandate (null bila belum ada). */
   activeMandate: PanelMandate | null;
+  balanceRefreshKey?: number;
 };
 
 const INPUT_CLASS =
   "mt-2 w-full rounded-xl border border-border-subtle bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-400";
 
 function explorerTx(signature: string): string {
-  const cluster = env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "?cluster=devnet" : "";
+  const cluster =
+    env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "?cluster=devnet" : "";
   return `https://explorer.solana.com/tx/${signature}${cluster}`;
 }
 
-export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
+export function VaultControlsPanel({
+  activeMandate,
+  balanceRefreshKey = 0,
+}: VaultControlsPanelProps) {
   const funds = useVaultFunds();
   const revokeFlow = useRevokeMandate();
 
   const [amount, setAmount] = useState("");
-    // Menyimpan ID mandate yang sudah dicabut. Status "dicabut" diturunkan saat
+  // Menyimpan ID mandate yang sudah dicabut. Status "dicabut" diturunkan saat
   // render, jadi berganti mandate otomatis tidak lagi dianggap dicabut.
   const [revokedId, setRevokedId] = useState<string | null>(null);
   const revoked = activeMandate !== null && revokedId === activeMandate.id;
@@ -49,24 +54,33 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [refreshBalances]);
+  }, [activeMandate?.id, balanceRefreshKey, refreshBalances]);
 
   const anyBusy = funds.busy || revokeFlow.busy;
   const amountEmpty = amount.trim().length === 0;
 
-    async function handleRevoke() {
+  async function handleRevoke() {
     if (!activeMandate) return;
-    const ok = await revokeFlow.revoke(activeMandate.id, activeMandate.mandatePda);
+    const ok = await revokeFlow.revoke(
+      activeMandate.id,
+      activeMandate.mandatePda,
+    );
     if (ok) setRevokedId(activeMandate.id);
   }
 
   return (
-    <Card className="p-6 md:p-8">
-      <Eyebrow>Vault</Eyebrow>
-      <h3 className="mt-2 font-display text-xl font-medium">Funds &amp; Access</h3>
+    <Card id="playground-funds" className="scroll-mt-24 p-5 md:p-6">
+      <Eyebrow>Step 1 / Funds</Eyebrow>
+      <h3 className="font-display mt-2 text-xl font-medium">
+        Funds &amp; Access
+      </h3>
+      <p className="text-fg-muted mt-1 text-sm">
+        Claim test USDC above, then create a mandate to initialize your vault.
+        Deposit into it before executing.
+      </p>
 
       {/* ------------------------------ Balance ------------------------------ */}
-      <section className="mt-6 rounded-2xl border border-border-subtle p-4">
+      <section className="border-border-subtle mt-6 rounded-2xl border p-4">
         <h4 className="font-medium">Balance</h4>
         <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
           <div>
@@ -96,14 +110,17 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
       </section>
 
       {/* ------------------------ Deposit & Withdraw ----------------------- */}
-      <section className="mt-6 rounded-2xl border border-border-subtle p-4">
+      <section className="border-border-subtle mt-6 rounded-2xl border p-4">
         <h4 className="font-medium">Deposit &amp; Withdraw</h4>
-        <p className="mt-1 text-sm text-fg-muted">
+        <p className="text-fg-muted mt-1 text-sm">
           Only the owner can deposit and withdraw. Withdrawals always go to the
           owners own token account.
         </p>
 
-        <label htmlFor="vault-amount" className="mt-4 block text-sm font-medium">
+        <label
+          htmlFor="vault-amount"
+          className="mt-4 block text-sm font-medium"
+        >
           Amount ({ASSET_SYMBOL})
         </label>
         <input
@@ -132,12 +149,15 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
         </div>
 
         {funds.status && (
-          <p aria-live="polite" className="mt-3 break-all text-sm text-fg-muted">
+          <p
+            aria-live="polite"
+            className="text-fg-muted mt-3 text-sm break-all"
+          >
             {funds.status}
           </p>
         )}
         {funds.error && (
-          <p role="alert" className="mt-3 break-all text-sm text-danger">
+          <p role="alert" className="text-danger mt-3 text-sm break-all">
             {funds.error}
           </p>
         )}
@@ -146,7 +166,7 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
             href={explorerTx(funds.signature)}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-block text-sm text-brand-400 underline"
+            className="text-brand-400 mt-2 inline-block text-sm underline"
           >
             View in Explorer
           </a>
@@ -154,56 +174,69 @@ export function VaultControlsPanel({ activeMandate }: VaultControlsPanelProps) {
       </section>
 
       {/* ------------------------------ Revoke ----------------------------- */}
-      <section className="mt-6 rounded-2xl border border-border-subtle p-4">
-        <h4 className="font-medium">Revoke Mandate</h4>
-        <p className="mt-1 text-sm text-fg-muted">
-          Once revoked, every agent transaction is immediately rejected by the
-          program (MandateIsRevoked). Revocation cannot be undone.
-        </p>
+      <details className="border-border-subtle mt-5 rounded-2xl border p-4">
+        <summary className="cursor-pointer list-none font-medium marker:hidden">
+          <span className="flex items-center justify-between gap-3">
+            <span>Revoke mandate</span>
+            <span aria-hidden="true" className="text-fg-subtle">
+              +
+            </span>
+          </span>
+        </summary>
+        <div className="pt-3">
+          <h4 className="font-medium">Revoke Mandate</h4>
+          <p className="text-fg-muted mt-1 text-sm">
+            Once revoked, every agent transaction is immediately rejected by the
+            program (MandateIsRevoked). Revocation cannot be undone.
+          </p>
 
-        {activeMandate ? (
-          <p className="mt-3 break-all text-xs text-fg-subtle">
-            Mandate: {activeMandate.mandatePda}
-          </p>
-        ) : (
-          <p className="mt-3 text-sm text-fg-muted">
-            No active mandate yet. Create or restore one first.
-          </p>
-        )}
+          {activeMandate ? (
+            <p className="text-fg-subtle mt-3 text-xs break-all">
+              Mandate: {activeMandate.mandatePda}
+            </p>
+          ) : (
+            <p className="text-fg-muted mt-3 text-sm">
+              No active mandate yet. Create or restore one first.
+            </p>
+          )}
 
-        <Button
-          className="mt-3 w-full"
-          disabled={!activeMandate || revoked || anyBusy}
-          onClick={() => void handleRevoke()}
-        >
-          {revokeFlow.busy
-            ? "Revoking..."
-            : revoked
-              ? "Mandate revoked"
-              : "Revoke Mandate"}
-        </Button>
-
-        {revokeFlow.status && (
-          <p aria-live="polite" className="mt-3 break-all text-sm text-fg-muted">
-            {revokeFlow.status}
-          </p>
-        )}
-        {revokeFlow.error && (
-          <p role="alert" className="mt-3 break-all text-sm text-danger">
-            {revokeFlow.error}
-          </p>
-        )}
-        {revokeFlow.signature && (
-          <a
-            href={explorerTx(revokeFlow.signature)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-sm text-brand-400 underline"
+          <Button
+            className="mt-3 w-full"
+            disabled={!activeMandate || revoked || anyBusy}
+            onClick={() => void handleRevoke()}
           >
-            View in Explorer
-          </a>
-        )}
-      </section>
+            {revokeFlow.busy
+              ? "Revoking..."
+              : revoked
+                ? "Mandate revoked"
+                : "Revoke Mandate"}
+          </Button>
+
+          {revokeFlow.status && (
+            <p
+              aria-live="polite"
+              className="text-fg-muted mt-3 text-sm break-all"
+            >
+              {revokeFlow.status}
+            </p>
+          )}
+          {revokeFlow.error && (
+            <p role="alert" className="text-danger mt-3 text-sm break-all">
+              {revokeFlow.error}
+            </p>
+          )}
+          {revokeFlow.signature && (
+            <a
+              href={explorerTx(revokeFlow.signature)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-400 mt-2 inline-block text-sm underline"
+            >
+              View in Explorer
+            </a>
+          )}
+        </div>
+      </details>
     </Card>
   );
 }

@@ -158,13 +158,16 @@ Copy `.env.example` to `.env.local`. Never commit `.env.local`.
 | `AGENT_SESSION_PUBKEY`             | server only              | Must match `NEXT_PUBLIC_AGENT_SESSION_PUBKEY` and the public key derived from the Railway worker key                     |
 | `WORKER_API_SECRET`                | **server only, secret**  | Shared Vercel/Railway credential for authenticated job completion; use a random URL-safe value of at least 32 characters |
 | `AGENT_SECRET_KEY`                 | **Railway only, secret** | JSON byte array for the dedicated Devnet session key. Do not configure this on Vercel                                    |
+| `FAUCET_TREASURY_SECRET_KEY`       | **server only, secret**  | Dedicated Devnet treasury key for the in-app test-funds claim. Configure only on Vercel                                 |
+| `FAUCET_SOL_DRIP_LAMPORTS`         | server only, optional    | SOL sent per claim in lamports; defaults to `100000000` (0.1 SOL)                                                       |
+| `FAUCET_TOKEN_DRIP_UNITS`          | server only, optional    | Test-token base units per claim; defaults to `50000000` (50 tokens with 6 decimals)                                     |
 
 Rules:
 
 - Anything prefixed `NEXT_PUBLIC_` is visible in the browser. Never put secrets there.
 - If an RPC URL contains an API key, restrict that key by origin at the provider. It is public by design.
 - When `FYAT_PROGRAM_ID` changes, derived vault addresses change too. Reset dev data in the database and reseed.
-- Run `pnpm db:migrate` against the same Neon database before deploying; migration `0004_agent_jobs.sql` adds the durable Railway queue.
+- Run `pnpm db:migrate` against the same Neon database before deploying; migrations `0004_agent_jobs.sql` and `0005_faucet_claims.sql` add the Railway queue and rolling faucet cooldown.
 - Set `NEXT_PUBLIC_AGENT_SESSION_PUBKEY` before building the Vercel app. The Vercel and Railway session-key settings must match.
 
 ### Vercel and Railway worker
@@ -178,6 +181,15 @@ Vercel remains the Next.js web/API deployment. Railway runs the persistent queue
 5. Keep a single Railway worker replica for the initial demo. The browser only enqueues a wallet-signed job; the worker checks the mandate on-chain, simulates and submits on Devnet, and Vercel verifies the confirmed transaction before recording a receipt.
 
 Use one dedicated, funded Devnet session key for the demo mandate. The worker stores a transaction signature before broadcasting and will not automatically resubmit a job whose transaction outcome is uncertain.
+
+### In-app Devnet faucet
+
+The Playground faucet sends SOL and test USDC from a dedicated treasury in one atomic Devnet transaction. Claims are limited to one per wallet every 24 hours and also rate-limited per IP.
+
+1. Run `pnpm faucet:keygen` once. It saves the secret key to `.keys/faucet-treasury.json` (gitignored) and prints only the public address.
+2. Fund that public address with Devnet SOL using the official Solana faucet, then run `pnpm mint:setup --to <TREASURY_PUBLIC_KEY>` to give it test USDC.
+3. Add the complete JSON-array contents of `.keys/faucet-treasury.json` as `FAUCET_TREASURY_SECRET_KEY` in Vercel. A 64-byte Base58 secret key is also accepted. Optionally set the SOL and token drip variables. Never put the secret in a `NEXT_PUBLIC_` variable, source control, or chat.
+4. Redeploy Vercel. The in-app claim remains unavailable until the treasury key is configured and the treasury has enough SOL and test tokens.
 
 ---
 
@@ -198,6 +210,7 @@ Use one dedicated, funded Devnet session key for the demo mandate. The worker st
 | `pnpm agent:keygen`                                           | Create the agent keypair in `.keys/agent.json` and print its public key          |
 | `pnpm agent:run --mandate <PDA> --amount <n> [--to <wallet>]` | Agent signs `execute_transfer` with its own key and records the receipt          |
 | `pnpm agent:worker`                                           | Poll Neon and process wallet-authorized Devnet jobs (Railway start command)      |
+| `pnpm faucet:keygen`                                          | Create a dedicated Devnet faucet treasury key in `.keys/faucet-treasury.json`   |
 
 ---
 
@@ -299,7 +312,8 @@ PostgreSQL on Neon. Key points (full definitions in `db/migrations/`):
 | `mandates`          | Session permissions: caps, budget, spent, expiry, `revoked_at` |
 | `mandate_receipts`  | Public audit tape. **Append-only** (enforced by trigger)       |
 | `auth_nonces`       | Used signature nonces (replay protection)                      |
-| `rate_limit_hits`   | Counters for database-backed rate limiting                     |
+| `rate_limit_hits`   | Counters for database-backed IP rate limiting                  |
+| `faucet_claims`     | Per-wallet rolling 24-hour faucet cooldown                     |
 | `schema_migrations` | Applied migrations with checksums                              |
 
 Integrity is enforced in the database, not only in application code:

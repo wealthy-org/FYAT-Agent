@@ -23,7 +23,7 @@ export default async function HomePage() {
   return (
     <>
       <Header
-        actions={<Button href="/docs">Use FYAT</Button>}
+        actions={<Button href="/docs/playground">Use FYAT</Button>}
         hideOnScrollFrom="platform"
       />
 

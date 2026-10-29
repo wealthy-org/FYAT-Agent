@@ -14,7 +14,7 @@ export const docsNav: readonly DocsNavGroup[] = [
   {
     title: "Try it live",
     items: [
-      { slug: "playground", label: "Playground" },
+      { slug: "playground", label: "Use FYAT" },
       { slug: "live-receipts", label: "Live receipts" },
     ],
   },

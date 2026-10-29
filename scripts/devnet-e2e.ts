@@ -1,4 +1,4 @@
-/**
+﻿/**
  * End-to-end Devnet: menjalankan empat skenario demo langsung ke program
  * fyat_mandate yang sudah di-deploy. Tidak ada logika "pura-pura" di sisi web:
  * semua penolakan datang dari program onchain.
@@ -73,21 +73,6 @@ function mandatePda(
     [Buffer.from("mandate"), vault.toBuffer(), idBytes],
     programId,
   )[0];
-}
-
-async function fetchLogs(
-  connection: Connection,
-  signature: string,
-): Promise<string[]> {
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const tx = await connection.getTransaction(signature, {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    });
-    if (tx?.meta?.logMessages) return tx.meta.logMessages;
-    await new Promise((resolve) => setTimeout(resolve, 750));
-  }
-  return [];
 }
 
 type Outcome = { signature: string; err: unknown; logs: string[] };

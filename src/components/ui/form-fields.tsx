@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+﻿import { ChevronDown } from "lucide-react";
 import {
   useId,
   type ComponentPropsWithoutRef,
@@ -87,7 +87,7 @@ export function TextField({
           id={id}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(id, { hint, error })}
-          className={cn(controlClasses(Boolean(error)), suffix && "pr-16")}
+          className={cn(controlClasses(Boolean(error)), suffix && "pr-16", inputClassName)}
           {...inputProps}
         />
         {suffix && (

@@ -4,7 +4,7 @@
 
 FYAT Agent is a transaction builder and mandate protocol for autonomous agents on Solana. A wallet owner defines a bounded mandate (spending caps, allowed action, approved recipient, expiry). The agent receives a temporary session key that can act only inside that mandate. The owner's private key never reaches the agent or the server.
 
-> **Status: Devnet prototype.** The web app, database and API are working. The onchain program that enforces mandates is still under development (see [Project status](#project-status)). Until it ships, limit checks in the UI are a preview, not enforcement. Do not use real funds.
+> **Status: Devnet prototype.** The onchain program enforces mandates (per-action cap, total budget, approved recipient, expiry, instant revoke) and is covered by tests and a Devnet end-to-end run. The session key still lives in the owner's browser, so this is a demo of enforcement, not yet an autonomous agent. Do not use real funds.
 
 ---
 
@@ -49,21 +49,17 @@ Owner wallet ──creates──▶ Vault PDA ──holds──▶ funds
 
 | Area | Status |
 |---|---|
-| Landing page, docs pages, Builder playground (configurator, flow preview, code preview) | Done |
+| Landing page, docs pages, Builder playground | Done |
 | Wallet connection (Phantom, Solflare) | Done |
 | Neon database schema and migrations | Done |
-| Signed-request API (vaults, mandates, revoke) and public receipts API | Done, verified by `pnpm api:smoke`. Not yet called by the UI |
-| Transfer simulation on Devnet | Done. Simulates a plain SPL transfer from the connected wallet, not yet mandate-aware |
-| Receipts feed | Done. Entries currently come from the demo seed script |
-| Anchor program: vault, deposit, withdraw | Written, not yet compiled or tested |
-| Anchor program: create mandate, revoke, execute with onchain limit checks | Next |
-| Program test suite (demo scenarios 1 to 4) and Devnet deploy | Next |
-| UI actions: create vault, deposit, create mandate, revoke, withdraw, mandate inspector | Planned |
-| Agent runner and receipts recorded from verified onchain transactions | Planned |
-| Swap via Meteora | Planned (last) |
-| Optional LLM-driven agent reasoning (OpenRouter) | Not scheduled |
-
----
+| Signed-request API (vaults, mandates, revoke) and receipts API | Done, called by the UI. `POST /api/vaults` verifies the vault onchain before saving |
+| Anchor program: vault, deposit, withdraw, create mandate, revoke, execute transfer | Done. 32 LiteSVM tests pass |
+| Devnet deployment and end-to-end flow | Done. Create vault, create mandate, execute, rejected execute, revoke |
+| UI: vault, deposit, withdraw, create mandate, mandate inspector, revoke, execute | Done |
+| Session key handling | Demo model: encrypted in the browser, owner approves each execution (see Known limitations) |
+| Autonomous agent runner and automatic receipts | Not built |
+| Swap (`Action::Swap`) | Not built. The program only supports `Transfer` |
+| CI and automated web tests | Not built |
 
 ## Tech stack
 
@@ -308,9 +304,7 @@ What is in place today:
 
 What does **not** exist yet:
 
-- Onchain enforcement of mandates (the core guarantee of the product).
-- Verification that a registered vault exists onchain before saving it.
-- Automated tests and CI.
+- Automated web tests and CI.
 - A nonce-based CSP. The current policy allows inline scripts for Next.js bootstrapping.
 - An independent security audit. Required before any mainnet use.
 
@@ -320,43 +314,57 @@ Report vulnerabilities privately to the maintainers. Do not open public issues f
 
 ## Onchain program
 
-The program lives in a **separate Anchor workspace** (`fyat_mandate`), developed in WSL on Windows because Rust builds on `/mnt/c` are very slow. The web app consumes its generated IDL and types.
+The program lives in a **separate Anchor workspace** (`fyat_mandate`), developed in WSL on Windows because Rust builds on `/mnt/c` are very slow. The web app consumes its generated IDL (`src/lib/idl/fyat_mandate.json`).
 
-Design (current and planned instructions):
-
-| Instruction | Signer | Purpose | State |
-|---|---|---|---|
-| `initialize_vault` | owner | Create the vault PDA and its token account | Written |
-| `deposit` | owner | Move tokens from the owner into the vault | Written |
-| `withdraw` | owner | Move tokens from the vault to the owner's own token account. Independent of mandates | Written |
-| `create_mandate` | owner | Register a session key with caps, recipient and expiry | Planned |
-| `revoke_mandate` | owner | Cut off a session immediately | Planned |
-| `execute_transfer` | session key | Transfer within the mandate. Checks cap, budget, recipient, expiry, revocation | Planned |
+| Instruction | Signer | Purpose |
+|---|---|---|
+| `initialize_vault` | owner | Create the vault PDA and its token account |
+| `deposit` | owner | Move tokens from the owner into the vault |
+| `withdraw` | owner | Move tokens to the owner's own token account. Independent of mandates |
+| `create_mandate` | owner | Register a session key with per-action cap, total budget, one approved recipient and an expiry (max 30 days) |
+| `revoke_mandate` | owner | Cut off a session immediately. Can only happen once |
+| `execute_transfer` | session key | Transfer within the mandate. Checks signer, revocation, expiry, per-action cap, remaining budget and recipient |
 
 Decisions worth knowing:
 
-- Vault PDA seeds are `["vault", owner, mint]`. They must stay identical to `src/lib/vault-address.ts`.
-- Classic SPL Token only. Token-2022 extensions (transfer fees, hooks) could break accounting.
-- Withdraw can only go to a token account owned by the owner, so a hijacked frontend cannot redirect funds.
-- Checked arithmetic everywhere. No `unwrap` in program code.
+- Vault PDA seeds are `["vault", owner, mint]`. Mandate seeds are `["mandate", vault, id (u64 LE)]`. The vault seeds must stay identical to `src/lib/vault-address.ts`. A shared test vector checks this on both sides (`tests/pda_parity.rs` and `scripts/check-vault-parity.ts`).
+- The destination token account must be owned by the mandate's recipient, so an agent cannot send funds to its own wallet.
+- The recipient cannot be the session key or the vault, and the session key cannot be the owner.
+- Withdraw can only go to a token account owned by the owner.
+- Classic SPL Token only. Token-2022 extensions could break accounting.
+- Checked arithmetic everywhere. Error codes are stable: new variants are only appended.
 - Upgrade authority must be a multisig, or removed, before any mainnet deployment.
 
----
+### Running the program tests
+
+Tests use LiteSVM, with no validator needed. They load `target/deploy/fyat_mandate.so`, which must be built as SBPF **v0**, because LiteSVM 0.10 rejects v3 binaries:
+
+```bash
+cargo build-sbf --arch v0 --manifest-path programs/fyat_mandate/Cargo.toml
+cargo test -p fyat_mandate
+```
+
+`anchor build` overwrites the binary with a v3 build. Rebuild with `--arch v0` before running tests again.
 
 ## Demo scenario
 
-The target end-to-end demo (needs the onchain program):
-
-1. Owner connects Phantom on Devnet, creates a vault, deposits 20 test tokens.
-2. Owner creates a mandate: max 5 per action.
+1. Owner connects Phantom on Devnet, creates a vault, deposits test tokens.
+2. Owner creates a mandate: max 5 per action, with an approved recipient.
 3. **Normal execution.** The agent transfers 3 and it succeeds, visible on the Devnet Explorer.
-4. **Policy blocked.** The agent tries 10 and the program rejects it.
-5. **Theft prevention.** The agent tries to send to its own wallet and the program rejects it.
-6. **Instant revoke.** The owner revokes the session and the agent loses all rights immediately.
+4. **Policy blocked.** The agent tries 10 and the program rejects it (`ExceedsPerActionLimit`).
+5. **Theft prevention.** The agent tries to send to its own wallet and the program rejects it (`DestinationNotAllowed`).
+6. **Instant revoke.** The owner revokes the session and the next execution is rejected (`MandateIsRevoked`).
 
-Steps 3 to 5 can already be previewed in the Builder playground. There the checks run locally, not onchain.
+Each scenario is enforced by the program, not the UI. The same scenarios run in the test suite:
 
----
+| Scenario | Test |
+|---|---|
+| Transfer within the cap succeeds | `demo_1_transfer_within_the_cap_succeeds` |
+| Transfer above the cap is rejected | `demo_2_transfer_above_the_cap_is_rejected_by_the_program` |
+| Send to the agent's own wallet is rejected | `demo_3_sending_to_the_agents_own_wallet_is_rejected` |
+| Revoke takes effect immediately | `demo_4_revoke_takes_effect_immediately` |
+
+The suite also covers the total budget ceiling, exact expiry boundary, wrong signer, double revoke, non-owner actions and every invalid mandate parameter.
 
 ## Code conventions
 
@@ -374,28 +382,22 @@ Steps 3 to 5 can already be previewed in the Builder playground. There the check
 
 ## Known limitations
 
-- Limit checks in the UI are a preview. Enforcement arrives with the onchain program.
-- The simulation tests a plain token transfer from the connected wallet. It does not exercise a mandate.
-- Swap simulation and execution are not implemented.
-- Receipt entries are currently demo data. Rows marked as passing link to real Devnet transactions, but no program enforced their mandate.
-- The public Devnet RPC is rate limited. Use a dedicated provider for sustained testing.
+- **Demo session model.** The session key is generated in the owner's browser and stored encrypted with a passphrase. The owner still approves each execution in the UI. This proves that the program enforces the limits, but it is not yet an autonomous agent.
+- The policy simulation in the Builder is a local preview. The binding limits are the ones enforced by the program.
+- Only `Action::Transfer` exists onchain. Swap is not implemented.
+- Receipts are recorded from real Devnet transactions made through the UI. `pnpm db:seed` still creates demo entries.
+- Devnet only. The public Devnet RPC is rate limited, so use a dedicated provider for sustained testing.
 - The `@fyat/sdk` package shown in code snippets does not exist yet. The snippets are illustrative and say so.
 - IP-based rate limiting is only reliable behind a proxy that sets the client IP header (for example Vercel).
-
----
+- No automated web tests or CI yet. The program has its own test suite.
 
 ## Roadmap
 
-1. Anchor program: mandates, revoke, execute, with onchain limit checks
-2. Program tests for the demo scenarios and Devnet deployment
+1. Agent runner that holds the session key and executes without the owner in the browser, with receipts recorded from verified transactions
+2. `Action::Swap` (Meteora adapter), with program tests first
 3. Browser `signedFetch` and a typed client generated from the IDL
-4. UI for vault and mandate management, plus the mandate inspector
-5. Agent runner and receipts recorded from verified transactions
-6. Swap adapter (Meteora)
-7. Test suite and CI, then deployment (Vercel and Railway)
-8. Hardening before any mainnet use: nonce-based CSP, multisig upgrade authority, external audit
-
----
+4. Web test suite and CI, then deployment (Vercel and Railway)
+5. Hardening before any mainnet use: nonce-based CSP, multisig upgrade authority, external audit
 
 ## License
 

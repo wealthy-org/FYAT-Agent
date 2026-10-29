@@ -7,6 +7,7 @@ import { useSimulation } from "../hooks/use-simulation";
 import { CodePreview } from "./code-preview";
 import { ExecutionFlowPreview } from "./execution-flow-preview";
 import { MandateConfigurator } from "./mandate-configurator";
+import { VaultControlsPanel } from "./vault-controls-panel";
 
 export function BuilderPlayground() {
   const mandateForm = useMandateForm();
@@ -18,6 +19,11 @@ export function BuilderPlayground() {
     // Ukuran mengikuti lebar wadahnya, bukan lebar layar.
     <div className="@container">
       <div className="grid gap-6 @3xl:grid-cols-2 @7xl:grid-cols-3 @7xl:items-start">
+
+        <div className="mt-6 @3xl:max-w-xl">
+          <VaultControlsPanel activeMandate={mandateCreator.activeMandate} />
+        </div>
+        
         <MandateConfigurator form={mandateForm} />
 
         <ExecutionFlowPreview

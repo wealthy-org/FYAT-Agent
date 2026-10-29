@@ -27,7 +27,7 @@ export function BuilderPlayground() {
   );
 
   return (
-    <div className="@container space-y-5">
+    <div className="@container mx-auto w-full max-w-4xl space-y-5">
       <FaucetClaimBanner
         onClaimed={() => setBalanceRefreshKey((key) => key + 1)}
       />

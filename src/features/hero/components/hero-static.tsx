@@ -4,16 +4,10 @@ import { siteConfig } from "@/lib/site";
 
 import { StatsStrip } from "../story/components/stats-strip";
 import { storyCopy } from "../story/data";
-import type { HeroStat } from "../types";
 import { HeroOrb } from "./hero-orb";
-import { HeroStats } from "./hero-stats";
 import { NetworkBadge } from "./network-badge";
 
-type HeroStaticProps = {
-  stats: readonly HeroStat[];
-};
-
-export function HeroStatic({ stats }: HeroStaticProps) {
+export function HeroStatic() {
   return (
     <>
       <section
@@ -53,11 +47,6 @@ export function HeroStatic({ stats }: HeroStaticProps) {
             {siteConfig.tagline}
           </p>
 
-          {stats.length > 0 && (
-            <div className="mt-6">
-              <HeroStats stats={stats} />
-            </div>
-          )}
         </Container>
       </section>
 

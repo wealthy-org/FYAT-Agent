@@ -7,8 +7,6 @@ import { useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 import { HeroStatic } from "../../components/hero-static";
-import { HeroStats } from "../../components/hero-stats";
-import type { HeroStat } from "../../types";
 import { STORY } from "../config";
 import { useHeroStory } from "../use-hero-story";
 import { NodeField } from "./node-field";
@@ -16,11 +14,7 @@ import { StatsStrip } from "./stats-strip";
 import { StoryCopy } from "./story-copy";
 import { NodeTooltip } from "./node-tooltip";
 
-type HeroProps = {
-  stats: readonly HeroStat[];
-};
-
-function HeroStage({ stats }: HeroProps) {
+function HeroStage() {
   const [stripActive, setStripActive] = useState(false);
 
   const {
@@ -100,11 +94,6 @@ function HeroStage({ stats }: HeroProps) {
             authorization built into the execution path.
           </p>
 
-          {stats.length > 0 && (
-            <div className="absolute inset-x-0 bottom-6 hidden px-6 sm:block">
-              <HeroStats stats={stats} />
-            </div>
-          )}
         </div>
 
         {/* Orbiting nodes */}
@@ -123,7 +112,7 @@ function HeroStage({ stats }: HeroProps) {
         {/* Stats appear after orbit transition */}
         <div
           ref={stripRef}
-          className="pointer-events-none absolute inset-x-0 top-[50%] z-30 opacity-0 md:top-[56%]"
+          className="pointer-events-none absolute inset-x-0 top-[58%] z-30 opacity-0 md:top-[56%]"
         >
           <StatsStrip active={stripActive} />
           <NodeTooltip tipRef={tipRef} />
@@ -133,12 +122,12 @@ function HeroStage({ stats }: HeroProps) {
   );
 }
 
-export function HeroStory({ stats }: HeroProps) {
+export function HeroStory() {
   const reducedMotion = usePrefersReducedMotion();
 
   if (reducedMotion) {
-    return <HeroStatic stats={stats} />;
+    return <HeroStatic />;
   }
 
-  return <HeroStage stats={stats} />;
+  return <HeroStage />;
 }

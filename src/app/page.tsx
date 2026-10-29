@@ -12,14 +12,11 @@ import {
 } from "@/features/execution";
 import { HeroSection } from "@/features/hero";
 import { PlatformSection } from "@/features/platform";
-import { getHeroStats } from "@/server/services/public-stats";
 
 /** Data publik di-cache; diperbarui paling lama tiap 60 detik. */
 export const revalidate = 60;
 
-export default async function HomePage() {
-  const stats = await getHeroStats();
-
+export default function HomePage() {
   return (
     <>
       <Header
@@ -28,7 +25,7 @@ export default async function HomePage() {
       />
 
       <main>
-        <HeroSection stats={stats} />
+        <HeroSection />
         <PlatformSection />
         <BuilderOverview />
         <ExecutionGraph />

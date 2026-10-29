@@ -4,7 +4,7 @@
 
 FYAT Agent is a transaction builder and mandate protocol for autonomous agents on Solana. A wallet owner defines a bounded mandate (spending caps, allowed action, approved recipient, expiry). The agent receives a temporary session key that can act only inside that mandate. The owner's private key never reaches the agent or the server.
 
-> **Status: Devnet prototype.** The onchain program enforces mandates (per-action cap, total budget, approved recipient, expiry, instant revoke) and is covered by tests and a Devnet end-to-end run. The session key still lives in the owner's browser, so this is a demo of enforcement, not yet an autonomous agent. Do not use real funds.
+> **Status: Devnet prototype.** The onchain program enforces mandates (per-action cap, total budget, approved recipient, expiry, instant revoke) and is covered by tests and a Devnet end-to-end run. An agent runner (CLI) can hold its own session key and execute without the owner. It is triggered manually, so this is not yet a fully autonomous agent. Do not use real funds.
 
 ---
 
@@ -56,8 +56,8 @@ Owner wallet ──creates──▶ Vault PDA ──holds──▶ funds
 | Anchor program: vault, deposit, withdraw, create mandate, revoke, execute transfer | Done. 32 LiteSVM tests pass |
 | Devnet deployment and end-to-end flow | Done. Create vault, create mandate, execute, rejected execute, revoke |
 | UI: vault, deposit, withdraw, create mandate, mandate inspector, revoke, execute | Done |
-| Session key handling | Demo model: encrypted in the browser, owner approves each execution (see Known limitations) |
-| Autonomous agent runner and automatic receipts | Not built |
+| Session key handling | Two modes: demo (key encrypted in the browser, owner approves each execution) or agent (key held by the agent runner, owner never signs executions) |
+| Agent runner (CLI) with its own session key, receipts written automatically | Done. Triggered manually from a terminal. No scheduler or job queue yet |
 | Swap (`Action::Swap`) | Not built. The program only supports `Transfer` |
 | CI and automated web tests | Not built |
 
@@ -151,6 +151,8 @@ Copy `.env.example` to `.env.local`. Never commit `.env.local`.
 | `DATABASE_MIGRATION_URL` | **server only** | Neon **direct** connection string, used by migrations and scripts |
 | `APP_URL` | server only | App origin. Its host is bound into signed messages (anti-phishing). Set it per environment |
 | `FYAT_PROGRAM_ID` | server only | Deployed Devnet program ID of `fyat_mandate`. Vault and mandate addresses are derived from it |
+| `SOLANA_RPC_URL` | server only, optional | RPC used by scripts. Falls back to `NEXT_PUBLIC_SOLANA_RPC_URL` |
+| `AGENT_SECRET_KEY` | **server only, secret** | JSON array of the agent's secret key, for running the agent runner on a server. Locally the runner reads `.keys/agent.json` |
 
 Rules:
 
@@ -173,6 +175,9 @@ Rules:
 | `pnpm db:seed` | Record demo receipts (Devnet and development only) |
 | `pnpm api:smoke` | End-to-end API checks, including attack cases |
 | `pnpm mint:setup` | Create or reuse the Devnet test mint, optionally mint tokens to `--to <address>` |
+| `pnpm e2e:devnet` | Run the four demo scenarios against the deployed Devnet program |
+| `pnpm agent:keygen` | Create the agent keypair in `.keys/agent.json` and print its public key |
+| `pnpm agent:run --mandate <PDA> --amount <n> [--to <wallet>]` | Agent signs `execute_transfer` with its own key and records the receipt |
 
 ---
 
@@ -219,6 +224,7 @@ Mutating endpoints require a wallet signature. Reads are public.
 | `POST` | `/api/vaults` | signed | Register the caller's vault (idempotent) |
 | `POST` | `/api/mandates` | signed | Create a mandate under the caller's vault |
 | `POST` | `/api/mandates/{id}/revoke` | signed | Revoke a mandate (owner only) |
+| `POST` | `/api/mandates/{id}/execute` | signed | Verify an executed transaction onchain and record its receipt (demo mode) |
 | `GET` | `/api/receipts?limit=&cursor=` | public | Paginated receipts feed (cursor-based) |
 
 There is intentionally **no public endpoint for writing receipts**. Receipts are written by server code after a transaction is verified.

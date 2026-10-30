@@ -52,9 +52,14 @@ export function OnchainProbeSection({
       )}
 
       {state.status === "done" && state.result.logs.length > 0 && (
-        <pre className="mt-2 max-h-40 overflow-auto text-xs text-fg-subtle">
-          {state.result.logs.join("\n")}
-        </pre>
+        <details className="mt-2">
+          <summary className="cursor-pointer text-xs text-fg-muted">
+            View raw program logs ({state.result.logs.length} lines)
+          </summary>
+          <pre className="mt-2 max-h-40 max-w-full overflow-auto whitespace-pre-wrap break-all text-xs text-fg-subtle">
+            {state.result.logs.join("\n")}
+          </pre>
+        </details>
       )}
 
       {state.status === "error" && (

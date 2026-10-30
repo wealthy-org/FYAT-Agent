@@ -191,6 +191,8 @@ The Playground faucet sends SOL and test USDC from a dedicated treasury in one a
 3. Add the complete JSON-array contents of `.keys/faucet-treasury.json` as `FAUCET_TREASURY_SECRET_KEY` in Vercel. A 64-byte Base58 secret key is also accepted. Optionally set the SOL and token drip variables. Never put the secret in a `NEXT_PUBLIC_` variable, source control, or chat.
 4. Redeploy Vercel. The in-app claim remains unavailable until the treasury key is configured and the treasury has enough SOL and test tokens.
 
+Run `pnpm faucet:check` to verify locally that the treasury secret derives the expected public address and has enough tokens for one claim. This check is read-only and does not print the secret key. The deployed Vercel environment must use the same treasury key, token mint, RPC network, and drip amount.
+
 ---
 
 ## Scripts

@@ -26,3 +26,13 @@ pub struct TransferExecuted {
     pub amount: u64,
     pub spent: u64,
 }
+
+#[event]
+pub struct SwapExecuted {
+    pub mandate: Pubkey,
+    pub session: Pubkey,
+    pub pool: Pubkey,
+    pub amount_in: u64,
+    pub amount_out: u64,
+    pub spent: u64,
+}

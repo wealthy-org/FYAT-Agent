@@ -29,11 +29,15 @@ pub mod fyat_mandate {
         instructions::withdraw::handle_withdraw(ctx, amount)
     }
 
-    pub fn create_mandate(
+    pub fn create_mandate(ctx: Context<CreateMandate>, params: CreateMandateParams) -> Result<()> {
+        instructions::create_mandate::handle_create_mandate(ctx, params)
+    }
+
+    pub fn create_swap_mandate(
         ctx: Context<CreateMandate>,
         params: CreateMandateParams,
     ) -> Result<()> {
-        instructions::create_mandate::handle_create_mandate(ctx, params)
+        instructions::create_swap_mandate::handle_create_swap_mandate(ctx, params)
     }
 
     pub fn revoke_mandate(ctx: Context<RevokeMandate>) -> Result<()> {
@@ -42,5 +46,13 @@ pub mod fyat_mandate {
 
     pub fn execute_transfer(ctx: Context<ExecuteTransfer>, amount: u64) -> Result<()> {
         instructions::execute_transfer::handle_execute_transfer(ctx, amount)
+    }
+
+    pub fn execute_swap<'info>(
+        ctx: Context<'info, ExecuteSwap<'info>>,
+        amount_in: u64,
+        minimum_amount_out: u64,
+    ) -> Result<()> {
+        instructions::execute_swap::handle_execute_swap(ctx, amount_in, minimum_amount_out)
     }
 }

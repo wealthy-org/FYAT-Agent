@@ -35,4 +35,12 @@ pub enum FyatError {
     DestinationNotAllowed,
     #[msg("Arithmetic overflow")]
     MathOverflow,
+    #[msg("Pool is not the mandate's approved pool")]
+    PoolNotAllowed,
+    #[msg("Swap accounts do not match the vault or the pool")]
+    InvalidSwapAccounts,
+    #[msg("Swap spent more than the requested input amount")]
+    SwapOverspent,
+    #[msg("Swap output is below the minimum amount out")]
+    SlippageExceeded,
 }

@@ -43,6 +43,14 @@ pub fn handle_create_mandate(
     ctx: Context<CreateMandate>,
     params: CreateMandateParams,
 ) -> Result<()> {
+    handle_create_mandate_with_action(ctx, params, Action::Transfer)
+}
+
+pub fn handle_create_mandate_with_action(
+    ctx: Context<CreateMandate>,
+    params: CreateMandateParams,
+    action: Action,
+) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
     let owner_key = ctx.accounts.owner.key();
     let vault_key = ctx.accounts.vault.key();
@@ -64,7 +72,11 @@ pub fn handle_create_mandate(
 
     // Agent tidak boleh memegang kunci owner, dan tidak boleh menjadi penerima dananya sendiri.
     require_keys_neq!(params.session, owner_key, FyatError::SessionIsOwner);
-    require_keys_neq!(params.recipient, params.session, FyatError::RecipientIsSession);
+    require_keys_neq!(
+        params.recipient,
+        params.session,
+        FyatError::RecipientIsSession
+    );
     require_keys_neq!(params.recipient, vault_key, FyatError::RecipientIsVault);
 
     let vault = &mut ctx.accounts.vault;
@@ -76,7 +88,7 @@ pub fn handle_create_mandate(
         id: mandate_id,
         session: params.session,
         recipient: params.recipient,
-        action: Action::Transfer,
+        action,
         max_per_action: params.max_per_action,
         max_total: params.max_total,
         spent: 0,

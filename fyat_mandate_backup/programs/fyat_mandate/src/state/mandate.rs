@@ -5,6 +5,8 @@ use anchor_lang::prelude::*;
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub enum Action {
     Transfer,
+    /// Swap melalui pool DAMM v2 yang tercatat pada `Mandate.recipient`.
+    Swap,
 }
 
 #[account]

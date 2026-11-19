@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
+import { ContractAddress } from "../../components/contract-address";
 import { HeroStatic } from "../../components/hero-static";
 import { STORY } from "../config";
 import { useHeroStory } from "../use-hero-story";
@@ -94,15 +95,16 @@ function HeroStage() {
             authorization built into the execution path.
           </p>
 
+          <ContractAddress className="hero-enter-description mt-5 w-[min(100%,26rem)]" />
         </div>
 
         {/* Orbiting nodes */}
-        <div className="absolute inset-0 z-20">
+        <div className="pointer-events-none absolute inset-0 z-20">
           <NodeField nodeRefs={nodeRefs} />
         </div>
 
         {/* Scroll-based story copy */}
-        <div className="absolute inset-0 z-20">
+        <div className="pointer-events-none absolute inset-0 z-20">
           <StoryCopy
             copy1Ref={copy1Ref}
             copy2Ref={copy2Ref}

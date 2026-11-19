@@ -2,6 +2,24 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+/** Cadangan untuk browser yang memblokir Clipboard API. */
+function legacyCopy(text: string): boolean {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    textarea.remove();
+  }
+}
+
 export function useCopyToClipboard(resetMs = 1500) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -13,8 +31,8 @@ export function useCopyToClipboard(resetMs = 1500) {
       try {
         await navigator.clipboard.writeText(text);
       } catch {
-        // Browser bisa menolak (izin atau konteks tidak aman).
-        return false;
+        // Browser bisa menolak (izin, konteks tidak aman, atau webview wallet).
+        if (!legacyCopy(text)) return false;
       }
 
       setCopied(true);

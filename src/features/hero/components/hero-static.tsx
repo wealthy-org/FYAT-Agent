@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 
 import { StatsStrip } from "../story/components/stats-strip";
 import { storyCopy } from "../story/data";
+import { ContractAddress } from "./contract-address";
 import { HeroOrb } from "./hero-orb";
 import { NetworkBadge } from "./network-badge";
 
@@ -33,6 +34,10 @@ export function HeroStatic() {
             Builds complete Solana agent transaction flows with mandate
             authorization built into the execution path.
           </p>
+
+          <div className="mt-6 flex justify-center">
+            <ContractAddress className="w-[min(100%,26rem)]" />
+          </div>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button href="/#builder">Open Builder</Button>

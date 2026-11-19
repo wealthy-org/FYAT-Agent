@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 
@@ -8,10 +9,44 @@ type DocsCodeProps = {
   code: string;
   /** Deskripsi untuk screen reader. */
   label: string;
+  /** Jadikan URL dan alamat Solana bisa diklik (alamat → Solana Explorer). */
+  linkify?: boolean;
 };
 
+const LINK_PATTERN = /(https?:\/\/[^\s]+)|\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/g;
+const LINK_CLASS =
+  "text-brand-200 underline decoration-brand-400/40 underline-offset-4 hover:decoration-brand-200";
+
+function linkifyCode(code: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+
+  for (const match of code.matchAll(LINK_PATTERN)) {
+    const start = match.index ?? 0;
+    if (start > cursor) nodes.push(code.slice(cursor, start));
+
+    const [text, url, address] = match;
+    const href = url ?? `https://explorer.solana.com/address/${address}`;
+    nodes.push(
+      <a
+        key={start}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={LINK_CLASS}
+      >
+        {text}
+      </a>,
+    );
+    cursor = start + text.length;
+  }
+
+  if (cursor < code.length) nodes.push(code.slice(cursor));
+  return nodes;
+}
+
 /** Kotak kode polos (tanpa pewarnaan sintaks). Tombol salin muncul saat hover. */
-export function DocsCode({ code, label }: DocsCodeProps) {
+export function DocsCode({ code, label, linkify = false }: DocsCodeProps) {
   const { copied, copy } = useCopyToClipboard();
 
   return (
@@ -35,7 +70,7 @@ export function DocsCode({ code, label }: DocsCodeProps) {
         aria-label={label}
         className="overflow-x-auto p-5 font-mono text-[13px] leading-6 text-fg"
       >
-        <code>{code}</code>
+        <code>{linkify ? linkifyCode(code) : code}</code>
       </pre>
     </div>
   );

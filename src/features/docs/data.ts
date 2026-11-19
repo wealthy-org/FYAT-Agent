@@ -38,6 +38,10 @@ export const docsNav: readonly DocsNavGroup[] = [
     title: "Security",
     items: [{ slug: "security", label: "Security model" }],
   },
+  {
+    title: "Onchain program",
+    items: [{ slug: "mainnet-deployment", label: "Mainnet deployment" }],
+  },
 ];
 
 export const allDocs = docsNav.flatMap((group) =>

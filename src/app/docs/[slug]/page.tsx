@@ -129,7 +129,11 @@ export default async function DocsArticlePage({ params }: PageProps) {
               </ul>
             )}
             {section.code && (
-              <DocsCode label={section.code.label} code={section.code.text} />
+              <DocsCode
+                label={section.code.label}
+                code={section.code.text}
+                linkify={section.code.linkify}
+              />
             )}
           </section>
         ))}

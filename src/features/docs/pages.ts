@@ -5,7 +5,7 @@ export type DocsSection = {
   title: string;
   body: readonly string[];
   bullets?: readonly string[];
-  code?: { label: string; text: string };
+  code?: { label: string; text: string; linkify?: boolean };
 };
 
 export type DocsPageContent = {
@@ -43,8 +43,8 @@ export const docsPages: Record<string, DocsPageContent> = {
         id: "current-status",
         title: "Current status",
         body: [
-          "FYAT Agent is a Devnet prototype: unaudited, no token, no real funds. The Builder verifies and simulates plans today. Onchain enforcement by the mandate program is the design target and has not shipped yet.",
-          "Receipts are recorded by a demo script until the program ships. Rows marked PASS link to real Devnet transactions.",
+          "The FYAT mandate program is live on Solana Mainnet. Vault custody, mandate limits, expiry, revocation, transfers and Meteora swaps are enforced onchain by the program, and its build is publicly verified against this repository.",
+          "The program has not been audited by a third party yet. Transactions move real funds, so start with small amounts. Program addresses and verification details are on the Mainnet deployment page.",
         ],
       },
     ],
@@ -324,7 +324,7 @@ export const docsPages: Record<string, DocsPageContent> = {
         id: "demo-receipts",
         title: "About demo receipts",
         body: [
-          "Until the onchain program ships, receipts are written by a demo script. Successful rows link to real Devnet transactions, but those transactions are plain transfers signed by an agent key, not enforced by the mandate program.",
+          "On Mainnet, receipts record executions that went through the FYAT mandate program. Each successful row links to its Solana Mainnet transaction, so anyone can check that the program accepted it.",
         ],
       },
     ],
@@ -499,8 +499,84 @@ export const docsPages: Record<string, DocsPageContent> = {
         id: "known-limits",
         title: "Known limits",
         body: [
-          "FYAT Agent is a Devnet prototype and has not been audited. The mandate rules are checked by the Builder and the server today. Enforcement inside the onchain program is the design target and has not shipped, so do not treat the current checks as a substitute for it.",
-          "Do not use real funds or a key you care about while the program is not live.",
+          "The mandate program is live on Solana Mainnet and enforces the mandate rules onchain. It has not been audited by a third party yet.",
+          "The program is upgradeable by a single upgrade authority key held by the FYAT team. Start with small amounts.",
+        ],
+      },
+    ],
+  },
+  "mainnet-deployment": {
+    lead: "Public addresses and verification details for the FYAT mandate program on Solana Mainnet. Every value here can be checked independently on Solana Explorer.",
+    sections: [
+      {
+        id: "program",
+        title: "Program",
+        body: [
+          "The mandate program owns every vault and mandate account. Its upgrade authority is a single key held by the FYAT team.",
+        ],
+        code: {
+          label: "fyat_mandate on Solana Mainnet",
+          linkify: true,
+          text: "Program ID         3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN\nProgramData        7seb8mUGDGGMc2TMpSnRV6bCvEyWfJMCPpukj839Su4Y\nUpgrade authority  Ez9BkS6MyKZJyHt2aYati5KBN2JuHErmtq53ZybRSWhM\nLoader             BPFLoaderUpgradeab1e11111111111111111111111\nProgram size       288,984 bytes\nFramework          Anchor 1.2.1\n\nExplorer: https://explorer.solana.com/address/3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN",
+        },
+      },
+      {
+        id: "verified-build",
+        title: "Verified build",
+        body: [
+          "The onchain executable was rebuilt from the public repository in a deterministic Docker environment, and the hashes match. The result is registered with the OtterSec verification service, which Solana Explorer reads.",
+        ],
+        code: {
+          label: "Build verification",
+          linkify: true,
+          text: "Executable hash  8d42333f15735b02865510d46da390047f2d94ab20d8a2b38d97025c6c26fea9\nRepository       https://github.com/wealthy-org/FYAT-Agent\nCommit           532bd37126d058441c77168531a0c411bda21fa0\nPath             fyat_mandate_backup\nBuild image      solanafoundation/solana-verifiable-build:4.1.2\n\nStatus: https://verify.osec.io/status/3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN",
+        },
+      },
+      {
+        id: "verify-it-yourself",
+        title: "Verify it yourself",
+        body: [
+          "Anyone can repeat the check with the solana-verify CLI and Docker. The command rebuilds the program from the commit above and compares it with the onchain hash.",
+        ],
+        code: {
+          label: "solana-verify",
+          text: "solana-verify verify-from-repo https://github.com/wealthy-org/FYAT-Agent \\\n  --program-id 3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN \\\n  --commit-hash 532bd37126d058441c77168531a0c411bda21fa0 \\\n  --mount-path fyat_mandate_backup \\\n  --library-name fyat_mandate \\\n  -b solanafoundation/solana-verifiable-build:4.1.2 \\\n  -u https://api.mainnet-beta.solana.com",
+        },
+      },
+      {
+        id: "security-contact",
+        title: "Security contact",
+        body: [
+          "The program publishes a security.txt, both inside the executable and as a Program Metadata account, so researchers can reach the team.",
+        ],
+        code: {
+          label: "security.txt",
+          linkify: true,
+          text: "Project   https://fyatbuilder.site\nContact   https://x.com/fyatbuilders\nPolicy    https://github.com/wealthy-org/FYAT-Agent/security\nSource    https://github.com/wealthy-org/FYAT-Agent\nMetadata  3HNfagzACoSuV9zVLNPzHkhVrh9PeBQ61H1WNVigFrmY",
+        },
+      },
+      {
+        id: "integrations",
+        title: "Tokens and integrations",
+        body: [
+          "The app is configured with these Mainnet accounts. Swap mandates may only route through the Meteora DAMM v2 program.",
+        ],
+        code: {
+          label: "Mainnet configuration",
+          linkify: true,
+          text: "Vault token (USDC)    EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\nSwap output (SOL)     So11111111111111111111111111111111111111112\nSwap pool (SOL-USDC)  8Pm2kZpnxD3hoMmt4bjStX2Pw2Z9abpbHzZxMPqxPmie\nMeteora DAMM v2       cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG\nAgent session key     3G6CMhRfFS6BTPuwjou8wnTfFrSnC51XHYPkKjYCCEpV",
+        },
+      },
+      {
+        id: "trust-assumptions",
+        title: "Trust assumptions",
+        body: [
+          "Read these before depositing real funds.",
+        ],
+        bullets: [
+          "The program has not been audited by a third party.",
+          "The program is upgradeable. The upgrade authority above can deploy new code, and each upgrade can be re-verified the same way.",
+          "Vault and mandate accounts hold a small SOL rent deposit that is not yet reclaimable, because the program has no close instructions.",
         ],
       },
     ],

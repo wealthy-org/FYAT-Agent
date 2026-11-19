@@ -21,6 +21,7 @@ import { useOnchainProbe } from "../hooks/use-onchain-probe";
 import { OnchainProbeSection } from "./onchain-probe-section";
 import { getSwapConfig } from "@/lib/swap-config";
 import { env } from "@/lib/env";
+import { IS_MAINNET, NETWORK_NAME } from "@/lib/network";
 
 type ExecutionFlowPreviewProps = {
   config: MandateConfig | null;
@@ -165,16 +166,17 @@ export function ExecutionFlowPreview({
       <Card id="playground-execute" className="scroll-mt-24 p-5 md:p-6">
         <Eyebrow>Step 5 / Execute</Eyebrow>
         <h3 className="font-display mt-2 text-xl font-medium">
-          Send the action on Devnet
+          Send the action on {NETWORK_NAME}
         </h3>
         <p className="text-fg-muted mt-1 text-sm">
-          This sends a real Devnet transaction. Create the mandate, deposit test
-          USDC into its vault, and pass the policy check before continuing.
+          This sends a real {NETWORK_NAME} transaction. Create the mandate,
+          deposit {IS_MAINNET ? "USDC" : "test USDC"} into its vault, and pass
+          the policy check before continuing.
         </p>
 
         <p className="text-fg-subtle mt-3 text-xs">
           {mandateCreator.externalAgent
-            ? "External agent mode: you sign this job request; the Railway worker executes it on Devnet."
+            ? `External agent mode: you sign this job request; the Railway worker executes it on ${NETWORK_NAME}.`
             : "Demo mode: the session key is stored in this browser, and your wallet approves every execution."}
         </p>
 

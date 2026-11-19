@@ -4,8 +4,8 @@ import { AnchorProvider, Program, type Wallet } from "@coral-xyz/anchor";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
 import type { Connection } from "@solana/web3.js";
 
-import idlJson from "@/lib/idl/fyat_mandate.json";
 import type { FyatMandate } from "@/lib/idl/fyat_mandate.types";
+import { fyatIdl } from "@/lib/program-id";
 
 const COMMITMENT = "confirmed" as const;
 
@@ -29,5 +29,5 @@ export function createFyatProgram(
     preflightCommitment: COMMITMENT,
   });
 
-  return new Program<FyatMandate>(idlJson as FyatMandate, provider);
+  return new Program<FyatMandate>(fyatIdl as FyatMandate, provider);
 }

@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/fyat_mandate.json`.
  */
 export type FyatMandate = {
-  "address": "Eu1b76PNqv5B8HbTsxrmirM3NfRy51bscQ5eUzgZVU6Y",
+  "address": "3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN",
   "metadata": {
     "name": "fyatMandate",
     "version": "0.1.0",
@@ -375,6 +375,9 @@ export type FyatMandate = {
       "accounts": [
         {
           "name": "session",
+          "docs": [
+            "Session key milik agent."
+          ],
           "signer": true,
           "relations": [
             "mandate"
@@ -441,9 +444,6 @@ export type FyatMandate = {
         },
         {
           "name": "mint",
-          "docs": [
-            "Token input = mint vault. Budget mandate dihitung dalam token ini."
-          ],
           "relations": [
             "vault"
           ]
@@ -543,9 +543,6 @@ export type FyatMandate = {
         },
         {
           "name": "vaultOutputTokenAccount",
-          "docs": [
-            "Hasil swap HARUS masuk ke ATA milik vault. Agent tidak bisa mengalihkannya."
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -636,6 +633,9 @@ export type FyatMandate = {
         },
         {
           "name": "pool",
+          "docs": [
+            "Pool yang diizinkan tersimpan pada `mandate.recipient`."
+          ],
           "writable": true
         },
         {
@@ -663,41 +663,8 @@ export type FyatMandate = {
               }
             ],
             "program": {
-              "kind": "const",
-              "value": [
-                9,
-                45,
-                33,
-                53,
-                101,
-                122,
-                21,
-                156,
-                43,
-                135,
-                212,
-                182,
-                106,
-                112,
-                219,
-                142,
-                151,
-                82,
-                56,
-                159,
-                247,
-                106,
-                175,
-                32,
-                108,
-                237,
-                6,
-                58,
-                56,
-                249,
-                90,
-                237
-              ]
+              "kind": "account",
+              "path": "ammProgram"
             }
           }
         },
@@ -747,41 +714,8 @@ export type FyatMandate = {
               }
             ],
             "program": {
-              "kind": "const",
-              "value": [
-                9,
-                45,
-                33,
-                53,
-                101,
-                122,
-                21,
-                156,
-                43,
-                135,
-                212,
-                182,
-                106,
-                112,
-                219,
-                142,
-                151,
-                82,
-                56,
-                159,
-                247,
-                106,
-                175,
-                32,
-                108,
-                237,
-                6,
-                58,
-                56,
-                249,
-                90,
-                237
-              ]
+              "kind": "account",
+              "path": "ammProgram"
             }
           }
         },

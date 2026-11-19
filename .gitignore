@@ -45,3 +45,5 @@ next-env.d.ts
 
 # Workspace Anchor hidup di repo sendiri (WSL), bukan di sini
 /fyat_mandate/
+# Repo memakai pnpm; lockfile npm jangan ikut ter-commit
+package-lock.json

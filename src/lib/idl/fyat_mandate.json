@@ -1,5 +1,5 @@
 {
-  "address": "Eu1b76PNqv5B8HbTsxrmirM3NfRy51bscQ5eUzgZVU6Y",
+  "address": "3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN",
   "metadata": {
     "name": "fyat_mandate",
     "version": "0.1.0",
@@ -369,6 +369,9 @@
       "accounts": [
         {
           "name": "session",
+          "docs": [
+            "Session key milik agent."
+          ],
           "signer": true,
           "relations": [
             "mandate"
@@ -435,9 +438,6 @@
         },
         {
           "name": "mint",
-          "docs": [
-            "Token input = mint vault. Budget mandate dihitung dalam token ini."
-          ],
           "relations": [
             "vault"
           ]
@@ -537,9 +537,6 @@
         },
         {
           "name": "vault_output_token_account",
-          "docs": [
-            "Hasil swap HARUS masuk ke ATA milik vault. Agent tidak bisa mengalihkannya."
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -630,6 +627,9 @@
         },
         {
           "name": "pool",
+          "docs": [
+            "Pool yang diizinkan tersimpan pada `mandate.recipient`."
+          ],
           "writable": true
         },
         {
@@ -657,41 +657,8 @@
               }
             ],
             "program": {
-              "kind": "const",
-              "value": [
-                9,
-                45,
-                33,
-                53,
-                101,
-                122,
-                21,
-                156,
-                43,
-                135,
-                212,
-                182,
-                106,
-                112,
-                219,
-                142,
-                151,
-                82,
-                56,
-                159,
-                247,
-                106,
-                175,
-                32,
-                108,
-                237,
-                6,
-                58,
-                56,
-                249,
-                90,
-                237
-              ]
+              "kind": "account",
+              "path": "amm_program"
             }
           }
         },
@@ -741,41 +708,8 @@
               }
             ],
             "program": {
-              "kind": "const",
-              "value": [
-                9,
-                45,
-                33,
-                53,
-                101,
-                122,
-                21,
-                156,
-                43,
-                135,
-                212,
-                182,
-                106,
-                112,
-                219,
-                142,
-                151,
-                82,
-                56,
-                159,
-                247,
-                106,
-                175,
-                32,
-                108,
-                237,
-                6,
-                58,
-                56,
-                249,
-                90,
-                237
-              ]
+              "kind": "account",
+              "path": "amm_program"
             }
           }
         },

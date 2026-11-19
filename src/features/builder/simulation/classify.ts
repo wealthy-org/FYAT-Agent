@@ -1,3 +1,5 @@
+import { IS_DEVNET } from "@/lib/network";
+
 import type { SimulationFailureCode } from "./types";
 
 type FailureDetail = { code: SimulationFailureCode; message: string };
@@ -14,15 +16,17 @@ export function classifyFailure(
   if (err === "AccountNotFound") {
     return {
       code: "INSUFFICIENT_SOL",
-      message:
-        "Your wallet has no SOL on this network to pay fees. Request devnet SOL from the faucet.",
+      message: IS_DEVNET
+        ? "Your wallet has no SOL on this network to pay fees. Request devnet SOL from the faucet."
+        : "Your wallet has no SOL on this network to pay fees. Add SOL to your wallet first.",
     };
   }
 
   if (logMatches(logs, /insufficient funds/i)) {
     return {
       code: "INSUFFICIENT_TOKEN_BALANCE",
-      message: "Your wallet does not hold enough of this token for the transfer.",
+      message:
+        "Your wallet does not hold enough of this token for the transfer.",
     };
   }
 

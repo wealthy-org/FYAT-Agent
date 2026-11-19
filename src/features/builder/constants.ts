@@ -1,5 +1,7 @@
+import { IS_MAINNET, NETWORK_NAME } from "@/lib/network";
+
 export const USDC_DECIMALS = 6;
-export const ASSET_LABEL = "USDC (Devnet)";
+export const ASSET_LABEL = IS_MAINNET ? "USDC" : `USDC (${NETWORK_NAME})`;
 
 export const ASSET_SYMBOL = "USDC";
 

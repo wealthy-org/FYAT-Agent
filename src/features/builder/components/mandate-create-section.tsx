@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { env } from "@/lib/env";
+import { explorerTxUrl } from "@/lib/solana";
 
 import type { MandateCreatorController } from "../mandate-creator-types";
 import type { MandateConfig } from "../types";
@@ -49,7 +49,8 @@ export function MandateCreateSection({
       />
       <p className="text-fg-subtle mt-1 text-xs">
         Leave blank for demo mode (a key will be generated in this browser).
-        Enter a key so the agent holds it and the owner does not sign executions.
+        Enter a key so the agent holds it and the owner does not sign
+        executions.
       </p>
 
       <Button
@@ -69,7 +70,9 @@ export function MandateCreateSection({
           }
         }}
       >
-        {controller.busy ? "Processing transaction..." : "Create On-chain Mandate"}
+        {controller.busy
+          ? "Processing transaction..."
+          : "Create On-chain Mandate"}
       </Button>
 
       {activeMandate && (
@@ -118,16 +121,14 @@ export function MandateCreateSection({
         <div className="mt-3 space-y-2 text-sm">
           <p className="break-all">Signature: {controller.signature}</p>
 
-          {env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" && (
-            <a
-              className="text-brand-400 underline"
-              href={`https://explorer.solana.com/tx/${controller.signature}?cluster=devnet`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              View transaction in Solana Explorer
-            </a>
-          )}
+          <a
+            className="text-brand-400 underline"
+            href={explorerTxUrl(controller.signature)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View transaction in Solana Explorer
+          </a>
         </div>
       )}
     </section>

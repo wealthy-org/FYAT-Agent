@@ -1,3 +1,4 @@
+import { IS_DEVNET, NETWORK_DISCLAIMER, NETWORK_NAME } from "@/lib/network";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -23,8 +24,9 @@ export const revalidate = 60;
 type PageProps = { params: Promise<{ slug: string }> };
 
 const liveLeads: Record<LiveDocSlug, string> = {
-  playground:
-    "Claim Devnet test funds, configure and create a mandate, then simulate before executing. The dry-run is free; execution sends a real Devnet transaction.",
+  playground: IS_DEVNET
+    ? "Claim Devnet test funds, configure and create a mandate, then simulate before executing. The dry-run is free; execution sends a real Devnet transaction."
+    : `Configure and create a mandate, then simulate before executing. The dry-run is free; execution sends a real ${NETWORK_NAME} transaction.`,
   "live-receipts":
     "Every attempt under a mandate leaves a public record: what the agent tried, and whether the policy let it through.",
 };
@@ -33,10 +35,14 @@ export function generateStaticParams() {
   return allDocs.map((doc) => ({ slug: doc.slug }));
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const doc = findDoc(slug);
-  return doc ? { title: doc.label, alternates: { canonical: `/docs/${slug}` } } : {};
+  return doc
+    ? { title: doc.label, alternates: { canonical: `/docs/${slug}` } }
+    : {};
 }
 
 async function LiveBody({ slug }: { slug: LiveDocSlug }) {
@@ -52,9 +58,7 @@ export default async function DocsArticlePage({ params }: PageProps) {
   const { prev, next } = getPager(slug);
   const callout = (
     <div className="mb-8">
-      <DocsCallout>
-        <strong>Devnet prototype.</strong> FYAT Agent is unaudited, has no token, and uses no real funds.
-      </DocsCallout>
+      <DocsCallout>{NETWORK_DISCLAIMER}</DocsCallout>
     </div>
   );
 
@@ -67,7 +71,9 @@ export default async function DocsArticlePage({ params }: PageProps) {
         <DocsShell wide sidebar={<DocsSidebar activeSlug={slug} />}>
           {callout}
           <DocsTitleCard eyebrow={doc.group} title={doc.label} />
-          <p className="mt-8 max-w-3xl text-lg text-fg-muted">{liveLeads[slug]}</p>
+          <p className="text-fg-muted mt-8 max-w-3xl text-lg">
+            {liveLeads[slug]}
+          </p>
 
           <div id={slug} className="mt-10 scroll-mt-28">
             <LiveBody slug={slug} />
@@ -82,35 +88,49 @@ export default async function DocsArticlePage({ params }: PageProps) {
   }
 
   /* ---------- Halaman artikel ---------- */
-  const content = docsPages[slug] ?? { lead: "This page is coming soon.", sections: [] };
-  const toc = content.sections.map((section) => ({ id: section.id, label: section.title }));
+  const content = docsPages[slug] ?? {
+    lead: "This page is coming soon.",
+    sections: [],
+  };
+  const toc = content.sections.map((section) => ({
+    id: section.id,
+    label: section.title,
+  }));
 
   return (
     <>
       <DocsHeader />
 
-      <DocsShell sidebar={<DocsSidebar activeSlug={slug} />} toc={<DocsToc items={toc} />}>
+      <DocsShell
+        sidebar={<DocsSidebar activeSlug={slug} />}
+        toc={<DocsToc items={toc} />}
+      >
         {callout}
 
         <DocsTitleCard eyebrow={doc.group} title={doc.label} />
-        <p className="mt-8 text-lg text-fg-muted">{content.lead}</p>
+        <p className="text-fg-muted mt-8 text-lg">{content.lead}</p>
 
         {content.sections.map((section) => (
           <section key={section.id}>
             <DocsHeading id={section.id}>{section.title}</DocsHeading>
             {section.body.map((paragraph, index) => (
-              <p key={index} className="mt-4 text-sm leading-relaxed text-fg-muted">
+              <p
+                key={index}
+                className="text-fg-muted mt-4 text-sm leading-relaxed"
+              >
                 {paragraph}
               </p>
             ))}
             {section.bullets && (
-              <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-fg-muted marker:text-fg-subtle">
+              <ul className="text-fg-muted marker:text-fg-subtle mt-4 list-disc space-y-2 pl-5 text-sm">
                 {section.bullets.map((bullet) => (
                   <li key={bullet}>{bullet}</li>
                 ))}
               </ul>
             )}
-            {section.code && <DocsCode label={section.code.label} code={section.code.text} />}
+            {section.code && (
+              <DocsCode label={section.code.label} code={section.code.text} />
+            )}
           </section>
         ))}
 

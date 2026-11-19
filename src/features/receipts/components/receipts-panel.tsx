@@ -1,3 +1,4 @@
+import { NETWORK_NAME } from "@/lib/network";
 import type { ReceiptPageDto } from "../types";
 import { ReceiptsFeed } from "./receipts-feed";
 
@@ -12,9 +13,7 @@ export function ReceiptsPanel({ initial }: ReceiptsPanelProps) {
       <ReceiptsFeed initial={initial} />
 
       <p className="text-fg-subtle mt-6 text-xs">
-        Devnet prototype: entries are recorded by a demo script until the
-        mandate program ships. Rows marked PASS link to real Devnet
-        transactions.
+        Rows marked PASS link to real {NETWORK_NAME} transactions.
       </p>
     </div>
   );

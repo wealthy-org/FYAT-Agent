@@ -10,6 +10,7 @@ export function shortenAddress(address: string, chars = 4): string {
 
 function clusterQuery(): string {
   if (env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet") return "?cluster=devnet";
+  if (env.NEXT_PUBLIC_SOLANA_NETWORK === "mainnet-beta") return "";
 
   const customUrl = encodeURIComponent(env.NEXT_PUBLIC_SOLANA_RPC_URL);
   return `?cluster=custom&customUrl=${customUrl}`;

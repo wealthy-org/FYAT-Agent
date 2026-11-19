@@ -9,7 +9,9 @@ const optionalAddress = z
   .optional();
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_SOLANA_NETWORK: z.enum(["devnet", "localnet"]).default("devnet"),
+  NEXT_PUBLIC_SOLANA_NETWORK: z
+    .enum(["devnet", "mainnet-beta", "localnet"])
+    .default("devnet"),
   NEXT_PUBLIC_SOLANA_RPC_URL: z.url().default("https://api.devnet.solana.com"),
   NEXT_PUBLIC_TOKEN_MINT: optionalAddress,
   /** Pool Meteora DAMM v2 yang disetujui untuk mandate swap. */
@@ -17,6 +19,8 @@ const clientSchema = z.object({
   /** Token output swap (pasangan dari TOKEN_MINT di pool itu). */
   NEXT_PUBLIC_SWAP_OUTPUT_MINT: optionalAddress,
   NEXT_PUBLIC_AGENT_SESSION_PUBKEY: optionalAddress,
+  /** Menimpa `address` di IDL, mis. program ID mainnet. */
+  NEXT_PUBLIC_FYAT_PROGRAM_ID: optionalAddress,
 });
 
 // Next.js hanya meng-inline NEXT_PUBLIC_* jika dirujuk secara eksplisit.
@@ -30,6 +34,8 @@ const parsed = clientSchema.safeParse({
     process.env.NEXT_PUBLIC_SWAP_OUTPUT_MINT || undefined,
   NEXT_PUBLIC_AGENT_SESSION_PUBKEY:
     process.env.NEXT_PUBLIC_AGENT_SESSION_PUBKEY || undefined,
+  NEXT_PUBLIC_FYAT_PROGRAM_ID:
+    process.env.NEXT_PUBLIC_FYAT_PROGRAM_ID || undefined,
 });
 
 if (!parsed.success) {

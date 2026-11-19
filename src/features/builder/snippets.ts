@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { NETWORK_NAME } from "@/lib/network";
 
 import { evaluatePolicy, formatAmount } from "./policy";
 import type { AgentAttempt, MandateConfig } from "./types";
@@ -37,7 +38,7 @@ function permissionLines(config: MandateConfig): string[] {
   if (config.action === "SWAP") {
     return [
       `action: "SWAP",`,
-      `inputMint: "USDC_DEVNET_MINT",`,
+      `inputMint: "USDC_${NETWORK_NAME.toUpperCase()}_MINT",`,
       `outputMint: "TOKEN_MINT",`,
       `venue: ${str(config.venue)},`,
       ...common,
@@ -66,9 +67,7 @@ function buildCallLines(
           approved ? str(config.venue) : `"UNLISTED_VENUE"`
         } });`
       : `const plan = await mandate.build({ amount: ${amount}, recipient: ${
-          approved
-            ? str(config.recipient)
-            : "agentKeypair.publicKey.toBase58()"
+          approved ? str(config.recipient) : "agentKeypair.publicKey.toBase58()"
         } });`;
 
   const lines = ["// 3. The agent plans, simulates, and executes safely."];

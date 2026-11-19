@@ -1,11 +1,18 @@
+import {
+  IS_DEVNET,
+  NETWORK,
+  NETWORK_LABELS,
+  NETWORK_NAME,
+} from "@/lib/network";
+
 export const sdkExample = [
   "// Illustrative API: @fyat/sdk is not published yet.",
   `import { createFyatClient, type FyatMandate } from "@fyat/sdk";`,
   "",
-  "// 1. Initialize the client on Solana Devnet.",
+  `// 1. Initialize the client on ${NETWORK_LABELS[NETWORK]}.`,
   "const client = createFyatClient({",
-  `  network: "devnet",`,
-  `  rpcUrl: "https://api.devnet.solana.com",`,
+  `  network: "${NETWORK}",`,
+  `  rpcUrl: "${IS_DEVNET ? "https://api.devnet.solana.com" : "<YOUR_RPC_URL>"}",`,
   "});",
   "",
   "// 2. The owner defines a constrained mandate.",
@@ -14,7 +21,7 @@ export const sdkExample = [
   "  sessionSigner: agentKeypair.publicKey,",
   "  permissions: {",
   `    action: "SWAP",`,
-  `    inputMint: "USDC_DEVNET_MINT",`,
+  `    inputMint: "USDC_${NETWORK_NAME.toUpperCase()}_MINT",`,
   `    outputMint: "TOKEN_MINT",`,
   "    maxPerAction: 5_000_000, // 5 USDC",
   "    maxTotal: 50_000_000, // 50 USDC",

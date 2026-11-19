@@ -1,3 +1,4 @@
+import { NETWORK_NAME } from "@/lib/network";
 import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -24,9 +25,7 @@ export function ReceiptsSection({ initial }: ReceiptsSectionProps) {
         <ReceiptsFeed initial={initial} />
 
         <p className="text-fg-subtle mt-6 text-xs">
-          Devnet prototype: entries are recorded by a demo script until the
-          mandate program ships. Rows marked PASS link to real Devnet
-          transactions.
+          Rows marked PASS link to real {NETWORK_NAME} transactions.
         </p>
       </Container>
     </Section>

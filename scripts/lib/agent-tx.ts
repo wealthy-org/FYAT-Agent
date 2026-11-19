@@ -11,7 +11,9 @@ import {
 export type Outcome = { signature: string; err: unknown; logs: string[] };
 
 export function explorerTx(signature: string): string {
-  return `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet";
+  const cluster = network === "mainnet-beta" ? "" : `?cluster=${network}`;
+  return `https://explorer.solana.com/tx/${signature}${cluster}`;
 }
 
 /**
@@ -97,4 +99,3 @@ export async function sendAsAgent(
   }
   return { signature, err, logs };
 }
-

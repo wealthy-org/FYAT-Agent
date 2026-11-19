@@ -33,6 +33,14 @@ import {
 import { findVaultPda } from "../src/lib/vault-address";
 import { loadAgentKeypair } from "./lib/agent-tx";
 
+const NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet";
+const SUPPORTED_NETWORKS = new Set(["devnet", "mainnet-beta"]);
+const NETWORK_NAME = NETWORK === "mainnet-beta" ? "Mainnet" : "Devnet";
+const DEFAULT_RPC: Record<string, string> = {
+  devnet: "https://api.devnet.solana.com",
+  "mainnet-beta": "https://api.mainnet-beta.solana.com",
+};
+
 type JobRow = {
   id: string;
   mandate_id: string;
@@ -65,12 +73,8 @@ function buildProgram(connection: Connection, agent: Keypair) {
       "utf8",
     ),
   ) as anchor.Idl;
-  const configuredProgramId = requireEnv("FYAT_PROGRAM_ID");
-  if ("address" in idl && idl.address !== configuredProgramId) {
-    throw new Error(
-      "FYAT_PROGRAM_ID does not match the checked-in program IDL.",
-    );
-  }
+  // Program ID per deploy (devnet/mainnet) dari env; layout IDL tetap sama.
+  idl.address = requireEnv("FYAT_PROGRAM_ID");
   const provider = new anchor.AnchorProvider(
     connection,
     new anchor.Wallet(agent),
@@ -355,7 +359,7 @@ async function executeJob(
     if (confirmation.value.err) {
       await notifyResult(job.id, {
         status: "FAILED",
-        error: "The transaction was confirmed as failed on Devnet.",
+        error: `The transaction was confirmed as failed on ${NETWORK_NAME}.`,
       });
       return;
     }
@@ -420,7 +424,7 @@ async function recoverStaleJobs(
     if (status.err) {
       await notifyResult(job.id, {
         status: "FAILED",
-        error: "The transaction was confirmed as failed on Devnet.",
+        error: `The transaction was confirmed as failed on ${NETWORK_NAME}.`,
       });
       continue;
     }
@@ -429,8 +433,11 @@ async function recoverStaleJobs(
 }
 
 async function run(): Promise<void> {
-  if ((process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet") !== "devnet") {
-    throw new Error("The Railway agent worker only supports Devnet.");
+  if (!SUPPORTED_NETWORKS.has(NETWORK)) {
+    throw new Error(`Unsupported NEXT_PUBLIC_SOLANA_NETWORK: ${NETWORK}`);
+  }
+  if (NETWORK === "mainnet-beta" && !process.env.SOLANA_RPC_URL) {
+    throw new Error("SOLANA_RPC_URL is required on mainnet.");
   }
   const agent = getAgent();
   const configuredSession = requireEnv("AGENT_SESSION_PUBKEY");
@@ -440,13 +447,13 @@ async function run(): Promise<void> {
   const connection = new Connection(
     process.env.SOLANA_RPC_URL ??
       process.env.NEXT_PUBLIC_SOLANA_RPC_URL ??
-      "https://api.devnet.solana.com",
+      DEFAULT_RPC[NETWORK],
     "confirmed",
   );
   const client = new Client({ connectionString: requireEnv("DATABASE_URL") });
   await client.connect();
   console.info(
-    `[agent-worker] Listening for Devnet jobs as ${configuredSession}`,
+    `[agent-worker] Listening for ${NETWORK_NAME} jobs as ${configuredSession}`,
   );
 
   for (;;) {

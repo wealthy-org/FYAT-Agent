@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { formatUnits } from "@/lib/amount";
-import { env } from "@/lib/env";
-import { shortenAddress } from "@/lib/solana";
+import { explorerAddressUrl, shortenAddress } from "@/lib/solana";
 
 import { ASSET_SYMBOL, USDC_DECIMALS } from "../constants";
 import {
@@ -21,11 +20,7 @@ const STATUS_STYLE: Record<InspectedMandateDto["status"], string> = {
   UNVERIFIED: "border-border-subtle text-fg-muted",
 };
 
-function explorerAccount(address: string): string {
-  const cluster =
-    env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "?cluster=devnet" : "";
-  return `https://explorer.solana.com/address/${address}${cluster}`;
-}
+const explorerAccount = explorerAddressUrl;
 
 const units = (value: string) =>
   `${formatUnits(BigInt(value), USDC_DECIMALS)} ${ASSET_SYMBOL}`;
@@ -108,33 +103,37 @@ export function MandateInspector() {
                   View mandate on Solana Explorer
                 </a>
 
-                <dl                 className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 text-xs sm:text-sm">
+                <dl className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 text-xs sm:text-sm">
                   <dt className="text-fg-muted">Spent</dt>
-                  <dd className="min-w-0 break-words text-right">
+                  <dd className="min-w-0 text-right break-words">
                     {units(item.spent)} / {units(item.maxTotal)}
                   </dd>
                   <dt className="text-fg-muted">Action</dt>
-                  <dd className="min-w-0 break-words text-right">{item.action}</dd>
+                  <dd className="min-w-0 text-right break-words">
+                    {item.action}
+                  </dd>
                   <dt className="text-fg-muted">Max per action</dt>
-                  <dd className="min-w-0 break-words text-right">{units(item.maxPerAction)}</dd>
+                  <dd className="min-w-0 text-right break-words">
+                    {units(item.maxPerAction)}
+                  </dd>
                   <dt className="text-fg-muted">
                     {item.action === "SWAP" ? "Approved pool" : "Recipient"}
                   </dt>
-                  <dd className="min-w-0 break-all text-right">
+                  <dd className="min-w-0 text-right break-all">
                     {shortenAddress(item.recipient)}
                   </dd>
                   <dt className="text-fg-muted">Session</dt>
-                  <dd className="min-w-0 break-all text-right">
+                  <dd className="min-w-0 text-right break-all">
                     {shortenAddress(item.sessionPubkey)}
                   </dd>
                   <dt className="text-fg-muted">Expires</dt>
-                  <dd className="min-w-0 break-words text-right">
+                  <dd className="min-w-0 text-right break-words">
                     {new Date(item.expiresAt).toLocaleString()}
                   </dd>
                   {item.revokedAt && (
                     <>
                       <dt className="text-fg-muted">Revoked</dt>
-                      <dd className="min-w-0 break-words text-right">
+                      <dd className="min-w-0 text-right break-words">
                         {new Date(item.revokedAt).toLocaleString()}
                       </dd>
                     </>

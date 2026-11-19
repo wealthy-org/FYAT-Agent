@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { IS_DEVNET } from "@/lib/network";
+
 import { FaucetClaimBanner } from "./faucet-claim-banner";
 import { PlaygroundStepNav } from "./playground-step-nav";
 import { useAgentAttempt } from "../hooks/use-agent-attempt";
@@ -28,9 +30,11 @@ export function BuilderPlayground() {
 
   return (
     <div className="@container mx-auto w-full max-w-4xl space-y-5">
-      <FaucetClaimBanner
-        onClaimed={() => setBalanceRefreshKey((key) => key + 1)}
-      />
+      {IS_DEVNET && (
+        <FaucetClaimBanner
+          onClaimed={() => setBalanceRefreshKey((key) => key + 1)}
+        />
+      )}
       <PlaygroundStepNav />
 
       <div className="grid items-start gap-5">

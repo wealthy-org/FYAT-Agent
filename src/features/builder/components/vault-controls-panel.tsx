@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { formatUnits } from "@/lib/amount";
-import { env } from "@/lib/env";
+import { explorerTxUrl } from "@/lib/solana";
 
 import { ASSET_SYMBOL, USDC_DECIMALS } from "../constants";
 import { useRevokeMandate } from "../hooks/use-revoke-mandate";
@@ -26,11 +26,7 @@ type VaultControlsPanelProps = {
 const INPUT_CLASS =
   "mt-2 w-full rounded-xl border border-border-subtle bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-400";
 
-function explorerTx(signature: string): string {
-  const cluster =
-    env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "?cluster=devnet" : "";
-  return `https://explorer.solana.com/tx/${signature}${cluster}`;
-}
+const explorerTx = explorerTxUrl;
 
 export function VaultControlsPanel({
   activeMandate,

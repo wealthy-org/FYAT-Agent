@@ -11,6 +11,7 @@ import { explorerTxUrl } from "@/lib/solana";
 import { ASSET_SYMBOL, USDC_DECIMALS } from "../constants";
 import { useRevokeMandate } from "../hooks/use-revoke-mandate";
 import { useVaultFunds } from "../hooks/use-vault-funds";
+import { IS_DEVNET } from "@/lib/network";
 
 type PanelMandate = {
   id: string;
@@ -71,7 +72,9 @@ export function VaultControlsPanel({
         Funds &amp; Access
       </h3>
       <p className="text-fg-muted mt-1 text-sm">
-        Claim test USDC above, then create a mandate to initialize your vault.
+        {IS_DEVNET
+          ? "Claim test USDC above, then create a mandate to initialize your vault."
+          : "Hold USDC in your wallet, then create a mandate to initialize your vault."}{" "}
         Deposit into it before executing.
       </p>
 

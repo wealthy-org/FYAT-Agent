@@ -19,6 +19,7 @@ import {
 import { buildExecuteSwapInstructions } from "./build-swap";
 import { classifyFailure } from "./classify";
 import type { SimulationOutcome, SimulationRequest } from "./types";
+import { IS_DEVNET } from "@/lib/network";
 const RPC_TIMEOUT_MS = 15_000;
 const MAX_LOG_LINES = 12;
 const MAX_LOG_LENGTH = 200;
@@ -146,7 +147,9 @@ export async function runSimulation(
         kind: "FAILED",
         code: "NO_TOKEN_ACCOUNT",
         message:
-          "Your wallet has no token account for this mint yet. Run pnpm mint:setup --to <your wallet> to receive test tokens.",
+          IS_DEVNET
+            ? "Your wallet has no token account for this mint yet. Run pnpm mint:setup --to <your wallet> to receive test tokens."
+            : "Your wallet has no USDC yet. Add USDC to your wallet first.",
         logs: [],
       };
     }

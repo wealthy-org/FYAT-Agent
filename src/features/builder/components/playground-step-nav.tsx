@@ -1,5 +1,11 @@
+import { IS_DEVNET } from "@/lib/network";
+
 const STEPS = [
-  { number: "01", label: "Get test funds", href: "#playground-funds" },
+  {
+    number: "01",
+    label: IS_DEVNET ? "Get test funds" : "Fund wallet",
+    href: "#playground-funds",
+  },
   { number: "02", label: "Configure mandate", href: "#playground-configure" },
   { number: "03", label: "Create mandate", href: "#playground-create" },
   { number: "04", label: "Simulate", href: "#playground-simulate" },

@@ -7,7 +7,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-fyat_mandate = "Eu1b76PNqv5B8HbTsxrmirM3NfRy51bscQ5eUzgZVU6Y"
+fyat_mandate = "3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN"
 
 [provider]
 cluster = "localnet"

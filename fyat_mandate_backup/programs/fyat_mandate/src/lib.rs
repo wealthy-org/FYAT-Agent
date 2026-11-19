@@ -11,7 +11,17 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("Eu1b76PNqv5B8HbTsxrmirM3NfRy51bscQ5eUzgZVU6Y");
+declare_id!("3N8HTTtsMmwsQe1XJ4dXD9XGrquSKXWTC9rsEkCz8ixN");
+
+// Kontak keamanan yang dibaca Solana Explorer ("Security.txt").
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "FYAT Agent",
+    project_url: "https://fyatbuilder.site",
+    contacts: "link:https://x.com/fyatbuilders",
+    policy: "https://github.com/wealthy-org/FYAT-Agent/security",
+    source_code: "https://github.com/wealthy-org/FYAT-Agent"
+}
 
 #[program]
 pub mod fyat_mandate {
